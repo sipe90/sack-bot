@@ -1,0 +1,13 @@
+sackbot:
+  bot:
+    token: discord_bot_token
+    chat:
+      enabled: true
+      allowDm: true
+      commandPrefix: /
+  files:
+    folder: ${user.home}${file.separator}sackbot${file.separator}sounds
+    watcher:
+      enabled: true
+  nitrite:
+    dbFile: ${user.home}${file.separator}sacbot${file.separator}database.db
