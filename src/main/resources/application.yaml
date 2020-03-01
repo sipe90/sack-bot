@@ -1,6 +1,6 @@
 sackbot:
   bot:
-    token: NjgxNTQwMzE3MTE5MzgxNTM0.XlvTkw.aC0wzxtEwoCjRH3p1Kbl6ddcDZ4
+    token: bot_token
     activity:
       type: watching
       text: hottest memes
