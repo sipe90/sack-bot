@@ -59,7 +59,7 @@ class AudioPlayerServiceImpl : AudioPlayerService {
     }
 
     override fun setVolume(guildId: String, volume: Int) {
-        audioPlayers[guildId]?.volume = volume.coerceAtLeast(1).coerceAtMost(100)
+        audioPlayers[guildId]?.volume = volume
     }
 
     override fun getVolume(guildId: String): Int? {

@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import reactor.util.function.Tuples
 import java.util.EnumSet
 import javax.annotation.PreDestroy
 
@@ -78,13 +79,15 @@ final class BotServiceImpl(
 
         val cmdStr = msg.substring(1)
         val cmd = cmdSplitRegex.split(cmdStr)
+        val voiceChannel = event.member?.voiceState?.channel
 
         when (cmd[0]) {
             "help" -> helpCommand(event, event.channel)
             "info" -> infoCommand(cmd, event, event.channel)
-            "list" -> listCommand(cmd, event, event.channel)
+            "list" -> listCommand(event.channel)
+            "random" -> randomCommand(voiceChannel, event.channel)
             "volume" -> volumeCommand(cmd, event.guild, event.channel)
-            else -> playFileCommand(cmd, event.member?.voiceState?.channel, event.channel)
+            else -> playFileCommand(cmd, voiceChannel, event.channel)
         }.subscribe()
     }
 
@@ -110,7 +113,8 @@ final class BotServiceImpl(
             return@flatMap when (cmd[0]) {
                 "help" -> helpCommand(event, it)
                 "info" -> infoCommand(cmd, event, it)
-                "list" -> listCommand(cmd, event, it)
+                "list" -> listCommand(it)
+                "random" -> randomCommand(voiceChannel, event.channel)
                 "volume" -> volumeCommand(cmd, voiceChannel?.guild, it)
                 else -> playFileCommand(cmd, voiceChannel, it)
             }
@@ -122,9 +126,10 @@ final class BotServiceImpl(
             StringBuilder().append("The following chat commands are available:\n")
                 .append("```")
                 .append(helpLine("help", "Prints this text"))
-                .append(helpLine("info", "N/A"))
+                //.append(helpLine("info", "N/A"))
                 .append(helpLine("list", "Lists all playable sound names"))
-                .append(helpLine("volume", "N/A"))
+                .append(helpLine("random", "Play a random sound"))
+                .append(helpLine("volume <1-100>", "Set sound playback volume"))
                 .append(helpLine("<sound_name>", "Plays a sound with the given name"))
                 .append("```")
         }.flatMap { channel.sendMessage(it).asMono() }
@@ -149,7 +154,7 @@ final class BotServiceImpl(
         val volumeStr = cmd[1]
 
         return try {
-            val volume = volumeStr.toInt()
+            val volume = volumeStr.toInt().coerceAtLeast(1).coerceAtMost(100)
             playerService.setVolume(guild.id, volume)
             channel.sendMessage("Setting volume to `$volume%`").asMono()
         } catch (e: NumberFormatException) {
@@ -172,15 +177,12 @@ final class BotServiceImpl(
         val audioFileName = cmd[0]
 
         return fileService.getAudioFilePathByName(audioFileName).flatMap {
-            if (it == null) return@flatMap channel.sendMessage("Could not find a sound file with given name").asMono()
             playerService.playInChannel(it.toString(), voiceChannel)
             channel.sendMessage("Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`").asMono()
-        }
+        }.switchIfEmpty(channel.sendMessage("Could not find a sound file with given name").asMono())
     }
 
     private fun listCommand(
-        cmd: List<String>,
-        event: Event,
         channel: MessageChannel
     ): Mono<Message> {
         return Mono.just("List of available sounds to play:\n```")
@@ -188,6 +190,21 @@ final class BotServiceImpl(
             .concatWith(Mono.just("\n```"))
             .reduce(StringBuilder(), { sb, str -> sb.append(str) })
             .flatMap { channel.sendMessage(it).asMono() }
+    }
+
+    private fun randomCommand(voiceChannel: VoiceChannel?, channel: MessageChannel): Mono<Message> {
+        if (voiceChannel == null) return channel.sendMessage("Could not find a voice channel to play in").asMono()
+        val paths = fileService.getAudioFiles()
+        return paths
+            .count()
+            .map { (0..it).random() }
+            .flatMap { paths.take(it).last() }
+            .flatMap { fileService.getAudioFilePathByName(it).map { p -> Tuples.of(it, p) } }
+            .flatMap {
+                playerService.playInChannel(it.t2.toString(), voiceChannel)
+                channel.sendMessage("Playing random sound file `${it.t1}` in voice channel `#${voiceChannel.name}`")
+                    .asMono()
+            }
     }
 
     private fun infoCommand(
