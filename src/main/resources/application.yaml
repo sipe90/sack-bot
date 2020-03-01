@@ -13,8 +13,4 @@ sackbot:
     watcher:
       enabled: true
   nitrite:
-    dbFile: ${user.home}${file.separator}sacbot${file.separator}database.db
-
-logging:
-  level:
-    com.github.sipe90.sackbot: debug
+    dbFile: ${user.home}${file.separator}sackbot${file.separator}database.db
