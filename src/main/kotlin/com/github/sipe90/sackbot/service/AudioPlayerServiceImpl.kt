@@ -37,20 +37,40 @@ class AudioPlayerServiceImpl : AudioPlayerService {
         val audioManager = guild.audioManager
         val audioPlayer = audioPlayers.getOrPut(guild.id, { createPlayer(guild) })
 
-        audioManager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
+        if (audioManager.isAttemptingToConnect) {
+            val queued = audioManager.queuedAudioConnection
+            if (queued != null && queued.id != voiceChannel.id) {
+                audioManager.closeAudioConnection()
+            }
+        }
+
         audioManager.openAudioConnection(voiceChannel)
+        audioManager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
 
         playerManager.loadItem(identifier, FunctionalResultHandler(
-            audioPlayer::playTrack,
+            {
+                logger.debug("Playing track {} on channel #{}", it.info.identifier, voiceChannel.name)
+                audioPlayer.playTrack(it)
+            },
             {},
             { logger.error("Could not find track with identifier {}", identifier) },
             { e -> logger.error("Exception while trying to load track", e) }
         ))
     }
 
+    override fun setVolume(guildId: String, volume: Int) {
+        audioPlayers[guildId]?.volume = volume.coerceAtLeast(1).coerceAtMost(100)
+    }
+
+    override fun getVolume(guildId: String): Int? {
+        return audioPlayers[guildId]?.volume
+    }
+
     private fun createPlayer(guild: Guild): AudioPlayer {
         logger.debug("Creating new instance of AudioPlayer for Guild {} ({})", guild.name, guild.id)
-        return playerManager.createPlayer()
+        val player = playerManager.createPlayer()
+        player.volume = 75
+        return player
     }
 
     private class AudioPlayerSendHandler(private val audioPlayer: AudioPlayer) : AudioSendHandler {

@@ -6,7 +6,9 @@ import java.nio.file.Path
 
 interface AudioFileService {
 
-    fun getAudioFiles(): Flux<Path>
+    fun getAudioFilePaths(): Flux<Path>
 
-    fun getAudioFileByName(name: String): Mono<Path>
+    fun getAudioFilePathByName(name: String): Mono<Path>
+
+    fun getAudioFiles(): Flux<String>
 }

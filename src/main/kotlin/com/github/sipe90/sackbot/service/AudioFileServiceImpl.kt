@@ -42,14 +42,18 @@ class AudioFileServiceImpl(private val config: FilesConfig, private val watcher:
         }
     }
 
-    override fun getAudioFiles(): Flux<Path> {
+    override fun getAudioFilePaths(): Flux<Path> {
         return Flux.fromStream {
             Files.list(audioFolderPath).filter { Files.isRegularFile(it) && Files.isReadable(it) }
         }
     }
 
-    override fun getAudioFileByName(name: String): Mono<Path> {
-        return getAudioFiles().filter { path -> stripExtension(path.fileName.toString()) == name }.next()
+    override fun getAudioFilePathByName(name: String): Mono<Path> {
+        return getAudioFilePaths().filter { stripExtension(it.fileName.toString()) == name }.next()
+    }
+
+    override fun getAudioFiles(): Flux<String> {
+        return getAudioFilePaths().map { stripExtension(it.fileName.toString()) }
     }
 
     fun stripExtension(fileName: String): String {

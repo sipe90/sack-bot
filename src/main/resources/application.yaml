@@ -1,6 +1,9 @@
 sackbot:
   bot:
-    token: discord_bot_token
+    token: NjgxNTQwMzE3MTE5MzgxNTM0.XlvTkw.aC0wzxtEwoCjRH3p1Kbl6ddcDZ4
+    activity:
+      type: watching
+      text: hottest memes
     chat:
       enabled: true
       allowDm: true
@@ -11,3 +14,7 @@ sackbot:
       enabled: true
   nitrite:
     dbFile: ${user.home}${file.separator}sacbot${file.separator}database.db
+
+logging:
+  level:
+    com.github.sipe90.sackbot: debug
