@@ -6,11 +6,13 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties("sackbot.bot")
 @ConstructorBinding
 data class BotConfig(
-        val token: String,
-        val chat: ChatProps) {
+    val token: String,
+    val chat: ChatConfig
+) {
 
-    data class ChatProps(
-            val enabled: Boolean,
-            val allowDm: Boolean,
-            val commandPrefix: String)
+    data class ChatConfig(
+        val enabled: Boolean,
+        val allowDm: Boolean,
+        val commandPrefix: String
+    )
 }

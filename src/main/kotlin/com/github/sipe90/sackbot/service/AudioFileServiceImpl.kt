@@ -4,23 +4,21 @@ import com.github.sipe90.sackbot.component.FileWatcher
 import com.github.sipe90.sackbot.config.FilesConfig
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import javax.annotation.PostConstruct
-import kotlin.IllegalArgumentException
-import kotlin.streams.toList
 
 @Service
-class AudioFileServiceImpl(private val config: FilesConfig, private val watcher: FileWatcher) {
+class AudioFileServiceImpl(private val config: FilesConfig, private val watcher: FileWatcher) : AudioFileService {
 
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private final val logger = LoggerFactory.getLogger(javaClass)
 
-    private val audioFolderPath: Path = Paths.get(config.folder)
+    private final val audioFolderPath: Path = Paths.get(config.folder)
 
-    @PostConstruct
-    fun init() {
+    init {
         if (Files.notExists(audioFolderPath)) {
             logger.info("Folder path {} not found, attempting to auto-create...", audioFolderPath)
             try {
@@ -44,12 +42,14 @@ class AudioFileServiceImpl(private val config: FilesConfig, private val watcher:
         }
     }
 
-    fun getAudioFiles(): List<Path> {
-        return Files.list(audioFolderPath).filter{ Files.isRegularFile(it) && Files.isReadable(it) }.toList()
+    override fun getAudioFiles(): Flux<Path> {
+        return Flux.fromStream {
+            Files.list(audioFolderPath).filter { Files.isRegularFile(it) && Files.isReadable(it) }
+        }
     }
 
-    fun getAudioFileByName(name: String): Path? {
-        return getAudioFiles().firstOrNull { path -> stripExtension(path.fileName.toString()) == name }
+    override fun getAudioFileByName(name: String): Mono<Path> {
+        return getAudioFiles().filter { path -> stripExtension(path.fileName.toString()) == name }.next()
     }
 
     fun stripExtension(fileName: String): String {
