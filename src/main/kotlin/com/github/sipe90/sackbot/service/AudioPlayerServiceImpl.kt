@@ -1,5 +1,6 @@
 package com.github.sipe90.sackbot.service
 
+import com.github.sipe90.sackbot.component.Text2Speech
 import com.sedmelluq.discord.lavaplayer.natives.ConnectorNativeLibLoader
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Service
 import java.nio.ByteBuffer
 
 @Service
-class AudioPlayerServiceImpl : AudioPlayerService {
+class AudioPlayerServiceImpl(private val tts: Text2Speech) : AudioPlayerService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
@@ -56,6 +57,11 @@ class AudioPlayerServiceImpl : AudioPlayerService {
             { logger.error("Could not find track with identifier {}", identifier) },
             { e -> logger.error("Exception while trying to load track", e) }
         ))
+    }
+
+    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel) {
+        val filePath = tts.textToSpeech(text)
+        playInChannel(filePath.toString(), voiceChannel)
     }
 
     override fun setVolume(guildId: String, volume: Int) {

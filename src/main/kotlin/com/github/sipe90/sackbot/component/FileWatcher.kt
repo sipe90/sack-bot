@@ -4,8 +4,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import java.io.IOException
-import java.nio.file.*
-import java.nio.file.StandardWatchEventKinds.*
+import java.nio.file.ClosedWatchServiceException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
+import java.nio.file.StandardWatchEventKinds.ENTRY_DELETE
+import java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY
+import java.nio.file.WatchEvent
+import java.nio.file.WatchService
 
 @Component
 class FileWatcher {
@@ -53,6 +59,8 @@ class FileWatcher {
             logger.error("Could not start file watcher", e)
         } catch (e: ClosedWatchServiceException) {
             logger.info("File watcher service has closed. Stopping file watcher")
+        } catch (e: InterruptedException) {
+            logger.info("Thread interrupted. Stopping file watcher")
         }
     }
 

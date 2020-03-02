@@ -3,7 +3,9 @@ package com.github.sipe90.sackbot.service
 import club.minnced.jda.reactor.asMono
 import club.minnced.jda.reactor.createManager
 import club.minnced.jda.reactor.on
+import club.minnced.jda.reactor.toInputStream
 import com.github.sipe90.sackbot.config.BotConfig
+import com.github.sipe90.sackbot.util.stripExtension
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
@@ -20,7 +22,9 @@ import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toFlux
 import reactor.util.function.Tuples
 import java.util.EnumSet
 import javax.annotation.PreDestroy
@@ -86,6 +90,7 @@ final class BotServiceImpl(
             "info" -> infoCommand(cmd, event, event.channel)
             "list" -> listCommand(event.channel)
             "random" -> randomCommand(voiceChannel, event.channel)
+            "say" -> sayCommand(cmd, voiceChannel, event.channel)
             "volume" -> volumeCommand(cmd, event.guild, event.channel)
             else -> playFileCommand(cmd, voiceChannel, event.channel)
         }.subscribe()
@@ -98,6 +103,8 @@ final class BotServiceImpl(
 
         event.author.openPrivateChannel().asMono().flatMap {
             logger.debug("Processing private message from {}: {}", event.author, msg)
+
+            if (event.message.attachments.isNotEmpty()) return@flatMap handleUploads(event, it).next()
 
             if (!msg.startsWith(config.chat.commandPrefix)) {
                 return@flatMap helpCommand(event, it)
@@ -115,10 +122,33 @@ final class BotServiceImpl(
                 "info" -> infoCommand(cmd, event, it)
                 "list" -> listCommand(it)
                 "random" -> randomCommand(voiceChannel, event.channel)
+                "say" -> sayCommand(cmd, voiceChannel, it)
                 "volume" -> volumeCommand(cmd, voiceChannel?.guild, it)
                 else -> playFileCommand(cmd, voiceChannel, it)
             }
         }.subscribe()
+    }
+
+    private fun handleUploads(event: PrivateMessageReceivedEvent, channel: MessageChannel): Flux<Message> {
+        return event.message.attachments.toFlux().flatMap map@{ attachment ->
+            logger.info("Processing attachment {}", attachment.fileName)
+            if (attachment.fileExtension != "wav" && attachment.fileExtension != "mp3") return@map channel.sendMessage("Could not upload file `${attachment.fileName}`: Unknown extension. Only mp3 and wav are supported.")
+                .asMono()
+            if (attachment.size > 1_000_000) return@map channel.sendMessage("Could not upload file `${attachment.fileName}`: File size cannot exceed 1MB")
+                .asMono()
+
+            val audioName = stripExtension(attachment.fileName)
+
+            return@map fileService.getAudioFilePathByName(attachment.fileName)
+                .hasElement()
+                .flatMap { exists ->
+                    if (exists) return@flatMap channel.sendMessage("File `${audioName}` already exists")
+                        .asMono()
+                    return@flatMap attachment.toInputStream()
+                        .flatMap { stream -> fileService.saveAudioFile(attachment.fileName, stream) }
+                        .flatMap { channel.sendMessage("Saved audio file `${audioName}`").asMono() }
+                }
+        }
     }
 
     private fun helpCommand(event: Event, channel: MessageChannel): Mono<Message> {
@@ -129,9 +159,11 @@ final class BotServiceImpl(
                 //.append(helpLine("info", "N/A"))
                 .append(helpLine("list", "Lists all playable sound names"))
                 .append(helpLine("random", "Play a random sound"))
+                .append(helpLine("say <text>", "Text to speech"))
                 .append(helpLine("volume <1-100>", "Set sound playback volume"))
                 .append(helpLine("<sound_name>", "Plays a sound with the given name"))
-                .append("```")
+                .append("```\n")
+                .append("You can also send me new audio files via a private message.")
         }.flatMap { channel.sendMessage(it).asMono() }
     }
 
@@ -180,6 +212,24 @@ final class BotServiceImpl(
             playerService.playInChannel(it.toString(), voiceChannel)
             channel.sendMessage("Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`").asMono()
         }.switchIfEmpty(channel.sendMessage("Could not find a sound file with given name").asMono())
+    }
+
+    private fun sayCommand(
+        cmd: List<String>,
+        voiceChannel: VoiceChannel?,
+        channel: MessageChannel
+    ): Mono<Message> {
+        if (cmd.size < 2) {
+            return channel.sendMessage("Invalid say command. Correct format is `${config.chat.commandPrefix}say <text>`")
+                .asMono()
+        }
+
+        if (voiceChannel == null) return channel.sendMessage("Could not find a voice channel to play in").asMono()
+
+        val text = cmd.subList(1, cmd.size).joinToString(" ")
+
+        playerService.playTtsInChannel(text, voiceChannel)
+        return channel.sendMessage("Playing text to speech in voice channel `#${voiceChannel.name}`").asMono()
     }
 
     private fun listCommand(

@@ -1,12 +1,15 @@
 package com.github.sipe90.sackbot.service
 
+import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.component.FileWatcher
 import com.github.sipe90.sackbot.config.FilesConfig
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -54,6 +57,18 @@ class AudioFileServiceImpl(private val config: FilesConfig, private val watcher:
 
     override fun getAudioFiles(): Flux<String> {
         return getAudioFilePaths().map { stripExtension(it.fileName.toString()) }
+    }
+
+    override fun saveAudioFile(name: String, inputStream: InputStream): Mono<Path> {
+        return File(audioFolderPath.toString(), name).outputStream().use {
+            val buf = ByteArray(1024)
+            var count = 0
+            while (inputStream.read(buf).also { b -> count = b } > 0) {
+                it.write(buf, 0, count)
+            }
+        }.toMono()
+            .map { audioFolderPath.resolve(name) }
+            .doOnSuccess { logger.debug("Saved audio file to $it") }
     }
 
     fun stripExtension(fileName: String): String {

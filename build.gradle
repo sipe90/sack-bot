@@ -1,8 +1,8 @@
 plugins {
-	id 'org.springframework.boot' version '2.2.5.RELEASE'
-	id 'io.spring.dependency-management'  version '1.0.9.RELEASE'
-	id 'org.jetbrains.kotlin.jvm' version '1.3.61'
-	id 'org.jetbrains.kotlin.plugin.spring' version '1.3.61'
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.61'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.61'
 }
 
 group = 'com.github.sipe90'
@@ -11,45 +11,54 @@ version = '0.0.1-SNAPSHOT'
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
-	mavenCentral()
-	jcenter()
+    mavenCentral()
+    jcenter()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client' 
-	implementation 'org.springframework.boot:spring-boot-starter-security' 
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
-	// implementation 'io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE'
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
+    // implementation 'io.projectreactor.kotlin:reactor-kotlin-extensions:1.0.2.RELEASE'
 
-	implementation 'org.jetbrains.kotlin:kotlin-reflect' 
-	implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8' 
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor'
 
-	implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
 
-	implementation 'org.dizitart:potassium-nitrite:3.3.0'
-	implementation 'net.dv8tion:JDA:4.1.1_109'
-	implementation 'club.minnced:jda-reactor:1.0.0'
-	implementation 'com.sedmelluq:lavaplayer:1.3.34'
-	
-	testImplementation('org.springframework.boot:spring-boot-starter-test')  {
-		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine' 
-	}
-	testImplementation 'io.projectreactor:reactor-test' 
-	testImplementation 'org.springframework.security:spring-security-test'
+    implementation 'org.dizitart:potassium-nitrite:3.3.0'
+    implementation 'net.dv8tion:JDA:4.1.1_109'
+    implementation 'club.minnced:jda-reactor:1.0.0'
+    implementation 'com.sedmelluq:lavaplayer:1.3.34'
 
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation('de.dfki.mary:marytts-lang-en:5.2') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j', module: 'log4j'
+    }
+    implementation('de.dfki.mary:voice-dfki-spike-hsmm:5.2') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        // exclude group: 'log4j', module: 'log4j'
+    }
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
 test {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
 compileKotlin {
-	kotlinOptions {
-		freeCompilerArgs = ['-Xjsr305=strict']
-		jvmTarget = '1.8'
-	}
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjsr305=strict']
+        jvmTarget = '1.8'
+    }
 }

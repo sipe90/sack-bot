@@ -6,6 +6,8 @@ interface AudioPlayerService {
 
     fun playInChannel(identifier: String, voiceChannel: VoiceChannel)
 
+    fun playTtsInChannel(text: String, voiceChannel: VoiceChannel)
+
     fun setVolume(guildId: String, volume: Int)
 
     fun getVolume(guildId: String): Int?
