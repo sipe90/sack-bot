@@ -11,6 +11,9 @@ interface AudioFileService {
 
     fun getAudioFilePathByName(name: String): Mono<Path>
 
+    fun audioFileExists(name: String): Mono<Boolean>
+
     fun getAudioFiles(): Flux<String>
+
     fun saveAudioFile(name: String, inputStream: InputStream): Mono<Path>
 }

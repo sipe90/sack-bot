@@ -15,7 +15,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 @Service
-class AudioFileServiceImpl(private val config: FilesConfig, private val watcher: FileWatcher) : AudioFileService {
+class AudioFileServiceImpl(config: FilesConfig, watcher: FileWatcher) : AudioFileService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
@@ -53,6 +53,10 @@ class AudioFileServiceImpl(private val config: FilesConfig, private val watcher:
 
     override fun getAudioFilePathByName(name: String): Mono<Path> {
         return getAudioFilePaths().filter { stripExtension(it.fileName.toString()) == name }.next()
+    }
+
+    override fun audioFileExists(name: String): Mono<Boolean> {
+        return getAudioFilePathByName(name).map { true }.defaultIfEmpty(false)
     }
 
     override fun getAudioFiles(): Flux<String> {

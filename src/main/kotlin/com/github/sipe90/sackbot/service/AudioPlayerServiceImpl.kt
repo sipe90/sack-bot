@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler
+import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
@@ -15,6 +16,7 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.VoiceChannel
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
 import java.nio.ByteBuffer
 
 @Service
@@ -26,14 +28,16 @@ class AudioPlayerServiceImpl(private val tts: Text2Speech) : AudioPlayerService 
     private final val audioPlayers = mutableMapOf<String, AudioPlayer>()
 
     init {
+
         playerManager.registerSourceManager(LocalAudioSourceManager())
         playerManager.registerSourceManager(YoutubeAudioSourceManager())
         playerManager.registerSourceManager(TwitchStreamAudioSourceManager())
+        playerManager.registerSourceManager(BeamAudioSourceManager())
 
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    override fun playInChannel(identifier: String, voiceChannel: VoiceChannel) {
+    override fun playInChannel(identifier: String, voiceChannel: VoiceChannel): Mono<Boolean> {
         val guild = voiceChannel.guild
         val audioManager = guild.audioManager
         val audioPlayer = audioPlayers.getOrPut(guild.id, { createPlayer(guild) })
@@ -48,20 +52,35 @@ class AudioPlayerServiceImpl(private val tts: Text2Speech) : AudioPlayerService 
         audioManager.openAudioConnection(voiceChannel)
         audioManager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
 
-        playerManager.loadItem(identifier, FunctionalResultHandler(
-            {
-                logger.debug("Playing track {} on channel #{}", it.info.identifier, voiceChannel.name)
-                audioPlayer.playTrack(it)
-            },
-            {},
-            { logger.error("Could not find track with identifier {}", identifier) },
-            { e -> logger.error("Exception while trying to load track", e) }
-        ))
+        logger.debug("Looking for track with identifier: {}", identifier)
+
+        return Mono.create<Boolean> { sink ->
+            playerManager.loadItem(identifier, FunctionalResultHandler(
+                {
+                    logger.debug("Playing track {} on channel #{}", it.info.title, voiceChannel.name)
+                    audioPlayer.playTrack(it)
+                    sink.success(true)
+                },
+                {
+                    logger.debug("Found playlist with tracks {}", it.tracks.map { track -> track.info.title })
+                    // audioPlayer.playTrack(it)
+                    sink.success(false)
+                },
+                {
+                    logger.error("Could not find track with identifier {}", identifier)
+                    sink.success(false)
+                },
+                { e ->
+                    logger.error("Exception while trying to load track", e)
+                    sink.error(e)
+                }
+            ))
+        }
     }
 
-    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel) {
+    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean> {
         val filePath = tts.textToSpeech(text)
-        playInChannel(filePath.toString(), voiceChannel)
+        return playInChannel(filePath.toString(), voiceChannel)
     }
 
     override fun setVolume(guildId: String, volume: Int) {
