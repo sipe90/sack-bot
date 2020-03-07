@@ -7,7 +7,7 @@ interface BotCommand {
 
     val commandPrefix: String
 
-    fun canProcess(vararg command: String): Boolean
+    fun canProcess(vararg command: String) = command.isNotEmpty() && command[0] == commandPrefix
 
     fun process(initiator: Event, vararg command: String): Mono<String>
 }

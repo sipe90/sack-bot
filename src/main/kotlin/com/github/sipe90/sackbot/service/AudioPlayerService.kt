@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono
 
 interface AudioPlayerService {
 
-    fun playInChannel(identifier: String, voiceChannel: VoiceChannel): Mono<Boolean>
+    fun playAudioInChannel(name: String, voiceChannel: VoiceChannel): Mono<Boolean>
 
     fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean>
 

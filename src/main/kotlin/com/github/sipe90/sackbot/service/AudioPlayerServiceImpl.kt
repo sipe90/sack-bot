@@ -1,5 +1,6 @@
 package com.github.sipe90.sackbot.service
 
+import com.github.sipe90.sackbot.audio.NitriteAudioSourceManager
 import com.github.sipe90.sackbot.component.Text2Speech
 import com.sedmelluq.discord.lavaplayer.natives.ConnectorNativeLibLoader
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
@@ -20,7 +21,8 @@ import reactor.core.publisher.Mono
 import java.nio.ByteBuffer
 
 @Service
-class AudioPlayerServiceImpl(private val tts: Text2Speech) : AudioPlayerService {
+class AudioPlayerServiceImpl(private val tts: Text2Speech, nitriteManager: NitriteAudioSourceManager) :
+    AudioPlayerService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
@@ -28,7 +30,7 @@ class AudioPlayerServiceImpl(private val tts: Text2Speech) : AudioPlayerService 
     private final val audioPlayers = mutableMapOf<String, AudioPlayer>()
 
     init {
-
+        playerManager.registerSourceManager(nitriteManager)
         playerManager.registerSourceManager(LocalAudioSourceManager())
         playerManager.registerSourceManager(YoutubeAudioSourceManager())
         playerManager.registerSourceManager(TwitchStreamAudioSourceManager())
@@ -37,7 +39,15 @@ class AudioPlayerServiceImpl(private val tts: Text2Speech) : AudioPlayerService 
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    override fun playInChannel(identifier: String, voiceChannel: VoiceChannel): Mono<Boolean> {
+    override fun playAudioInChannel(name: String, voiceChannel: VoiceChannel): Mono<Boolean> {
+        return playInChannel("${voiceChannel.guild.id}:${name}", voiceChannel)
+    }
+
+    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean> {
+        return tts.textToSpeech(text).flatMap { playInChannel(it.toString(), voiceChannel) }
+    }
+
+    private fun playInChannel(identifier: String, voiceChannel: VoiceChannel): Mono<Boolean> {
         val guild = voiceChannel.guild
         val audioManager = guild.audioManager
         val audioPlayer = audioPlayers.getOrPut(guild.id, { createPlayer(guild) })
@@ -76,11 +86,6 @@ class AudioPlayerServiceImpl(private val tts: Text2Speech) : AudioPlayerService 
                 }
             ))
         }
-    }
-
-    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean> {
-        val filePath = tts.textToSpeech(text)
-        return playInChannel(filePath.toString(), voiceChannel)
     }
 
     override fun setVolume(guildId: String, volume: Int) {

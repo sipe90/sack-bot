@@ -3,18 +3,23 @@ package com.github.sipe90.sackbot.service
 import club.minnced.jda.reactor.asMono
 import club.minnced.jda.reactor.createManager
 import club.minnced.jda.reactor.on
-import club.minnced.jda.reactor.toInputStream
+import club.minnced.jda.reactor.toBytes
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.bot.BotCommand
 import com.github.sipe90.sackbot.config.BotConfig
+import com.github.sipe90.sackbot.persistence.MemberRepository
+import com.github.sipe90.sackbot.util.getApplicableGuild
 import com.github.sipe90.sackbot.util.stripExtension
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ShutdownEvent
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
@@ -22,7 +27,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
 import java.util.EnumSet
 import javax.annotation.PreDestroy
 
@@ -30,6 +34,8 @@ import javax.annotation.PreDestroy
 final class BotServiceImpl(
     private val config: BotConfig,
     private val fileService: AudioFileService,
+    private val playerService: AudioPlayerService,
+    private val memberRepository: MemberRepository,
     commands: List<BotCommand>
 ) : BotService {
 
@@ -66,6 +72,12 @@ final class BotServiceImpl(
         eventManager.on<PrivateMessageReceivedEvent>()
             .subscribe(this::onPrivateMessageReceived)
 
+        eventManager.on<GuildVoiceJoinEvent>()
+            .subscribe(this::onGuildVoiceJoin)
+
+        eventManager.on<GuildVoiceLeaveEvent>()
+            .subscribe(this::onGuildVoiceLeave)
+
         jda = JDABuilder(config.token)
             .setEventManager(eventManager)
             .setStatus(OnlineStatus.DO_NOT_DISTURB)
@@ -90,7 +102,7 @@ final class BotServiceImpl(
         val botCommand = commandsMap[cmd[0]] ?: playCommand
         if (botCommand.canProcess(*cmd)) {
             logger.trace("BotCommand {} processing command {}", botCommand.javaClass, cmd)
-            botCommand.process(event, *cmd).log().subscribe { event.channel.sendMessage(it) }
+            botCommand.process(event, *cmd).log().subscribe { event.channel.sendMessage(it).queue() }
         }
     }
 
@@ -122,29 +134,80 @@ final class BotServiceImpl(
         }).log().subscribe { it.t1.sendMessage(it.t2).queue() }
     }
 
-    private fun handleUploads(event: PrivateMessageReceivedEvent): Flux<String> {
-        return event.message.attachments.toFlux().flatMap map@{ attachment ->
-            logger.info("Processing attachment {}", attachment.fileName)
+    private fun handleUploads(event: PrivateMessageReceivedEvent): Flux<String> =
+        Flux.from<Message.Attachment> { event.message.attachments }
+            .flatMap flatMap@{ attachment ->
+                val guild = getApplicableGuild(event)
+                    ?: return@flatMap "Could not find guild or voice channel to perform the action".toMono()
 
-            if (attachment.fileExtension != "wav" && attachment.fileExtension != "mp3") {
-                return@map "Could not upload file `${attachment.fileName}`: Unknown extension. Only mp3 and wav are supported.".toMono()
-            }
-            if (attachment.size > 1_000_000) {
-                return@map "Could not upload file `${attachment.fileName}`: File size cannot exceed 1MB".toMono()
-            }
+                val fileName = attachment.fileName
+                val fileExtension = attachment.fileExtension
+                val size = attachment.size
 
-            val audioName = stripExtension(attachment.fileName)
+                val audioName = stripExtension(fileName)
 
-            return@map fileService.getAudioFilePathByName(attachment.fileName)
-                .hasElement()
-                .flatMap { exists ->
-                    if (exists) return@flatMap "File `${audioName}` already exists".toMono()
+                logger.info("Processing attachment {}", fileName)
 
-                    return@flatMap attachment.toInputStream()
-                        .flatMap { stream -> fileService.saveAudioFile(attachment.fileName, stream) }
-                        .flatMap { "Saved audio file `${audioName}`".toMono() }
+                if (fileExtension != "wav" && fileExtension != "mp3") {
+                    return@flatMap "Could not upload file `${fileName}`: Unknown extension. Only mp3 and wav are supported.".toMono()
                 }
-        }
+                if (size > 1_000_000) {
+                    return@flatMap "Could not upload file `${fileName}`: File size cannot exceed 1MB".toMono()
+                }
+
+                return@flatMap fileService.audioFileExists(guild.id, audioName)
+                    .flatMap exists@{ exists ->
+                        if (exists) return@exists "Audio `${audioName}` already exists".toMono()
+
+                        return@exists fileService.saveAudioFile(
+                            guild.id,
+                            audioName,
+                            fileExtension,
+                            attachment.toBytes(),
+                            event.author.id
+                        ).flatMap { "Saved audio `${audioName}`".toMono() }
+                    }
+            }
+
+    private fun onGuildVoiceJoin(event: GuildVoiceJoinEvent) {
+        if (event.member.user.isBot) return
+
+        val userId = event.member.user.id
+        val voiceChannel = event.channelJoined
+        val guildId = event.guild.id
+
+        memberRepository.findOne(guildId, userId)
+            .flatMap { member ->
+                val entrySound = member.entrySound ?: return@flatMap Mono.just(false)
+                return@flatMap fileService.audioFileExists(guildId, entrySound).flatMap exists@{ exists ->
+                    if (exists) {
+                        logger.debug("Playing user {} entry sound in channel #{}", entrySound, voiceChannel.name)
+                        return@exists playerService.playAudioInChannel(entrySound, voiceChannel).map { true }
+                    }
+                    logger.warn("User {} has an unknown entry sound: {}", event.member.user, entrySound)
+                    return@exists Mono.just(false)
+                }
+            }.subscribe()
+    }
+
+    private fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent) {
+        if (event.member.user.isBot) return
+
+        val userId = event.member.user.id
+        val voiceChannel = event.channelLeft
+        val guildId = event.guild.id
+
+        memberRepository.findOne(guildId, userId)
+            .flatMap { member ->
+                val exitSound = member.exitSound ?: return@flatMap Mono.just(false)
+                return@flatMap fileService.audioFileExists(guildId, exitSound).flatMap exists@{ exists ->
+                    if (exists) {
+                        return@exists playerService.playAudioInChannel(exitSound, voiceChannel).map { true }
+                    }
+                    logger.warn("User {} has an unknown exit sound: {}", event.member.user, exitSound)
+                    return@exists Mono.just(false)
+                }
+            }.subscribe()
     }
 
     @PreDestroy

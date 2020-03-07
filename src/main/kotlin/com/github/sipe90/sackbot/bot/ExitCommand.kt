@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
-class EntryCommand(private val fileService: AudioFileService, private val memberRepository: MemberRepository) :
+class ExitCommand(private val fileService: AudioFileService, private val memberRepository: MemberRepository) :
     BotCommand {
 
-    override val commandPrefix = "entry"
+    override val commandPrefix = "exit"
 
     override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
         val guild = getApplicableGuild(initiator)
@@ -28,19 +28,19 @@ class EntryCommand(private val fileService: AudioFileService, private val member
         }
 
         memberRepository.findOrCreate(guild.id, user.id).flatMap { member ->
-            if (command.size == 1) return@flatMap if (member.entrySound != null) "Your entry sound is set to `${member.entrySound}`".toMono() else
-                "Your entry sound has not yet been set".toMono()
+            if (command.size == 1) return@flatMap if (member.exitSound != null) "Your exit sound is set to `${member.exitSound}`".toMono() else
+                "Your exit sound has not yet been set".toMono()
             val audioName = command[1]
             if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName).flatMap exists@{
                 if (it) {
-                    member.entrySound = audioName
+                    member.exitSound = audioName
                     return@exists memberRepository.updateMember(member)
-                        .flatMap { "Your entry sound has been changed to `${member.entrySound}`".toMono() }
+                        .flatMap { "Your exit sound has been changed to `${member.entrySound}`".toMono() }
                 } else {
                     "Could not find any sounds with given name".toMono()
                 }
             }
-            "Invalid entry command.".toMono()
+            "Invalid exit command.".toMono()
         }
     }
 }

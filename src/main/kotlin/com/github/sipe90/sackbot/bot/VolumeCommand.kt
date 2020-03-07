@@ -3,33 +3,33 @@ package com.github.sipe90.sackbot.bot
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.service.AudioPlayerService
+import com.github.sipe90.sackbot.util.getApplicableGuild
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
-class VolumeCommand(private val config: BotConfig, private val playerService: AudioPlayerService) :
-    AbstractBotCommand() {
+class VolumeCommand(private val config: BotConfig, private val playerService: AudioPlayerService) : BotCommand {
 
     override val commandPrefix = "volume"
 
-    override fun process(initiator: Event, vararg command: String): Mono<String> {
+    override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
         val guild = getApplicableGuild(initiator)
-            ?: return "Could not find guild or voice channel to perform the action".toMono()
+            ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
         if (command.size == 1) {
             val volume = playerService.getVolume(guild.id)
-            return "Current volume is set to `$volume%`".toMono()
+            return@defer "Current volume is set to `$volume%`".toMono()
         }
 
-        if (command.size != 2) return helpText().toMono()
+        if (command.size != 2) return@defer helpText().toMono()
 
         val volumeStr = command[1]
-        return try {
+        try {
             val volume = volumeStr.toInt()
                 .coerceAtLeast(1)
                 .coerceAtMost(100)
-            
+
             playerService.setVolume(guild.id, volume)
             "Setting volume to `$volume%`".toMono()
         } catch (e: NumberFormatException) {
