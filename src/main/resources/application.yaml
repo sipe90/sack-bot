@@ -10,3 +10,24 @@ sackbot:
       commandPrefix: /
   nitrite:
     dbFile: ${user.home}${file.separator}sackbot${file.separator}database.db
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          discord:
+            clientId: discord-app-client-id
+            clientSecret: discord-app-client-secret
+            authorizationGrantType: authorization_code
+            redirectUri: '{baseUrl}/login/oauth2/code/{registrationId}'
+            scope:
+              - identify
+              - guilds
+        provider:
+          discord:
+            authorizationUri: https://discordapp.com/api/oauth2/authorize
+            tokenUri: https://discordapp.com/api/oauth2/token
+            userInfoUri: https://discordapp.com/api/users/@me
+            userInfoAuthenticationMethod: header
+            userNameAttribute: username
