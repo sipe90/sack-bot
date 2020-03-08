@@ -9,7 +9,11 @@ interface AudioPlayerService {
 
     fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean>
 
+    fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Boolean>
+
     fun setVolume(guildId: String, volume: Int)
 
     fun getVolume(guildId: String): Int?
+
+    fun playUrlInChannel(url: String, voiceChannel: VoiceChannel): Mono<Boolean>
 }

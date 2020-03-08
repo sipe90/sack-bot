@@ -15,6 +15,7 @@ class HelpCommand(private val config: BotConfig) : BotCommand {
             .append("```")
             .append(helpLine("help", "Prints this text"))
             .append(helpLine("list", "Lists all playable sound names"))
+            .append(helpLine("url <url>", "Play audio from a web source"))
             .append(helpLine("random", "Play a random sound"))
             .append(helpLine("say <text>", "Text to speech"))
             .append(

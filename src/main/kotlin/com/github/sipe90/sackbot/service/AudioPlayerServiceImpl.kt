@@ -43,8 +43,16 @@ class AudioPlayerServiceImpl(private val tts: Text2Speech, nitriteManager: Nitri
         return playInChannel("${voiceChannel.guild.id}:${name}", voiceChannel)
     }
 
+    override fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Boolean> {
+        return tts.randomPhraseToSpeech().flatMap { playInChannel(it.toString(), voiceChannel) }
+    }
+
     override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean> {
         return tts.textToSpeech(text).flatMap { playInChannel(it.toString(), voiceChannel) }
+    }
+
+    override fun playUrlInChannel(url: String, voiceChannel: VoiceChannel): Mono<Boolean> {
+        return playInChannel(url, voiceChannel)
     }
 
     private fun playInChannel(identifier: String, voiceChannel: VoiceChannel): Mono<Boolean> {

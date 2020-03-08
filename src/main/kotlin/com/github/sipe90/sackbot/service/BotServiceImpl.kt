@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
-import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ShutdownEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
@@ -27,6 +26,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toFlux
 import java.util.EnumSet
 import javax.annotation.PreDestroy
 
@@ -135,7 +135,7 @@ final class BotServiceImpl(
     }
 
     private fun handleUploads(event: PrivateMessageReceivedEvent): Flux<String> =
-        Flux.from<Message.Attachment> { event.message.attachments }
+        event.message.attachments.toFlux()
             .flatMap flatMap@{ attachment ->
                 val guild = getApplicableGuild(event)
                     ?: return@flatMap "Could not find guild or voice channel to perform the action".toMono()

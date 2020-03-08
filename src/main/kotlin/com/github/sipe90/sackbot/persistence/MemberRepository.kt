@@ -9,13 +9,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toFlux
 
 @Repository
 class MemberRepository(val repository: ObjectRepository<Member>) {
 
     final val logger = LoggerFactory.getLogger(javaClass)
 
-    fun getAll(guildId: String): Flux<Member> = Flux.from { repository.find(Member::guildId eq guildId) }
+    fun getAll(guildId: String): Flux<Member> = repository.find(Member::guildId eq guildId).toFlux()
 
     fun findOne(guildId: String, userId: String): Mono<Member> = Mono.defer {
         repository.find((Member::guildId eq guildId) and (Member::userId eq userId)).toMono()

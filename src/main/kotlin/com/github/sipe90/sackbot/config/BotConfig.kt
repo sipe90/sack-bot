@@ -9,7 +9,8 @@ import org.springframework.boot.context.properties.ConstructorBinding
 data class BotConfig(
     val token: String,
     val activity: ActivityConfig,
-    val chat: ChatConfig
+    val chat: ChatConfig,
+    val tts: TTSConfig
 ) {
 
     data class ActivityConfig(
@@ -32,5 +33,9 @@ data class BotConfig(
         val enabled: Boolean,
         val allowDm: Boolean,
         val commandPrefix: String
+    )
+
+    data class TTSConfig(
+        val phrasesFile: String
     )
 }

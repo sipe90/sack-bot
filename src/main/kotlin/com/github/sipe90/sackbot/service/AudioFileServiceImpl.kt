@@ -21,9 +21,7 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
         return findAudioFile(guildId, name).map { true }.defaultIfEmpty(false)
     }
 
-    override fun getAudioFiles(guildId: String): Flux<AudioFile> {
-        return audioFileRepository.getAll(guildId)
-    }
+    override fun getAudioFiles(guildId: String): Flux<AudioFile> = audioFileRepository.getAll(guildId)
 
     override fun saveAudioFile(
         guildId: String,

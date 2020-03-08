@@ -8,6 +8,7 @@ import org.dizitart.no2.objects.ObjectRepository
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toFlux
 
 @Repository
 class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
@@ -20,7 +21,7 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
             }
     }
 
-    fun getAll(guildId: String): Flux<AudioFile> = Flux.from { repository.find(AudioFile::guildId eq guildId) }
+    fun getAll(guildId: String): Flux<AudioFile> = repository.find(AudioFile::guildId eq guildId).toFlux()
 
     fun saveAudioFile(audioFile: AudioFile): Mono<AudioFile> = Mono.defer {
         repository.insert(audioFile)

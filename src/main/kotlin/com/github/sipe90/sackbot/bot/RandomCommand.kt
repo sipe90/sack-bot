@@ -24,8 +24,6 @@ class RandomCommand(private val fileService: AudioFileService, private val playe
             .map { (1..it).random() }
             .flatMap { paths.take(it).last() }
             .flatMap { audioFile -> playerService.playAudioInChannel(audioFile.name, voiceChannel).map { audioFile } }
-            .flatMap {
-                "Playing random sound file `${it.name}` in voice channel `#${voiceChannel.name}`".toMono()
-            }
+            .map { "Playing random sound file `${it.name}` in voice channel `#${voiceChannel.name}`" }
     }
 }

@@ -17,7 +17,9 @@ class SayCommand(private val config: BotConfig, private val playerService: Audio
         val voiceChannel = getVoiceChannel(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
         if (command.size < 2) {
-            return@defer "Invalid say command. Correct format is `${config.chat.commandPrefix}say <text>`".toMono()
+            return@defer playerService.playRandomTtsInChannel(voiceChannel)
+                .map { "Playing random text to speech phrase in voice channel `#${voiceChannel.name}`" }
+                .switchIfEmpty("Invalid say command. Correct format is `${config.chat.commandPrefix}say <text>`".toMono())
         }
 
         val text = command.slice(1 until command.size).joinToString(" ")
