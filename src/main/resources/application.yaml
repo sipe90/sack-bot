@@ -9,6 +9,7 @@ sackbot:
       allowDm: true
       commandPrefix: /
     tts:
+      voice:
       phrasesFile: ${user.home}${file.separator}sackbot${file.separator}phrases.txt
   nitrite:
     dbFile: ${user.home}${file.separator}sackbot${file.separator}database.db
