@@ -11,6 +11,7 @@ import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.util.getApplicableGuild
 import com.github.sipe90.sackbot.util.stripExtension
+import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
@@ -80,6 +81,7 @@ final class BotServiceImpl(
 
         jda = JDABuilder(config.token)
             .setEventManager(eventManager)
+            .setAudioSendFactory(NativeAudioSendFactory())
             .setStatus(OnlineStatus.DO_NOT_DISTURB)
             .setEnabledCacheFlags(EnumSet.of(CacheFlag.VOICE_STATE))
             .build()
