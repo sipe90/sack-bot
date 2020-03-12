@@ -154,7 +154,7 @@ final class BotServiceImpl(
                     return@flatMap "Could not upload file `${fileName}`: Unknown extension. Only mp3 and wav are supported.".toMono()
                 }
                 if (size > config.upload.sizeLimit) {
-                    return@flatMap "Could not upload file `${fileName}`: File size cannot exceed `${config.upload.sizeLimit}B`".toMono()
+                    return@flatMap "Could not upload file `${fileName}`: File size cannot exceed `${config.upload.sizeLimit / 1000}kB`".toMono()
                 }
 
 
