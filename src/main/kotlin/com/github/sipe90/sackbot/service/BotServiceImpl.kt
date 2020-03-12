@@ -163,7 +163,7 @@ final class BotServiceImpl(
                         if (!config.upload.overrideExisting) return@exists "Audio `${audioName}` already exists".toMono()
 
                         return@exists fileService.updateAudioFile(it, attachment.toBytes(), event.author.id)
-                            .map { "Saved audio file `${audioName}`" }
+                            .map { "Updated audio file `${audioName}`" }
                     }.switchIfEmpty(
                         fileService.saveAudioFile(
                             guild.id,
@@ -171,7 +171,7 @@ final class BotServiceImpl(
                             fileExtension,
                             attachment.toBytes(),
                             event.author.id
-                        ).map { "Updated audio file `${audioName}`" }
+                        ).map { "Saved audio file `${audioName}`" }
                     )
             }
 
