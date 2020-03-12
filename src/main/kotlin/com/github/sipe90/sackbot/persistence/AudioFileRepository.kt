@@ -27,4 +27,15 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
         repository.insert(audioFile)
         Mono.just(audioFile)
     }
+
+    fun updateAudioFile(audioFile: AudioFile): Mono<Boolean> = Mono.defer {
+        (repository.update(
+            findMemberFilter(audioFile.guildId, audioFile.name),
+            audioFile,
+            false
+        ).affectedCount > 0).toMono()
+    }
+
+    private fun findMemberFilter(guildId: String, name: String) =
+        (AudioFile::guildId eq guildId) and (AudioFile::name eq name)
 }

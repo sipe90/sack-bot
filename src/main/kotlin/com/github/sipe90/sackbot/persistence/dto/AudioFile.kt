@@ -15,5 +15,7 @@ data class AudioFile(
     val guildId: String,
     val createdBy: String,
     val created: Instant,
-    val data: ByteArray
+    var modifiedBy: String?,
+    var modified: Instant?,
+    var data: ByteArray
 )

@@ -153,22 +153,26 @@ final class BotServiceImpl(
                 if (fileExtension != "wav" && fileExtension != "mp3") {
                     return@flatMap "Could not upload file `${fileName}`: Unknown extension. Only mp3 and wav are supported.".toMono()
                 }
-                if (size > 1_000_000) {
-                    return@flatMap "Could not upload file `${fileName}`: File size cannot exceed 1MB".toMono()
+                if (size > config.upload.sizeLimit) {
+                    return@flatMap "Could not upload file `${fileName}`: File size cannot exceed `${config.upload.sizeLimit}B`".toMono()
                 }
 
-                return@flatMap fileService.audioFileExists(guild.id, audioName)
-                    .flatMap exists@{ exists ->
-                        if (exists) return@exists "Audio `${audioName}` already exists".toMono()
 
-                        return@exists fileService.saveAudioFile(
+                return@flatMap fileService.findAudioFile(guild.id, audioName)
+                    .flatMap exists@{
+                        if (!config.upload.overrideExisting) return@exists "Audio `${audioName}` already exists".toMono()
+
+                        return@exists fileService.updateAudioFile(it, attachment.toBytes(), event.author.id)
+                            .map { "Saved audio file `${audioName}`" }
+                    }.switchIfEmpty(
+                        fileService.saveAudioFile(
                             guild.id,
                             audioName,
                             fileExtension,
                             attachment.toBytes(),
                             event.author.id
-                        ).flatMap { "Saved audio `${audioName}`".toMono() }
-                    }
+                        ).map { "Updated audio file `${audioName}`" }
+                    )
             }
 
     private fun onGuildVoiceJoin(event: GuildVoiceJoinEvent) {

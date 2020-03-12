@@ -10,7 +10,8 @@ data class BotConfig(
     val token: String,
     val activity: ActivityConfig,
     val chat: ChatConfig,
-    val tts: TTSConfig
+    val tts: TTSConfig,
+    val upload: UploadConfig
 ) {
 
     data class ActivityConfig(
@@ -38,5 +39,10 @@ data class BotConfig(
     data class TTSConfig(
         val voice: String,
         val phrasesFile: String
+    )
+
+    data class UploadConfig(
+        val sizeLimit: Int,
+        val overrideExisting: Boolean
     )
 }

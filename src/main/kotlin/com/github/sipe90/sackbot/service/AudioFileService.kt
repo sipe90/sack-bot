@@ -14,9 +14,11 @@ interface AudioFileService {
         guildId: String,
         name: String,
         extension: String?,
-        bytes: Flux<Byte>,
+        data: Flux<Byte>,
         userId: String
     ): Mono<AudioFile>
+
+    fun updateAudioFile(audioFile: AudioFile, data: Flux<Byte>, userId: String): Mono<Boolean>
 
     fun findAudioFile(guildId: String, name: String): Mono<AudioFile>
 }

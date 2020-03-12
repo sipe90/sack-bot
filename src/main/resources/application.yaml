@@ -11,6 +11,9 @@ sackbot:
     tts:
       voice:
       phrasesFile: ${user.home}${file.separator}sackbot${file.separator}phrases.txt
+    upload:
+      sizeLimit: 100000
+      overrideExisting: true
   nitrite:
     dbFile: ${user.home}${file.separator}sackbot${file.separator}database.db
 

@@ -27,10 +27,10 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
         guildId: String,
         name: String,
         extension: String?,
-        bytes: Flux<Byte>,
+        data: Flux<Byte>,
         userId: String
     ): Mono<AudioFile> =
-        bytes.collectList().flatMap {
+        data.collectList().flatMap {
             audioFileRepository.saveAudioFile(
                 AudioFile(
                     name,
@@ -38,8 +38,18 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
                     guildId,
                     userId,
                     Instant.now(),
+                    null,
+                    null,
                     it.toByteArray()
                 )
             )
+        }
+
+    override fun updateAudioFile(audioFile: AudioFile, data: Flux<Byte>, userId: String): Mono<Boolean> =
+        data.collectList().flatMap {
+            audioFile.data = it.toByteArray()
+            audioFile.modified = Instant.now()
+            audioFile.modifiedBy = userId
+            audioFileRepository.updateAudioFile(audioFile)
         }
 }
