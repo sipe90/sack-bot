@@ -1,4 +1,4 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.SackException
@@ -31,15 +31,16 @@ class EntryCommand(private val fileService: AudioFileService, private val member
             if (command.size == 1) return@flatMap if (member.entrySound != null) "Your entry sound is set to `${member.entrySound}`".toMono() else
                 "Your entry sound has not yet been set".toMono()
             val audioName = command[1]
-            if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName).flatMap exists@{
-                if (it) {
-                    member.entrySound = audioName
-                    return@exists memberRepository.updateMember(member)
-                        .flatMap { "Your entry sound has been changed to `${member.entrySound}`".toMono() }
-                } else {
-                    "Could not find any sounds with given name".toMono()
+            if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName, user.id)
+                .flatMap exists@{
+                    if (it) {
+                        member.entrySound = audioName
+                        return@exists memberRepository.updateMember(member)
+                            .flatMap { "Your entry sound has been changed to `${member.entrySound}`".toMono() }
+                    } else {
+                        "Could not find any sounds with given name".toMono()
+                    }
                 }
-            }
             "Invalid entry command.".toMono()
         }
     }

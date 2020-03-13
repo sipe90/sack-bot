@@ -1,4 +1,4 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig

@@ -2,6 +2,7 @@ package com.github.sipe90.sackbot.util
 
 import com.github.sipe90.sackbot.SackException
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.VoiceChannel
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -23,5 +24,12 @@ fun getApplicableGuild(event: Event): Guild? =
                 guild.voiceChannels.flatMap { vc -> vc.members }.map { m -> m.id }.contains(event.author.id)
             }
         is GuildMessageReceivedEvent -> event.guild
+        else -> throw SackException("Invalid event")
+    }
+
+fun getUser(event: Event): User? =
+    when (event) {
+        is PrivateMessageReceivedEvent -> event.author
+        is GuildMessageReceivedEvent -> event.member?.user
         else -> throw SackException("Invalid event")
     }

@@ -1,5 +1,6 @@
 package com.github.sipe90.sackbot.config
 
+import com.github.sipe90.sackbot.auth.DiscordUser
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
@@ -11,7 +12,6 @@ import org.springframework.security.oauth2.client.userinfo.ReactiveOAuth2UserSer
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction.oauth2AuthorizedClient
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers
@@ -64,7 +64,7 @@ class SecurityConfig {
                     val attributes = HashMap<String, Any>(user.attributes)
                     attributes["guilds"] = it
 
-                    DefaultOAuth2User(
+                    DiscordUser(
                         user.authorities,
                         Collections.unmodifiableMap(attributes),
                         client.clientRegistration.providerDetails.userInfoEndpoint.userNameAttributeName

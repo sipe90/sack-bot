@@ -1,4 +1,4 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import net.dv8tion.jda.api.events.Event
 import reactor.core.publisher.Mono

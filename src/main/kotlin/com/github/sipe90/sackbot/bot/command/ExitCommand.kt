@@ -1,4 +1,4 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.SackException
@@ -31,15 +31,16 @@ class ExitCommand(private val fileService: AudioFileService, private val memberR
             if (command.size == 1) return@flatMap if (member.exitSound != null) "Your exit sound is set to `${member.exitSound}`".toMono() else
                 "Your exit sound has not yet been set".toMono()
             val audioName = command[1]
-            if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName).flatMap exists@{
-                if (it) {
-                    member.exitSound = audioName
-                    return@exists memberRepository.updateMember(member)
-                        .flatMap { "Your exit sound has been changed to `${member.entrySound}`".toMono() }
-                } else {
-                    "Could not find any sounds with given name".toMono()
+            if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName, user.id)
+                .flatMap exists@{
+                    if (it) {
+                        member.exitSound = audioName
+                        return@exists memberRepository.updateMember(member)
+                            .flatMap { "Your exit sound has been changed to `${member.entrySound}`".toMono() }
+                    } else {
+                        "Could not find any sounds with given name".toMono()
+                    }
                 }
-            }
             "Invalid exit command.".toMono()
         }
     }

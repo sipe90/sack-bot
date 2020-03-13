@@ -1,36 +1,34 @@
 package com.github.sipe90.sackbot.controller
 
+import com.fasterxml.jackson.annotation.JsonView
+import com.github.sipe90.sackbot.auth.DiscordUser
+import com.github.sipe90.sackbot.persistence.dto.API
 import com.github.sipe90.sackbot.persistence.dto.AudioFile
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
-import com.github.sipe90.sackbot.service.BotService
+import com.github.sipe90.sackbot.service.JDAService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
 class BotCommandController(
     private val audioFileService: AudioFileService,
     private val audioPlayerService: AudioPlayerService,
-    private val botService: BotService
+    private val jdaService: JDAService
 ) {
 
-    /*
     @GetMapping("/me")
-    fun userInfo(@AuthenticationPrincipal principal: OAuth2User): Mono<OAuth2User> {
+    fun userInfo(@AuthenticationPrincipal principal: DiscordUser): Mono<DiscordUser> {
         return Mono.just(principal)
     }
-     */
 
     @GetMapping("/sounds")
-    fun getSoundsList(@AuthenticationPrincipal principal: OAuth2User): Flux<AudioFile> {
-        return audioFileService.getAudioFiles("")
-    }
-
-    @GetMapping("/guilds")
-    fun getGuilds(@AuthenticationPrincipal principal: OAuth2User): Flux<AudioFile> {
-        return audioFileService.getAudioFiles("")
+    @JsonView(API::class)
+    fun getSoundsList(@RequestParam guildId: String, @AuthenticationPrincipal principal: DiscordUser): Flux<AudioFile> {
+        return audioFileService.getAudioFiles(guildId, principal.getId())
     }
 }
