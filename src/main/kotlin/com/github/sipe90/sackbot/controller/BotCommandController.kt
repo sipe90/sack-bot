@@ -22,6 +22,7 @@ class BotCommandController(
 ) {
 
     @GetMapping("/me")
+    @JsonView(API::class)
     fun userInfo(@AuthenticationPrincipal principal: DiscordUser): Mono<DiscordUser> {
         return Mono.just(principal)
     }
