@@ -35,7 +35,7 @@ class ExitCommand(private val fileService: AudioFileService, private val memberR
                 .flatMap exists@{
                     if (it) {
                         member.exitSound = audioName
-                        return@exists memberRepository.updateMember(member)
+                        return@exists memberRepository.updateMember(member, user.id)
                             .flatMap { "Your exit sound has been changed to `${member.entrySound}`".toMono() }
                     } else {
                         "Could not find any sounds with given name".toMono()

@@ -1,6 +1,9 @@
 package com.github.sipe90.sackbot.config
 
 import com.github.sipe90.sackbot.auth.DiscordUser
+import com.github.sipe90.sackbot.persistence.MemberRepository
+import com.github.sipe90.sackbot.service.JDAService
+import net.dv8tion.jda.api.entities.Guild
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
@@ -47,18 +50,28 @@ class SecurityConfig {
     }
 
     @Bean
-    fun oauth2UserService(rest: WebClient): ReactiveOAuth2UserService<OAuth2UserRequest, OAuth2User> {
+    fun oauth2UserService(
+        rest: WebClient,
+        jdaService: JDAService,
+        memberRepository: MemberRepository
+    ): ReactiveOAuth2UserService<OAuth2UserRequest, OAuth2User> {
         val delegate = DefaultOAuth2UserService()
         return ReactiveOAuth2UserService { request: OAuth2UserRequest ->
             val user = delegate.loadUser(request)
             val client = OAuth2AuthorizedClient(request.clientRegistration, user.name, request.accessToken)
 
+            val userId = user.attributes["id"] as String
+            val mutualGuilds = jdaService.getMutualGuilds(userId).map(Guild::getName)
+
             return@ReactiveOAuth2UserService rest
-                .get().uri("https://discordapp.com/api/users/@me/guilds")
+                .get()
+                .uri("https://discordapp.com/api/users/@me/guilds")
                 .attributes(oauth2AuthorizedClient(client))
                 .retrieve()
                 .bodyToFlux<Map<String, Any>>()
-                .map { it["id"] }
+                .map { it["id"] as String }
+                .filter { mutualGuilds.contains(it) }
+                .flatMap { memberRepository.findOrCreate(it, userId).map { _ -> it } }
                 .collectList()
                 .map {
                     val attributes = HashMap<String, Any>(user.attributes)

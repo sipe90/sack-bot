@@ -35,7 +35,7 @@ class EntryCommand(private val fileService: AudioFileService, private val member
                 .flatMap exists@{
                     if (it) {
                         member.entrySound = audioName
-                        return@exists memberRepository.updateMember(member)
+                        return@exists memberRepository.updateMember(member, user.id)
                             .flatMap { "Your entry sound has been changed to `${member.entrySound}`".toMono() }
                     } else {
                         "Could not find any sounds with given name".toMono()

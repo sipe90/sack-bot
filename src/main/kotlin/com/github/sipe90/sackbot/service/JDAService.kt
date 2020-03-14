@@ -51,8 +51,10 @@ class JDAService(
             .build()
     }
 
+    fun getMutualGuilds(userId: String) = jda.getMutualGuilds(jda.getUserById(userId))
+
     fun isMutualGuild(guildId: String, userId: String) =
-        jda.getMutualGuilds(jda.getUserById(userId)).any { it.id == guildId }
+        getMutualGuilds(userId).any { it.id == guildId }
 
     @PreDestroy
     fun cleanUp() {
