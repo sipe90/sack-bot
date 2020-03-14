@@ -57,10 +57,10 @@ final class MessageEventHandler(
 
     private fun processPrivateMessageEvent(event: PrivateMessageReceivedEvent): Mono<String> {
         if (event.author.isBot) return Mono.empty()
+        if (event.message.attachments.isNotEmpty()) return handleUploads(event).next()
         if (!event.message.contentRaw.startsWith(config.chat.commandPrefix)) {
             return helpCommand.process(event)
         }
-        if (event.message.attachments.isNotEmpty()) return handleUploads(event).next()
         return processCommand(event, event.message.contentRaw)
     }
 
