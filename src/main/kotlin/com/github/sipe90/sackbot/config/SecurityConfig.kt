@@ -1,5 +1,6 @@
 package com.github.sipe90.sackbot.config
 
+import com.github.sipe90.sackbot.auth.DiscordGuild
 import com.github.sipe90.sackbot.auth.DiscordUser
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.JDAService
@@ -20,7 +21,6 @@ import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToFlux
-import java.util.Collections
 
 @EnableWebFluxSecurity
 class SecurityConfig {
@@ -56,30 +56,27 @@ class SecurityConfig {
         memberRepository: MemberRepository
     ): ReactiveOAuth2UserService<OAuth2UserRequest, OAuth2User> {
         val delegate = DefaultOAuth2UserService()
-        return ReactiveOAuth2UserService { request: OAuth2UserRequest ->
+        return ReactiveOAuth2UserService { request ->
             val user = delegate.loadUser(request)
             val client = OAuth2AuthorizedClient(request.clientRegistration, user.name, request.accessToken)
+            val attributes = DiscordUser.Attributes.getForScopes(*request.accessToken.scopes.toTypedArray())
 
-            val userId = user.attributes["id"] as String
-            val mutualGuilds = jdaService.getMutualGuilds(userId).map(Guild::getName)
+            val userId = user.attributes[DiscordUser.Attributes.ID] as String
+            val mutualGuilds = jdaService.getMutualGuilds(userId).map(Guild::getId)
 
             return@ReactiveOAuth2UserService rest
                 .get()
                 .uri("https://discordapp.com/api/users/@me/guilds")
                 .attributes(oauth2AuthorizedClient(client))
                 .retrieve()
-                .bodyToFlux<Map<String, Any>>()
-                .map { it["id"] as String }
-                .filter { mutualGuilds.contains(it) }
-                .flatMap { memberRepository.findOrCreate(it, userId).map { _ -> it } }
+                .bodyToFlux<DiscordGuild>()
+                .filter { mutualGuilds.contains(it.id) }
+                .flatMap { memberRepository.findOrCreate(it.id, userId).map { _ -> it } }
                 .collectList()
                 .map {
-                    val attributes = HashMap<String, Any>(user.attributes)
-                    attributes["guilds"] = it
-
                     DiscordUser(
                         user.authorities,
-                        Collections.unmodifiableMap(attributes),
+                        user.attributes.filterKeys(attributes::contains).plus(Pair("guilds", it)),
                         client.clientRegistration.providerDetails.userInfoEndpoint.userNameAttributeName
                     ) as OAuth2User
                 }

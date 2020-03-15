@@ -14,8 +14,8 @@ import java.time.Instant
 
 @Repository
 class MemberRepository(val repository: ObjectRepository<Member>) {
-
-    final val logger = LoggerFactory.getLogger(javaClass)
+    
+    private final val logger = LoggerFactory.getLogger(javaClass)
 
     fun getGuildMembers(guildId: String): Flux<Member> = repository.find(Member::guildId eq guildId).toFlux()
 
@@ -36,18 +36,7 @@ class MemberRepository(val repository: ObjectRepository<Member>) {
     }
 
     fun createMember(guildId: String, userId: String): Mono<Member> =
-        insertMember(
-            Member(
-                guildId,
-                userId,
-                null,
-                null,
-                "system",
-                Instant.now(),
-                null,
-                null
-            )
-        )
+        insertMember(newMember(guildId, userId))
 
     fun updateMember(member: Member, userId: String): Mono<Member> = Mono.fromCallable {
         logger.trace("Updating member: {}", member)
@@ -65,6 +54,18 @@ class MemberRepository(val repository: ObjectRepository<Member>) {
         repository.insert(member)
         member
     }
+
+    private fun newMember(guildId: String, userId: String) =
+        Member(
+            guildId,
+            userId,
+            null,
+            null,
+            "system",
+            Instant.now(),
+            null,
+            null
+        )
 
     private fun findMemberFilter(guildId: String, userId: String) =
         (Member::guildId eq guildId) and (Member::userId eq userId)
