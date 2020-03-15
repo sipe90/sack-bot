@@ -76,7 +76,8 @@ class SecurityConfig {
                 .map {
                     DiscordUser(
                         user.authorities,
-                        user.attributes.filterKeys(attributes::contains).plus(Pair("guilds", it))
+                        user.attributes.filterKeys(attributes::contains)
+                            .plus("guilds" to it)
                     )
                 }
         }
