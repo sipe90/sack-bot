@@ -1,16 +1,15 @@
 package com.github.sipe90.sackbot.auth
 
 import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User
+import org.springframework.security.oauth2.core.user.OAuth2User
 
 /**
  * https://discordapp.com/developers/docs/resources/user#user-object
  */
 class DiscordUser(
-    authorities: Collection<GrantedAuthority>,
-    attributes: Map<String, Any>,
-    nameAttributeKey: String
-) : DefaultOAuth2User(authorities, attributes, nameAttributeKey) {
+    private val authorities: Collection<GrantedAuthority>,
+    private val attributes: Map<String, Any>
+) : OAuth2User {
 
     object Attributes {
         const val ID = "id"
@@ -50,9 +49,17 @@ class DiscordUser(
         fun getForScopes(vararg scopes: String): List<String> = scopes.flatMap(this::getForScope)
     }
 
-    // Identity scope
+    override fun getAuthorities(): Collection<GrantedAuthority> {
+        return authorities
+    }
+
+    override fun getAttributes(): Map<String, Any> {
+        return attributes
+    }
 
     override fun getName() = getUsername()
+
+    // Identity scope
 
     fun getId(): String = attributes[Attributes.ID] as String
     fun getUsername(): String = attributes[Attributes.USERNAME] as String

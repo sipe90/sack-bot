@@ -76,9 +76,8 @@ class SecurityConfig {
                 .map {
                     DiscordUser(
                         user.authorities,
-                        user.attributes.filterKeys(attributes::contains).plus(Pair("guilds", it)),
-                        client.clientRegistration.providerDetails.userInfoEndpoint.userNameAttributeName
-                    ) as OAuth2User
+                        user.attributes.filterKeys(attributes::contains).plus(Pair("guilds", it))
+                    )
                 }
         }
     }
