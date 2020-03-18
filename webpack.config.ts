@@ -4,7 +4,6 @@ import path from 'path'
 import { Configuration, DefinePlugin } from 'webpack'
 
 const SRC_ROOT = path.resolve(__dirname, 'src', 'main', 'webapp')
-const RES_ROOT = path.resolve(__dirname, 'src', 'main', 'resources', 'static')
 const DEST = path.resolve(__dirname, 'build', 'resources', 'main', 'static')
 
 const config: Configuration = {
@@ -51,8 +50,8 @@ const config: Configuration = {
     plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
-            template: path.resolve(RES_ROOT, 'index.html'),
-            favicon: path.resolve(RES_ROOT, 'favicon.ico')
+            template: path.resolve(SRC_ROOT, 'index.html'),
+            favicon: path.resolve(SRC_ROOT, 'favicon.ico')
         }),
         new DefinePlugin({
             VERSION: JSON.stringify(process.env.npm_package_version)
