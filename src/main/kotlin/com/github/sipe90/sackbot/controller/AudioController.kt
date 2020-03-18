@@ -33,7 +33,7 @@ class AudioController(
         @RequestParam name: String,
         @AuthenticationPrincipal principal: DiscordUser
     ): Mono<Void> {
-        return audioPlayerService.playAudioForUser(principal.name, name).then()
+        return audioPlayerService.playAudioForUser(principal.getId(), name).then()
     }
 
     @GetMapping
