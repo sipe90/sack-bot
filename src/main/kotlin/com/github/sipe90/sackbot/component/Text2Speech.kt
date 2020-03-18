@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -25,13 +26,33 @@ class Text2Speech(config: BotConfig) {
     private final val phrases = ArrayList<String>()
 
     init {
+        val voice = config.tts.voice
+        val phrasesFile = config.tts.phrasesFile
+
         maryTts.locale = Locale.UK
 
-        val phrasesFile = config.tts.phrasesFile
+        if (StringUtils.isNotEmpty(voice)) {
+            if (!maryTts.availableVoices.contains(voice)) {
+                logger.warn("Invalid voice name given: {}. Available voices are: {}", voice, maryTts.availableVoices)
+                logger.info("Using default voice: {}", maryTts.voice)
+            } else {
+                maryTts.voice = voice
+            }
+        } else {
+            logger.info("Using default voice: {}", maryTts.voice)
+        }
+
         if (StringUtils.isNotEmpty(phrasesFile)) {
             val path = Paths.get(phrasesFile)
+            logger.info("Loading phrases from {}", phrasesFile)
             if (Files.isRegularFile(path) && Files.isReadable(path)) {
-                phrases.addAll(Files.readAllLines(path, StandardCharsets.UTF_8))
+                try {
+                    phrases.addAll(Files.readAllLines(path, StandardCharsets.UTF_8))
+                } catch (e: IOException) {
+                    logger.error("Failed to read phrases from file", e)
+                }
+            } else {
+                logger.error("Could not load phrases. Check the that the file exists and it is readable.")
             }
         }
     }

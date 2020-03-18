@@ -1,9 +1,9 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.service.AudioPlayerService
-import com.github.sipe90.sackbot.util.getApplicableGuild
+import com.github.sipe90.sackbot.util.getGuild
 import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
@@ -20,7 +20,7 @@ class UrlCommand(
     override fun canProcess(vararg command: String) = true
 
     override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
-        val guild = getApplicableGuild(initiator)
+        val guild = getGuild(initiator)
         val voiceChannel = getVoiceChannel(initiator)
 
         if (guild == null || voiceChannel == null) return@defer "Could not find guild or voice channel to perform the action".toMono()

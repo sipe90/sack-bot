@@ -1,10 +1,10 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.AudioFileService
-import com.github.sipe90.sackbot.util.getApplicableGuild
+import com.github.sipe90.sackbot.util.getGuild
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
@@ -18,7 +18,7 @@ class ExitCommand(private val fileService: AudioFileService, private val memberR
     override val commandPrefix = "exit"
 
     override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
-        val guild = getApplicableGuild(initiator)
+        val guild = getGuild(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
         val user = when (initiator) {
@@ -31,15 +31,16 @@ class ExitCommand(private val fileService: AudioFileService, private val memberR
             if (command.size == 1) return@flatMap if (member.exitSound != null) "Your exit sound is set to `${member.exitSound}`".toMono() else
                 "Your exit sound has not yet been set".toMono()
             val audioName = command[1]
-            if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName).flatMap exists@{
-                if (it) {
-                    member.exitSound = audioName
-                    return@exists memberRepository.updateMember(member)
-                        .flatMap { "Your exit sound has been changed to `${member.entrySound}`".toMono() }
-                } else {
-                    "Could not find any sounds with given name".toMono()
+            if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName, user.id)
+                .flatMap exists@{
+                    if (it) {
+                        member.exitSound = audioName
+                        return@exists memberRepository.updateMember(member, user.id)
+                            .flatMap { "Your exit sound has been changed to `${member.entrySound}`".toMono() }
+                    } else {
+                        "Could not find any sounds with given name".toMono()
+                    }
                 }
-            }
             "Invalid exit command.".toMono()
         }
     }

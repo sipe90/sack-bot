@@ -1,4 +1,4 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig
@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
-class SayCommand(private val config: BotConfig, private val playerService: AudioPlayerService) : BotCommand {
+class SayCommand(private val config: BotConfig, private val playerService: AudioPlayerService) :
+    BotCommand {
 
     override val commandPrefix = "say"
 

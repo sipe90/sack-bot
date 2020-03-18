@@ -1,6 +1,5 @@
 package com.github.sipe90.sackbot.persistence
 
-import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.persistence.dto.Member
 import org.dizitart.kno2.filters.and
 import org.dizitart.kno2.filters.eq
@@ -10,13 +9,17 @@ import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
+import reactor.core.publisher.toMono
+import java.time.Instant
 
 @Repository
 class MemberRepository(val repository: ObjectRepository<Member>) {
+    
+    private final val logger = LoggerFactory.getLogger(javaClass)
 
-    final val logger = LoggerFactory.getLogger(javaClass)
+    fun getGuildMembers(guildId: String): Flux<Member> = repository.find(Member::guildId eq guildId).toFlux()
 
-    fun getAll(guildId: String): Flux<Member> = repository.find(Member::guildId eq guildId).toFlux()
+    fun getUserMembers(userId: String): Flux<Member> = repository.find(Member::userId eq userId).toFlux()
 
     fun findOne(guildId: String, userId: String): Mono<Member> = Mono.defer {
         repository.find((Member::guildId eq guildId) and (Member::userId eq userId)).toMono()
@@ -32,10 +35,13 @@ class MemberRepository(val repository: ObjectRepository<Member>) {
             }
     }
 
-    fun createMember(guildId: String, userId: String): Mono<Member> = insertMember(Member(guildId, userId, null, null))
+    fun createMember(guildId: String, userId: String): Mono<Member> =
+        insertMember(newMember(guildId, userId))
 
-    fun updateMember(member: Member): Mono<Member> = Mono.fromCallable {
-        logger.trace("Saving new member: {}", member)
+    fun updateMember(member: Member, userId: String): Mono<Member> = Mono.fromCallable {
+        logger.trace("Updating member: {}", member)
+        member.modified = Instant.now()
+        member.modifiedBy = userId
         repository.update(findMemberFilter(member.guildId, member.userId), member, false)
         member
     }
@@ -48,6 +54,18 @@ class MemberRepository(val repository: ObjectRepository<Member>) {
         repository.insert(member)
         member
     }
+
+    private fun newMember(guildId: String, userId: String) =
+        Member(
+            guildId,
+            userId,
+            null,
+            null,
+            "system",
+            Instant.now(),
+            null,
+            null
+        )
 
     private fun findMemberFilter(guildId: String, userId: String) =
         (Member::guildId eq guildId) and (Member::userId eq userId)

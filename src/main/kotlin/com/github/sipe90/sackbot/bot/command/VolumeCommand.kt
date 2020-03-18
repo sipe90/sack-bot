@@ -1,20 +1,21 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.service.AudioPlayerService
-import com.github.sipe90.sackbot.util.getApplicableGuild
+import com.github.sipe90.sackbot.util.getGuild
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
-class VolumeCommand(private val config: BotConfig, private val playerService: AudioPlayerService) : BotCommand {
+class VolumeCommand(private val config: BotConfig, private val playerService: AudioPlayerService) :
+    BotCommand {
 
     override val commandPrefix = "volume"
 
     override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
-        val guild = getApplicableGuild(initiator)
+        val guild = getGuild(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
         if (command.size == 1) {

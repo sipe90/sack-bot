@@ -1,4 +1,4 @@
-package com.github.sipe90.sackbot.bot
+package com.github.sipe90.sackbot.bot.command
 
 import com.github.sipe90.sackbot.config.BotConfig
 import net.dv8tion.jda.api.events.Event
