@@ -7,7 +7,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.io.ByteArrayOutputStream
 import java.time.Instant
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @Service
 class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository, private val jdaService: JDAService) :
@@ -17,6 +20,28 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository,
 
     override fun findAudioFile(guildId: String, name: String): Mono<AudioFile> {
         return audioFileRepository.findOne(guildId, name)
+    }
+
+    override fun zipFiles(guildId: String, userId: String): Mono<ByteArray> =
+        getAudioFiles(guildId, userId)
+            .collectList()
+            .map {
+                ByteArrayOutputStream().use { baos ->
+                    val zip = ZipOutputStream(baos)
+                    it.forEach {
+                        val entry = ZipEntry(entryName(it.name, it.extension))
+                        zip.putNextEntry(entry)
+                        zip.write(it.data)
+                        zip.closeEntry()
+                    }
+                    zip.finish()
+                    baos
+                }.toByteArray()
+            }
+
+    private fun entryName(fileName: String, extension: String?): String {
+        if (extension == null) return fileName
+        return "${fileName}.${extension}"
     }
 
     override fun audioFileExists(guildId: String, name: String, userId: String): Mono<Boolean> {

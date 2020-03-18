@@ -6,7 +6,7 @@ import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.bot.command.BotCommand
 import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.service.AudioFileService
-import com.github.sipe90.sackbot.util.getApplicableGuild
+import com.github.sipe90.sackbot.util.getGuild
 import com.github.sipe90.sackbot.util.stripExtension
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.GenericEvent
@@ -76,7 +76,7 @@ final class MessageEventHandler(
     private fun handleUploads(event: PrivateMessageReceivedEvent): Flux<String> =
         event.message.attachments.toFlux()
             .flatMap flatMap@{ attachment ->
-                val guild = getApplicableGuild(event)
+                val guild = getGuild(event)
                     ?: return@flatMap "Could not find guild or voice channel to perform the action".toMono()
 
                 val fileName = attachment.fileName

@@ -16,4 +16,8 @@ interface AudioPlayerService {
     fun getVolume(guildId: String): Int?
 
     fun playUrlInChannel(url: String, voiceChannel: VoiceChannel): Mono<Boolean>
+
+    fun playAudioForUser(userId: String, name: String): Mono<Boolean>
+
+    fun playAudioForUser(guildId: String, userId: String, name: String): Mono<Boolean>
 }

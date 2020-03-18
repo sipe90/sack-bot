@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ShutdownEvent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
@@ -51,9 +53,13 @@ class JDAService(
             .build()
     }
 
-    fun getMutualGuilds(userId: String) = jda.getMutualGuilds(jda.getUserById(userId))
+    fun getUser(userId: String): User? = jda.getUserById(userId)
 
-    fun isMutualGuild(guildId: String, userId: String) =
+    fun getGuild(guildId: String): Guild? = jda.getGuildById(guildId)
+
+    fun getMutualGuilds(userId: String): List<Guild> = jda.getMutualGuilds(jda.getUserById(userId))
+
+    fun isMutualGuild(guildId: String, userId: String): Boolean =
         getMutualGuilds(userId).any { it.id == guildId }
 
     @PreDestroy

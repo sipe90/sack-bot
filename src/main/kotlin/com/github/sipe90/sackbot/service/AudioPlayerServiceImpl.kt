@@ -2,6 +2,8 @@ package com.github.sipe90.sackbot.service
 
 import com.github.sipe90.sackbot.audio.NitriteAudioSourceManager
 import com.github.sipe90.sackbot.component.Text2Speech
+import com.github.sipe90.sackbot.exception.ValidationException
+import com.github.sipe90.sackbot.util.getVoiceChannel
 import com.sedmelluq.discord.lavaplayer.natives.ConnectorNativeLibLoader
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
@@ -21,7 +23,11 @@ import reactor.core.publisher.Mono
 import java.nio.ByteBuffer
 
 @Service
-class AudioPlayerServiceImpl(private val tts: Text2Speech, nitriteManager: NitriteAudioSourceManager) :
+class AudioPlayerServiceImpl(
+    private val jdaService: JDAService,
+    private val tts: Text2Speech,
+    nitriteManager: NitriteAudioSourceManager
+) :
     AudioPlayerService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
@@ -37,6 +43,20 @@ class AudioPlayerServiceImpl(private val tts: Text2Speech, nitriteManager: Nitri
         playerManager.registerSourceManager(BeamAudioSourceManager())
 
         ConnectorNativeLibLoader.loadConnectorLibrary()
+    }
+
+    override fun playAudioForUser(guildId: String, userId: String, name: String): Mono<Boolean> {
+        val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
+        val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
+        val voiceChannel =
+            getVoiceChannel(guild, user) ?: throw ValidationException("Could not find voice channel to play in")
+        return playAudioInChannel(name, voiceChannel)
+    }
+
+    override fun playAudioForUser(userId: String, name: String): Mono<Boolean> {
+        val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
+        val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
+        return playAudioInChannel(name, voiceChannel)
     }
 
     override fun playAudioInChannel(name: String, voiceChannel: VoiceChannel): Mono<Boolean> {
