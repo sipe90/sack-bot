@@ -42,7 +42,7 @@ class AudioController(
         @AuthenticationPrincipal principal: DiscordUser
     ): Mono<Void> {
         return audioFileService.randomAudioFile(guildId, principal.getId())
-            .flatMap { audioPlayerService.playAudioForUser(guildId, principal.getId()) }
+            .flatMap { audioPlayerService.playAudioForUser(guildId, principal.getId(), it.name) }
             .then()
     }
 
