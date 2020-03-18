@@ -22,5 +22,7 @@ interface AudioFileService {
 
     fun findAudioFile(guildId: String, name: String): Mono<AudioFile>
 
+    fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile>
+
     fun zipFiles(guildId: String, userId: String): Mono<ByteArray>
 }

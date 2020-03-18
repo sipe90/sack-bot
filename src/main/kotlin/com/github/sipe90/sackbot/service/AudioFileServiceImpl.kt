@@ -22,6 +22,14 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository,
         return audioFileRepository.findOne(guildId, name)
     }
 
+    override fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile> {
+        val paths = getAudioFiles(guildId, userId)
+        return paths
+            .count()
+            .map { (1..it).random() }
+            .flatMap { paths.take(it).last() }
+    }
+
     override fun zipFiles(guildId: String, userId: String): Mono<ByteArray> =
         getAudioFiles(guildId, userId)
             .collectList()
