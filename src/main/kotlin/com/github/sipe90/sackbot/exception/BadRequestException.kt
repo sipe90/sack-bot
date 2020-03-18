@@ -1,8 +1,7 @@
 package com.github.sipe90.sackbot.exception
 
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 
-open class BadRequestException(
-    override val message: String?,
-    override val httpStatus: HttpStatus = HttpStatus.BAD_REQUEST
-) : WebException(message)
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+open class BadRequestException(message: String?) : WebException(message)

@@ -85,8 +85,14 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository,
             )
         }
 
-    override fun updateAudioFile(audioFile: AudioFile, data: Flux<Byte>, userId: String): Mono<Boolean> =
+    override fun updateAudioFile(
+        audioFile: AudioFile,
+        extension: String,
+        data: Flux<Byte>,
+        userId: String
+    ): Mono<Boolean> =
         data.collectList().flatMap {
+            audioFile.extension = extension
             audioFile.data = it.toByteArray()
             audioFile.size = it.size
             audioFile.modified = Instant.now()

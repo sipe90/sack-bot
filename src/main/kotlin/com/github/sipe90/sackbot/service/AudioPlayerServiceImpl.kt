@@ -10,7 +10,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler
 import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
@@ -37,7 +36,6 @@ class AudioPlayerServiceImpl(
 
     init {
         playerManager.registerSourceManager(nitriteManager)
-        playerManager.registerSourceManager(LocalAudioSourceManager())
         playerManager.registerSourceManager(YoutubeAudioSourceManager())
         playerManager.registerSourceManager(TwitchStreamAudioSourceManager())
         playerManager.registerSourceManager(BeamAudioSourceManager())
@@ -105,7 +103,7 @@ class AudioPlayerServiceImpl(
                     sink.success(false)
                 },
                 {
-                    logger.error("Could not find track with identifier {}", identifier)
+                    logger.warn("Could not find track with identifier {}", identifier)
                     sink.success(false)
                 },
                 { e ->
