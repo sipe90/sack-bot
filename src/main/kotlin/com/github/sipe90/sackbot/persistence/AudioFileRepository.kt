@@ -17,7 +17,7 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
         repository.find((AudioFile::guildId eq guildId) and (AudioFile::name eq name)).toMono()
             .flatMap {
                 val file = it.firstOrDefault()
-                return@flatMap if (file == null) Mono.empty<AudioFile>() else Mono.just(file)
+                return@flatMap if (file == null) Mono.empty() else Mono.just(file)
             }
     }
 

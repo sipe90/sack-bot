@@ -1,21 +1,33 @@
 sackbot:
+  home: ${user.home}${file.separator}sackbot
   bot:
     token: bot_token
     activity:
       type: watching
-      text: hottest memes
+      text: the hottest memes
     chat:
       enabled: true
       allowDm: true
-      commandPrefix: /
+      commandPrefix: !
+    voices:
+      hgrunt:
+        enabled: false
+        path: ${sackbot.home}/voices/hgrunt
+        substitutions[,]: _comma
+        substitutions[.]: _period
+      vox:
+        enabled: false
+        path: ${sackbot.home}/voices/vox
+        substitutions[,]: _comma
+        substitutions[.]: _period
     tts:
       voice:
-      phrasesFile: ${user.home}${file.separator}sackbot${file.separator}phrases.txt
+      phrasesFile: ${sackbot.home}${file.separator}phrases.txt
     upload:
       sizeLimit: 1000000
       overrideExisting: true
   nitrite:
-    dbFile: ${user.home}${file.separator}sackbot${file.separator}database.db
+    dbFile: ${sackbot.home}${file.separator}database.db
 
 spring:
   security:

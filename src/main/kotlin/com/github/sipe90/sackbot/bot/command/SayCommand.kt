@@ -1,31 +1,47 @@
 package com.github.sipe90.sackbot.bot.command
 
-import club.minnced.jda.reactor.toMono
-import com.github.sipe90.sackbot.config.BotConfig
+import com.github.sipe90.sackbot.component.VoiceLines
 import com.github.sipe90.sackbot.service.AudioPlayerService
 import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
+import reactor.core.publisher.Flux
+import reactor.core.publisher.toFlux
+import reactor.core.publisher.toMono
 
 @Component
-class SayCommand(private val config: BotConfig, private val playerService: AudioPlayerService) :
+class SayCommand(
+    private val voiceLines: VoiceLines,
+    private val playerService: AudioPlayerService
+) :
     BotCommand {
 
     override val commandPrefix = "say"
 
-    override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
+    override fun process(initiator: Event, vararg command: String): Flux<String> = Flux.defer {
         val voiceChannel = getVoiceChannel(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
+        val voices = voiceLines.getVoices()
+        if (voices.isEmpty()) {
+            return@defer "There are no voices available!".toMono()
+        }
         if (command.size < 2) {
-            return@defer playerService.playRandomTtsInChannel(voiceChannel)
-                .map { "Playing random text to speech phrase in voice channel `#${voiceChannel.name}`" }
-                .switchIfEmpty("Invalid say command. Correct format is `${config.chat.commandPrefix}say <text>`".toMono())
+            return@defer "Available voices: `${voices.joinToString("`, `")}`".toMono()
+        }
+        val voice = command[1]
+        if (!voiceLines.voiceIsAvailable(voice)) {
+            return@defer "Invalid voice given. Available voices are: `${voices.joinToString(", ")}`".toMono()
+        }
+        if (command.size < 3) {
+            return@defer Flux.just("Available voice lines for voice `${voice}`:\n")
+                .concatWith(voiceLines.getVoiceLines(voice).chunked(100) {
+                    "```${it.joinToString("\n")}```"
+                }.toFlux())
         }
 
-        val text = command.slice(1 until command.size).joinToString(" ")
+        val lines = command.slice(2 until command.size)
 
-        playerService.playTtsInChannel(text, voiceChannel)
-            .flatMap { "Playing text to speech in voice channel `#${voiceChannel.name}`".toMono() }
+        playerService.playVoiceLinesInChannel(voice, lines, voiceChannel)
+            .map { "Playing ${lines.size} voice lines with voice `${voice}` on channel #${voiceChannel.name}" }
     }
 }

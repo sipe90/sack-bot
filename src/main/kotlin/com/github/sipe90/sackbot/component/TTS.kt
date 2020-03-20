@@ -17,7 +17,7 @@ import java.nio.file.Paths
 import java.util.Locale
 
 @Component
-class Text2Speech(config: BotConfig) {
+class TTS(config: BotConfig) {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
