@@ -19,11 +19,7 @@ class RandomCommand(private val fileService: AudioFileService, private val playe
         val voiceChannel = getVoiceChannel(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
         val user = getUser(initiator) ?: return@defer "Could not find user".toMono()
-        val paths = fileService.getAudioFiles(voiceChannel.guild.id, user.id)
-        paths
-            .count()
-            .map { (1..it).random() }
-            .flatMap { paths.take(it).last() }
+        return@defer fileService.randomAudioFile(voiceChannel.guild.id, user.id)
             .flatMap { audioFile -> playerService.playAudioInChannel(audioFile.name, voiceChannel).map { audioFile } }
             .map { "Playing random sound file `${it.name}` in voice channel `#${voiceChannel.name}`" }
     }

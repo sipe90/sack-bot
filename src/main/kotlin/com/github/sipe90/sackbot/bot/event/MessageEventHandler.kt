@@ -98,7 +98,12 @@ final class MessageEventHandler(
                     .flatMap exists@{
                         if (!config.upload.overrideExisting) return@exists "Audio `${audioName}` already exists".toMono()
 
-                        return@exists fileService.updateAudioFile(it, attachment.toBytes(), event.author.id)
+                        return@exists fileService.updateAudioFile(
+                                it,
+                                fileExtension,
+                                attachment.toBytes(),
+                                event.author.id
+                            )
                             .map { "Updated audio file `${audioName}`" }
                     }.switchIfEmpty(
                         fileService.saveAudioFile(

@@ -8,11 +8,13 @@ import com.sedmelluq.discord.lavaplayer.container.MediaContainerHints
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.ProbingAudioSourceManager
+import com.sedmelluq.discord.lavaplayer.tools.io.NonSeekableInputStream
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioReference
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo
 import org.springframework.stereotype.Component
+import java.io.ByteArrayInputStream
 import java.io.DataInput
 import java.io.DataOutput
 
@@ -24,7 +26,7 @@ class NitriteAudioSourceManager(private val audioFileService: AudioFileService) 
 
     override fun loadItem(manager: DefaultAudioPlayerManager, reference: AudioReference): AudioItem? {
         val audioFile = getAudioFile(reference.identifier) ?: return null
-        SeekableBufferedInputStream(audioFile.data.clone()).use {
+        NonSeekableInputStream(ByteArrayInputStream(audioFile.data.clone())).use {
             return handleLoadResult(
                 MediaContainerDetection(
                     containerRegistry,

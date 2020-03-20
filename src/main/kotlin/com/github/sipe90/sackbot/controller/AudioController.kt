@@ -36,6 +36,16 @@ class AudioController(
         return audioPlayerService.playAudioForUser(principal.getId(), name).then()
     }
 
+    @PostMapping("/random")
+    fun playRandomSound(
+        @PathVariable guildId: String,
+        @AuthenticationPrincipal principal: DiscordUser
+    ): Mono<Void> {
+        return audioFileService.randomAudioFile(guildId, principal.getId())
+            .flatMap { audioPlayerService.playAudioForUser(guildId, principal.getId(), it.name) }
+            .then()
+    }
+
     @GetMapping
     @JsonView(API::class)
     fun getSoundsList(@PathVariable guildId: String, @AuthenticationPrincipal principal: DiscordUser): Flux<AudioFile> {

@@ -14,7 +14,7 @@ data class AudioFile(
     @JsonView(API::class)
     val name: String,
     @JsonView(API::class)
-    val extension: String?,
+    var extension: String?,
     @JsonView(API::class)
     var size: Int?,
     @JsonView(API::class)
