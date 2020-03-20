@@ -1,6 +1,7 @@
 import { CleanWebpackPlugin } from 'clean-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import path from 'path'
+import tsImportPluginFactory from 'ts-import-plugin'
 import { Configuration, DefinePlugin } from 'webpack'
 
 const SRC_ROOT = path.resolve(__dirname, 'src', 'main', 'webapp')
@@ -23,6 +24,9 @@ const config: Configuration = {
                 loader: 'ts-loader',
                 options: {
                     transpileOnly: true,
+                    getCustomTransformers: () => ({
+                        before: [ tsImportPluginFactory({ libraryName: 'antd', style: 'css', libraryDirectory: 'lib' }) ]
+                    }),
                     compilerOptions: {
                         module: 'es2015'
                     }
@@ -41,11 +45,13 @@ const config: Configuration = {
     devServer: {
         port: 3000,
         open: true,
-        useLocalIp: true,
+        // openPage: 'oauth2/authorization/discord',
+        useLocalIp: false,
         historyApiFallback: true,
-        proxy: {
-            '/api': 'http://localhost:8080'
-        }
+        proxy: [{
+            context: ['/oauth2', '/login', '/api'],
+            target: 'http://localhost:8080'
+        }],
     },
     plugins: [
         new CleanWebpackPlugin(),

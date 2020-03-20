@@ -6,9 +6,10 @@ import { composeWithDevTools   } from 'redux-devtools-extension';
 import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
 
-const loggerMiddleware = createLogger()
+import reducers from '@/reducers'
+import AppContainer from '@/components/AppContainer'
 
-const reducers = () => null
+const loggerMiddleware = createLogger()
 
 const store = createStore(
     reducers,
@@ -21,7 +22,7 @@ const store = createStore(
 
 ReactDOM.render(
     <Provider store={store}>
-        <h1>Yo</h1>
+        <AppContainer/>
     </Provider>,
     document.getElementById('root'),
 )
