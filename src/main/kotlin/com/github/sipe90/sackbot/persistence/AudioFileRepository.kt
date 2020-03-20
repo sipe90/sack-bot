@@ -21,7 +21,8 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
             }
     }
 
-    fun getAll(guildId: String): Flux<AudioFile> = repository.find(AudioFile::guildId eq guildId).toFlux()
+    fun getAll(guildId: String): Flux<AudioFile> =
+        repository.find(AudioFile::guildId eq guildId).sortedBy { it.name }.toFlux()
 
     fun saveAudioFile(audioFile: AudioFile): Mono<AudioFile> = Mono.defer {
         repository.insert(audioFile)
