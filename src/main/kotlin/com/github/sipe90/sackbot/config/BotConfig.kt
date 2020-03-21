@@ -11,6 +11,7 @@ data class BotConfig(
     val activity: ActivityConfig,
     val chat: ChatConfig,
     val tts: TTSConfig,
+    val voices: Map<String, VoiceConfig>,
     val upload: UploadConfig
 ) {
 
@@ -39,6 +40,12 @@ data class BotConfig(
     data class TTSConfig(
         val voice: String,
         val phrasesFile: String
+    )
+
+    data class VoiceConfig(
+        val enabled: Boolean,
+        val path: String,
+        val substitutions: Map<String, String>
     )
 
     data class UploadConfig(

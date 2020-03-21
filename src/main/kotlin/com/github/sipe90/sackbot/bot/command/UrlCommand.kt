@@ -7,7 +7,7 @@ import com.github.sipe90.sackbot.util.getGuild
 import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
+import reactor.core.publisher.Flux
 
 @Component
 class UrlCommand(
@@ -19,7 +19,7 @@ class UrlCommand(
 
     override fun canProcess(vararg command: String) = true
 
-    override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
+    override fun process(initiator: Event, vararg command: String): Flux<String> = Flux.defer {
         val guild = getGuild(initiator)
         val voiceChannel = getVoiceChannel(initiator)
 

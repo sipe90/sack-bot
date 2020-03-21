@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
+import reactor.util.function.Tuples
 
 @Component
 final class MessageEventHandler(
@@ -42,35 +43,35 @@ final class MessageEventHandler(
         }
         if (event is PrivateMessageReceivedEvent) {
             return processPrivateMessageEvent(event)
-                .zipWith(Mono.defer { event.author.openPrivateChannel().asMono() })
-                .flatMap { it.t2.sendMessage(it.t1).asMono() }
+                .flatMap { f -> Mono.defer { event.author.openPrivateChannel().asMono() }.map { m -> Tuples.of(m, f) } }
+                .flatMap { it.t1.sendMessage(it.t2).asMono() }
                 .then()
         }
         throw SackException("Invalid event: ${event.javaClass.name}")
     }
 
-    private fun processGuildMessageEvent(event: GuildMessageReceivedEvent): Mono<String> {
-        if (event.author.isBot) return Mono.empty()
-        if (!event.message.contentRaw.startsWith(config.chat.commandPrefix)) return Mono.empty()
+    private fun processGuildMessageEvent(event: GuildMessageReceivedEvent): Flux<String> {
+        if (event.author.isBot) return Flux.empty()
+        if (!event.message.contentRaw.startsWith(config.chat.commandPrefix)) return Flux.empty()
         return processCommand(event, event.message.contentRaw)
     }
 
-    private fun processPrivateMessageEvent(event: PrivateMessageReceivedEvent): Mono<String> {
-        if (event.author.isBot) return Mono.empty()
-        if (event.message.attachments.isNotEmpty()) return handleUploads(event).next()
+    private fun processPrivateMessageEvent(event: PrivateMessageReceivedEvent): Flux<String> {
+        if (event.author.isBot) return Flux.empty()
+        if (event.message.attachments.isNotEmpty()) return handleUploads(event)
         if (!event.message.contentRaw.startsWith(config.chat.commandPrefix)) {
             return helpCommand.process(event)
         }
         return processCommand(event, event.message.contentRaw)
     }
 
-    private fun processCommand(event: Event, message: String): Mono<String> {
+    private fun processCommand(event: Event, message: String): Flux<String> {
         val cmd = cmdSplitRegex.split(message.substring(1)).toTypedArray()
         val botCommand = commandsMap[cmd[0]] ?: playCommand
         if (botCommand.canProcess(*cmd)) {
             return botCommand.process(event, *cmd)
         }
-        return Mono.empty()
+        return Flux.empty()
     }
 
     private fun handleUploads(event: PrivateMessageReceivedEvent): Flux<String> =

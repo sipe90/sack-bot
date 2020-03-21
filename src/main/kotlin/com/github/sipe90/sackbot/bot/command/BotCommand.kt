@@ -1,7 +1,7 @@
 package com.github.sipe90.sackbot.bot.command
 
 import net.dv8tion.jda.api.events.Event
-import reactor.core.publisher.Mono
+import reactor.core.publisher.Flux
 
 interface BotCommand {
 
@@ -9,5 +9,5 @@ interface BotCommand {
 
     fun canProcess(vararg command: String) = command.isNotEmpty() && command[0] == commandPrefix
 
-    fun process(initiator: Event, vararg command: String): Mono<String>
+    fun process(initiator: Event, vararg command: String): Flux<String>
 }

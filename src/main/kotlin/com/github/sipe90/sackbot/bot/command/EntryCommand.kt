@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
+import reactor.core.publisher.Flux
 
 @Component
 class EntryCommand(private val fileService: AudioFileService, private val memberRepository: MemberRepository) :
@@ -17,7 +17,7 @@ class EntryCommand(private val fileService: AudioFileService, private val member
 
     override val commandPrefix = "entry"
 
-    override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
+    override fun process(initiator: Event, vararg command: String): Flux<String> = Flux.defer {
         val guild = getGuild(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 

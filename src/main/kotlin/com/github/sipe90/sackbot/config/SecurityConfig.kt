@@ -18,7 +18,6 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.server.SecurityWebFilterChain
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToFlux
 
@@ -29,8 +28,9 @@ class SecurityConfig {
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http
             .authorizeExchange()
-            .matchers(pathMatchers("/api/**")).authenticated()
-            .anyExchange().permitAll()
+            // .matchers(pathMatchers("/api/**")).authenticated()
+            // .anyExchange().permitAll()
+            .anyExchange().authenticated()
             .and().httpBasic().disable()
             .csrf().disable()
             .oauth2Client()

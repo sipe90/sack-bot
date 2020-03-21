@@ -7,7 +7,7 @@ import com.github.sipe90.sackbot.util.getUser
 import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
+import reactor.core.publisher.Flux
 
 @Component
 class RandomCommand(private val fileService: AudioFileService, private val playerService: AudioPlayerService) :
@@ -15,7 +15,7 @@ class RandomCommand(private val fileService: AudioFileService, private val playe
 
     override val commandPrefix = "rnd"
 
-    override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
+    override fun process(initiator: Event, vararg command: String): Flux<String> = Flux.defer {
         val voiceChannel = getVoiceChannel(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
         val user = getUser(initiator) ?: return@defer "Could not find user".toMono()

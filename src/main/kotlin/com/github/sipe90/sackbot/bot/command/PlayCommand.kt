@@ -1,6 +1,5 @@
 package com.github.sipe90.sackbot.bot.command
 
-import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
@@ -8,7 +7,8 @@ import com.github.sipe90.sackbot.util.getGuild
 import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Mono
+import reactor.core.publisher.Flux
+import reactor.core.publisher.toMono
 
 @Component
 class PlayCommand(
@@ -21,7 +21,7 @@ class PlayCommand(
 
     override fun canProcess(vararg command: String) = true
 
-    override fun process(initiator: Event, vararg command: String): Mono<String> = Mono.defer {
+    override fun process(initiator: Event, vararg command: String): Flux<String> = Flux.defer {
         val guild = getGuild(initiator)
         val voiceChannel = getVoiceChannel(initiator)
 
@@ -34,16 +34,10 @@ class PlayCommand(
         val audioFileName = command[0]
 
         fileService.findAudioFile(guild.id, audioFileName)
-            .flatMap { playerService.playAudioInChannel(it.name, voiceChannel) }
             .flatMap {
-                return@flatMap if (it) "Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`".toMono()
-                else "Could not find a sound file with given name".toMono()
-            }.switchIfEmpty(
-                playerService.playAudioInChannel(audioFileName, voiceChannel)
-                    .flatMap {
-                        return@flatMap if (it) "Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`".toMono()
-                        else "Could not find any sounds with given name".toMono()
-                    }
-            )
+                playerService.playAudioInChannel(it.name, voiceChannel)
+                    .then("Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`".toMono())
+            }
+            .switchIfEmpty("Could not find any sounds with given name".toMono())
     }
 }
