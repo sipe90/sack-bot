@@ -1,5 +1,4 @@
-import { IAudioFile, ThunkResult } from "@/types"
-import { ActionCreator } from "redux"
+import { IAudioFile, AsyncThunkResult } from "@/types"
 import { fetchGetJson, fetchPostJson } from "@/util"
 
 export const FETCH_SOUNDS_REQUEST = "FETCH_SOUNDS_REQUEST"
@@ -72,7 +71,7 @@ const fetchSoundsRejected = (error: Error): FetchSoundsRejectedAction => ({
     payload: error
 })
 
-export const fetchSounds: ActionCreator<ThunkResult> = (guildId: string) => async (dispatch) => {
+export const fetchSounds = (guildId: string): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(fetchSoundsRequest())
         const res = await fetchGetJson<IAudioFile[]>(`/api/${guildId}/sounds`)
@@ -98,7 +97,7 @@ const playSoundRejected = (error: Error): PlaySoundRejectedAction => ({
     payload: error
 })
 
-export const playSound: ActionCreator<ThunkResult> = (guildId: string, name: string) => async (dispatch) => {
+export const playSound = (guildId: string, name: string): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playSoundRequest())
         const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/play?name=${name}`)
@@ -124,7 +123,7 @@ const playRandomSoundRejected = (error: Error): PlayRandomSoundRejectedAction =>
     payload: error
 })
 
-export const playRandomSound: ActionCreator<ThunkResult> = (guildId: string) => async (dispatch) => {
+export const playRandomSound = (guildId: string): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playRandomSoundRequest())
         const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/random`)

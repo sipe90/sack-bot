@@ -1,5 +1,4 @@
-import { ActionCreator } from "redux"
-import { ThunkResult, IMember, IGuild } from "@/types"
+import { IMember, IGuild, AsyncThunkResult } from "@/types"
 import { fetchGetJson } from "@/util"
 import { fetchSounds } from "./sounds"
 
@@ -65,7 +64,7 @@ const fetchUserRejected = (error: Error): FetchUserRejectedAction => ({
     payload: error
 })
 
-export const fetchUser: ActionCreator<ThunkResult> = () => async (dispatch) => {
+export const fetchUser = (): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(fetchUserRequest())
         const res = await fetchGetJson<IMember[]>('/api/me')
@@ -92,7 +91,7 @@ const fetchGuildsRejected = (error: Error): FetchGuildsRejectedAction => ({
     payload: error
 })
 
-export const fetchGuilds: ActionCreator<ThunkResult> = () => async (dispatch) => {
+export const fetchGuilds = (): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(fetchGuildsRequest())
         const res = await fetchGetJson<IGuild[]>('/api/guilds')
