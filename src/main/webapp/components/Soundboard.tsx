@@ -13,6 +13,7 @@ const SoundboardRoot = styled.div`
 
 const Sound = styled.div`
     margin: 5px;
+    flex: 0 0 0;
 `
 
 const Soundboard: React.FC = () => {
@@ -40,18 +41,22 @@ const Soundboard: React.FC = () => {
             {sounds.map((sound) => 
                 <Sound key={sound.name}>
                     <Button
+                        block
+                        style={{ width: 120 }}
                         disabled={playingSound}
                         onClick={() => selectedGuild && dispatch(playSound(selectedGuild, sound.name))}>
-                            {sound.name}
+                            <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>{sound.name}</div>
                     </Button>
                 </Sound>
             )}
             <Sound>
                 <Button
+                    block
+                    style={{ width: 120 }}
                     disabled={playingSound}
                     type="primary"
                     onClick={onPlayRandomSound}>
-                        Random
+                        <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>Random</div>
                 </Button>
             </Sound>
         </SoundboardRoot>
