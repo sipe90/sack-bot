@@ -1,6 +1,5 @@
 package com.github.sipe90.sackbot.persistence
 
-import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.persistence.dto.AudioFile
 import org.dizitart.kno2.filters.and
 import org.dizitart.kno2.filters.eq
@@ -9,6 +8,7 @@ import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toMono
 
 @Repository
 class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
