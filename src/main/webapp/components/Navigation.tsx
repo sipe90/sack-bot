@@ -83,12 +83,7 @@ const renderNavigationLink = (route: IRouteDefinition, index: number) => (
         to={route.path}
         exact={true}
     >
-        <div>
             {route.icon}
-        </div>
-        <div>
-            {route.text}
-        </div>
     </NavigationLink>
 )
 
