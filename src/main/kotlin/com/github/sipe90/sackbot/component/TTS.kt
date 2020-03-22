@@ -1,6 +1,5 @@
 package com.github.sipe90.sackbot.component
 
-import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig
 import marytts.LocalMaryInterface
 import marytts.MaryInterface
@@ -9,6 +8,7 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toMono
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files

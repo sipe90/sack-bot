@@ -9,12 +9,12 @@ import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
-import reactor.core.publisher.toMono
+import reactor.kotlin.core.publisher.toMono
 import java.time.Instant
 
 @Repository
 class MemberRepository(val repository: ObjectRepository<Member>) {
-    
+
     private final val logger = LoggerFactory.getLogger(javaClass)
 
     fun getGuildMembers(guildId: String): Flux<Member> = repository.find(Member::guildId eq guildId).toFlux()

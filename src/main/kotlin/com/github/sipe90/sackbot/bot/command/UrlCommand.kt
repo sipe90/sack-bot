@@ -1,6 +1,5 @@
 package com.github.sipe90.sackbot.bot.command
 
-import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.service.AudioPlayerService
 import com.github.sipe90.sackbot.util.getGuild
@@ -8,6 +7,7 @@ import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
+import reactor.kotlin.core.publisher.toMono
 
 @Component
 class UrlCommand(

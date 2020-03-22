@@ -38,7 +38,7 @@ class HelpCommand(private val config: BotConfig) : BotCommand {
         return StringBuilder("\n")
             .append(config.chat.commandPrefix)
             .append(cmd)
-            .append("                -- ".substring(cmd.length - 1))
+            .append("                    -- ".substring(cmd.length - 1))
             .append(text)
     }
 }

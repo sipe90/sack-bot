@@ -8,7 +8,7 @@ import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
-import reactor.core.publisher.toMono
+import reactor.kotlin.core.publisher.toMono
 
 @Component
 class PlayCommand(

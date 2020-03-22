@@ -1,6 +1,5 @@
 package com.github.sipe90.sackbot.bot.command
 
-import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.AudioFileService
@@ -10,6 +9,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
+import reactor.kotlin.core.publisher.toMono
 
 @Component
 class EntryCommand(private val fileService: AudioFileService, private val memberRepository: MemberRepository) :

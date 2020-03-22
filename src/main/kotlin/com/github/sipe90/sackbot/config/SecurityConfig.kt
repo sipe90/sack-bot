@@ -6,6 +6,7 @@ import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.JDAService
 import net.dv8tion.jda.api.entities.Guild
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpStatus
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient
@@ -18,6 +19,8 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToFlux
 
@@ -28,9 +31,9 @@ class SecurityConfig {
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http
             .authorizeExchange()
-            // .matchers(pathMatchers("/api/**")).authenticated()
-            // .anyExchange().permitAll()
-            .anyExchange().authenticated()
+            .matchers(pathMatchers("/api/**")).authenticated()
+            .anyExchange().permitAll()
+            .and().exceptionHandling().authenticationEntryPoint(HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
             .and().httpBasic().disable()
             .csrf().disable()
             .oauth2Client()
