@@ -3,6 +3,7 @@ package com.github.sipe90.sackbot.config
 import com.github.sipe90.sackbot.auth.DiscordUser
 import com.github.sipe90.sackbot.handler.AudioHandler
 import com.github.sipe90.sackbot.handler.UserHandler
+import com.github.sipe90.sackbot.handler.VoiceHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
@@ -17,7 +18,8 @@ import reactor.core.publisher.Mono
 @Configuration
 class Routes(
     private var userHandler: UserHandler,
-    private var audioHandler: AudioHandler
+    private var audioHandler: AudioHandler,
+    private val voiceHandler: VoiceHandler
 ) {
 
     @Bean
@@ -25,6 +27,8 @@ class Routes(
         ("/api" and accept(MediaType.APPLICATION_JSON)).nest {
             GET("/me", handle(userHandler::userInfo))
             GET("/guilds", handle(userHandler::mutualGuilds))
+            GET("/voices", handle(voiceHandler::getVoiceLines))
+            POST("/{guildId}/voices/play", handle(voiceHandler::playVoiceLines))
             "/{guildId}/sounds".nest {
                 GET("/", handle(audioHandler::getSoundsList))
                 POST("/play", handle(audioHandler::playSound))

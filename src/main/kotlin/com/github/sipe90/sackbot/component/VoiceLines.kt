@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.TreeMap
 import kotlin.streams.toList
 
 @Component
@@ -17,13 +18,17 @@ class VoiceLines(private val config: BotConfig) {
         voiceLines = config.voices.filter { it.value.enabled }
             .mapValues {
                 getVoiceFiles(it.value.path)
-                    .associateBy { file -> stripExtension(file.fileName.toString()) }
+                    .associateByTo(TreeMap()) { file -> stripExtension(file.fileName.toString()) }
             }
     }
 
     fun voiceIsAvailable(voice: String): Boolean = config.voices[voice]?.enabled == true
 
     fun getVoices(): Set<String> = config.voices.filterValues { it.enabled }.keys
+
+    fun getVoiceLines(): Map<String, Set<String>> {
+        return voiceLines.mapValues { it.value.keys }
+    }
 
     fun getVoiceLines(voice: String): Set<String> {
         if (!voiceIsAvailable(voice)) throw IllegalArgumentException("Invalid voice")
