@@ -32,6 +32,10 @@ const fetchJson = async <E> (url: string, init?: RequestInit): Promise<JsonRespo
     const res = await fetch(url, init)
     const { headers, json, ok, status, statusText } = res
 
+    if (status == 401) {
+        window.location.href = "/oauth2/authorization/discord"
+    }
+
     const resJson = isJsonResponse(headers) ? await json.call(res) : null
 
     return ok ? {

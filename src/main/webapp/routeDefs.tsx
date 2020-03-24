@@ -17,15 +17,18 @@ export interface IRouteDefinition {
 }
 
 const SoundBoardIcon = styled(TableOutlined)`
-    font-size: 22px
+    margin-top: 8px;
+    font-size: 24px
 `
 
 const VoicesIcon = styled(SoundOutlined)`
-    font-size: 22px
+    margin-top: 8px;
+    font-size: 24px
 `
 
 const TTSIcon = styled(RobotOutlined)`
-    font-size: 22px
+    margin-top: 8px;
+    font-size: 24px
 `
 
 const routes: IRouteDefinition[] = [

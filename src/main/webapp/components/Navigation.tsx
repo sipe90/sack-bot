@@ -1,9 +1,10 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { IRouteDefinition } from '@/routeDefs'
-import { Avatar, Select } from 'antd'
+import { Avatar, Button, Menu, Dropdown } from 'antd'
+import { DownOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
 
@@ -42,27 +43,34 @@ const Navigation: React.FC<INavigationProps> = (props) => {
             {props.routes.map(renderNavigationLink)}
         </NavigationMenu>
         <div style={{ display: "flex", alignItems: "center" }}>
-        <Avatar
-            style={{ marginRight: 10 }}
-            size="large"
-            src={selectedGuild ? guilds.find(({id}) => id == selectedGuild)?.iconUrl || undefined : undefined}>
-                {selectedGuild ? undefined : "G"}
-        </Avatar>
-        <Select<string>
-            style={{ minWidth: 200, marginRight: 10 }}
-            placeholder="Select guild"
-            value={selectedGuild || undefined}
-            onSelect={(guildId) => dispatch(selectGuild(guildId))}
-        >
-            {guilds.map(({ id, name}) => (
-                <Select.Option
-                    key={id}
-                    value={id}
+            <Avatar
+                style={{ marginRight: 10 }}
+                size="large"
+                src={selectedGuild ? guilds.find(({id}) => id == selectedGuild)?.iconUrl || undefined : undefined}>
+                    {selectedGuild ? undefined : "G"}
+            </Avatar>
+            <div style={{marginRight: 10 }}>
+                <Dropdown
+                    overlay={
+                        <Menu
+                            selectedKeys={selectedGuild ?[selectedGuild] : []}
+                        >
+                            {guilds.map(({ id, name }) => (
+                                <Menu.Item
+                                    key={id}
+                                    onClick={() => dispatch(selectGuild(id))}
+                                >
+                                    {name}
+                                </Menu.Item>)
+                            )}
+                        </Menu>
+                    }
                 >
-                    {name}
-            </Select.Option>)
-            )}
-        </Select>
+                    <Button>
+                        Guild <DownOutlined />
+                    </Button>
+                </Dropdown>
+            </div>
         </div>
     </div>
 )
@@ -75,12 +83,7 @@ const renderNavigationLink = (route: IRouteDefinition, index: number) => (
         to={route.path}
         exact={true}
     >
-        <div>
             {route.icon}
-        </div>
-        <div>
-            {route.text}
-        </div>
     </NavigationLink>
 )
 
