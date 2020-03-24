@@ -8,7 +8,7 @@ sackbot:
     chat:
       enabled: true
       allowDm: true
-      commandPrefix: !
+      commandPrefix: "!"
     voices:
       hgrunt:
         enabled: false
