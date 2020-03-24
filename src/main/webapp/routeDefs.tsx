@@ -7,6 +7,7 @@ import {
 import styled from 'styled-components'
 
 import Soundboard from '@/components/Soundboard'
+import Voices from './components/Voices'
 
 export interface IRouteDefinition {
     path: string
@@ -40,7 +41,7 @@ const routes: IRouteDefinition[] = [
         text: 'Soundboard',
     },
     {
-        container: <div />,
+        container: <Voices />,
         exact: true,
         icon: <VoicesIcon />,
         path: '/voices',

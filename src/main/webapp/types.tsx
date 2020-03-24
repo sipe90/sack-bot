@@ -45,3 +45,7 @@ export interface IAudioFile {
     modifiedBy?: string
     modified?: number
 }
+
+export interface IVoiceLines {
+    [voice: string]: string[]
+}

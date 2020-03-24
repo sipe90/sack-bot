@@ -14,7 +14,7 @@ const initialState: ISoundsState = {
     playingSound: false
 }
 
-const userReducer: Reducer<ISoundsState, SoundsActions> = (state = initialState, action) => {
+const soundsReducer: Reducer<ISoundsState, SoundsActions> = (state = initialState, action) => {
     switch(action.type) {
         case FETCH_SOUNDS_REQUEST:
             return { ...state, soundLoading: true }
@@ -43,4 +43,4 @@ const userReducer: Reducer<ISoundsState, SoundsActions> = (state = initialState,
     }
 }
 
-export default userReducer
+export default soundsReducer
