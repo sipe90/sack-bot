@@ -2,6 +2,7 @@ package com.github.sipe90.sackbot.config
 
 import com.github.sipe90.sackbot.auth.DiscordUser
 import com.github.sipe90.sackbot.handler.AudioHandler
+import com.github.sipe90.sackbot.handler.TTSHandler
 import com.github.sipe90.sackbot.handler.UserHandler
 import com.github.sipe90.sackbot.handler.VoiceHandler
 import org.springframework.context.annotation.Bean
@@ -19,7 +20,8 @@ import reactor.core.publisher.Mono
 class Routes(
     private var userHandler: UserHandler,
     private var audioHandler: AudioHandler,
-    private val voiceHandler: VoiceHandler
+    private val voiceHandler: VoiceHandler,
+    private val ttsHandler: TTSHandler
 ) {
 
     @Bean
@@ -34,6 +36,10 @@ class Routes(
                 POST("/play", handle(audioHandler::playSound))
                 POST("/random", handle(audioHandler::playRandomSound))
                 GET("/export", handle(audioHandler::exportSounds))
+            }
+            "{guildId}/tts".nest {
+                POST("/play", handle(ttsHandler::playTTS))
+                POST("/random", handle(ttsHandler::playRandomTTS))
             }
         }
     }
