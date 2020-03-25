@@ -39,7 +39,6 @@ const Voices: React.FC = () => {
 
     return (
         <Card
-            headStyle={{ overflow: 'visible' }}
             bodyStyle={{ minHeight: 80 }}
             title={
                 <div style={{ display: 'flex', whiteSpace: 'normal' }}>
@@ -58,7 +57,7 @@ const Voices: React.FC = () => {
                         </Select>
                         <Select<string>
                             style={{ width: 200 }}
-                            value={null as any}
+                            value=""
                             disabled={!voice}
                             showSearch
                             onSelect={(value) => setLines(lines.concat(value))}
@@ -91,13 +90,11 @@ const Voices: React.FC = () => {
                     <VoiceLine 
                         key={idx} 
                         closable 
-                        onClose={(e: Event) => 
-                            setLines(lines.filter((_line, i) => { 
-                                e.preventDefault() 
-                                return i !== idx
-                            }
-                        )
-                    )}>
+                        onClose={(e: Event) => {
+                            e.preventDefault() 
+                            setLines(lines.filter((_line, i) => i !== idx))
+                        }}
+                    >
                         {line}
                     </VoiceLine>
                 )}
