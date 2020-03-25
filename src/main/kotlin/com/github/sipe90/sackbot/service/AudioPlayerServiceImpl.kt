@@ -32,8 +32,7 @@ class AudioPlayerServiceImpl(
     private val tts: TTS,
     private val voiceLines: VoiceLines,
     nitriteManager: NitriteAudioSourceManager
-) :
-    AudioPlayerService {
+) : AudioPlayerService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
@@ -51,25 +50,36 @@ class AudioPlayerServiceImpl(
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    override fun playAudioForUser(guildId: String, userId: String, name: String): Mono<Void> {
+    override fun playAudioForUser(guildId: String, userId: String, name: String): Mono<Unit> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
         val voiceChannel =
             getVoiceChannel(guild, user) ?: throw ValidationException("Could not find voice channel to play in")
-        return playAudioInChannel(name, voiceChannel).then()
+        return playAudioInChannel(name, voiceChannel)
     }
 
-    override fun playAudioForUser(userId: String, name: String): Mono<Void> {
+    override fun playAudioForUser(userId: String, name: String): Mono<Unit> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
-        return playAudioInChannel(name, voiceChannel).then()
+        return playAudioInChannel(name, voiceChannel)
     }
 
-    override fun playAudioInChannel(name: String, voiceChannel: VoiceChannel): Mono<Void> {
-        return playInChannel("${voiceChannel.guild.id}:${name}", voiceChannel).then()
+    override fun playAudioInChannel(name: String, voiceChannel: VoiceChannel): Mono<Unit> {
+        return playInChannel("${voiceChannel.guild.id}:${name}", voiceChannel).cast(Unit.javaClass)
     }
 
-    override fun playVoiceLinesInChannel(voice: String, lines: List<String>, voiceChannel: VoiceChannel): Mono<Void> =
+    override fun playVoiceLinesForUser(
+        guildId: String,
+        userId: String,
+        voice: String,
+        lines: List<String>
+    ): Mono<Unit> {
+        val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
+        val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
+        return playVoiceLinesInChannel(voice, lines, voiceChannel)
+    }
+
+    override fun playVoiceLinesInChannel(voice: String, lines: List<String>, voiceChannel: VoiceChannel): Mono<Unit> =
         Mono.fromCallable {
             val guild = voiceChannel.guild
             val audioManager = guild.audioManager
@@ -79,19 +89,21 @@ class AudioPlayerServiceImpl(
 
             connect(audioManager, voiceChannel, trackScheduler.player)
 
+            logger.debug("Queuing voice lines {} from voice {} on channel #{}", lines, voice, voiceChannel.name)
+
             paths.forEach {
                 val track =
                     localAudioSourceManager.loadItem(playerManager, AudioReference(it.toString(), null)) as AudioTrack
                 trackScheduler.queue(track)
             }
-        }.then()
+        }
 
-    override fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Void> {
-        return tts.randomPhraseToSpeech().flatMap { playInChannel(it.toString(), voiceChannel) }.then()
+    override fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Unit> {
+        return tts.randomPhraseToSpeech().flatMap { playInChannel(it.toString(), voiceChannel) }.cast(Unit.javaClass)
     }
 
-    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Void> {
-        return tts.textToSpeech(text).flatMap { playInChannel(it.toString(), voiceChannel) }.then()
+    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Unit> {
+        return tts.textToSpeech(text).flatMap { playInChannel(it.toString(), voiceChannel) }.cast(Unit.javaClass)
     }
 
     override fun playUrlInChannel(url: String, voiceChannel: VoiceChannel): Mono<Boolean> {
