@@ -13,7 +13,6 @@ interface INavigationProps {
 }
 
 const NavigationMenu = styled.div`
-    text-align: center;
     flex-grow: 1;
 `
 
