@@ -53,7 +53,7 @@ const Voices: React.FC = () => {
                             }}
                         >
                             {Object.keys(voiceLines).map((voice) =>
-                                <Select.Option value={voice}>{voice}</Select.Option>)}
+                                <Select.Option key={voice} value={voice}>{voice}</Select.Option>)}
                         </Select>
                         <Select<string>
                             style={{ width: 200 }}
@@ -63,7 +63,7 @@ const Voices: React.FC = () => {
                             onSelect={(value) => setLines(lines.concat(value))}
                         >
                             {voice && voiceLines[voice].map((voiceLine) =>
-                                <Select.Option value={voiceLine}>{voiceLine}</Select.Option>)}
+                                <Select.Option key={voiceLine} value={voiceLine}>{voiceLine}</Select.Option>)}
                         </Select>
                     </div>
                     <div>
