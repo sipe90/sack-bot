@@ -1,3 +1,5 @@
+import { message } from 'antd'
+
 import { AsyncThunkResult } from "@/types"
 import { fetchPostJson } from "@/util"
 
@@ -60,6 +62,7 @@ export const playTTS = (guildId: string, text: string): AsyncThunkResult => asyn
 
         dispatch(playTTSResolved())
     } catch (error) {
+        message.error(`Failed to play TTS: ${error.message}`)
         dispatch(playTTSRejected(error))
     }
 }
@@ -86,6 +89,7 @@ export const playRandomTTS = (guildId: string): AsyncThunkResult => async (dispa
 
         dispatch(playRandomTTSResolved())
     } catch (error) {
+        message.error(`Failed to play TTS: ${error.message}`)
         dispatch(playRandomTTSRejected(error))
     }
 }

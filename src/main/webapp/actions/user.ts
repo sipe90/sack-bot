@@ -1,3 +1,5 @@
+import { message } from 'antd'
+
 import { IMember, IGuild, AsyncThunkResult } from "@/types"
 import { fetchGetJson } from "@/util"
 import { fetchSounds } from "./sounds"
@@ -73,6 +75,7 @@ export const fetchUser = (): AsyncThunkResult => async (dispatch) => {
 
         dispatch(fetchUserResolved(res.json))
     } catch (error) {
+        message.error(`Failed to get user details: ${error.message}`)
         dispatch(fetchUserRejected(error))
     }
 }
@@ -106,6 +109,7 @@ export const fetchGuilds = (): AsyncThunkResult => async (dispatch) => {
             dispatch(fetchSounds(selectedGuild.id))
         }
     } catch (error) {
+        message.error(`Failed to get user guilds: ${error.message}`)
         dispatch(fetchGuildsRejected(error))
     }
 }

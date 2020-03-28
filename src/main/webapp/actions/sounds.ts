@@ -1,3 +1,5 @@
+import { message } from 'antd'
+
 import { IAudioFile, AsyncThunkResult } from "@/types"
 import { fetchGetJson, fetchPostJson } from "@/util"
 
@@ -80,6 +82,7 @@ export const fetchSounds = (guildId: string): AsyncThunkResult => async (dispatc
 
         dispatch(fetchSoundsResolved(res.json))
     } catch (error) {
+        message.error(`Failed to get sounds: ${error.message}`)
         dispatch(fetchSoundsRejected(error))
     }
 }
@@ -106,6 +109,7 @@ export const playSound = (guildId: string, name: string): AsyncThunkResult => as
 
         dispatch(playSoundResolved())
     } catch (error) {
+        message.error(`Failed to play sound: ${error.message}`)
         dispatch(playSoundRejected(error))
     }
 }
@@ -132,6 +136,7 @@ export const playRandomSound = (guildId: string): AsyncThunkResult => async (dis
 
         dispatch(playRandomSoundResolved())
     } catch (error) {
+        message.error(`Failed to play sound: ${error.message}`)
         dispatch(playRandomSoundRejected(error))
     }
 }

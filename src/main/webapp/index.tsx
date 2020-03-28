@@ -5,10 +5,16 @@ import { applyMiddleware, createStore, Middleware } from 'redux'
 import { composeWithDevTools   } from 'redux-devtools-extension';
 import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
+import { message } from 'antd'
 
 import reducers from '@/reducers'
 import App from '@/components/App'
 
+message.config({
+    duration: 3,
+    maxCount: 3,
+    top: 72,
+})
 
 const middlewares: Middleware[] = [thunkMiddleware];
 

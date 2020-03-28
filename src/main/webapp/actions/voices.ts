@@ -1,3 +1,5 @@
+import { message } from 'antd'
+
 import { AsyncThunkResult, IVoiceLines } from "@/types"
 import { fetchGetJson, fetchPostJson } from "@/util"
 
@@ -62,6 +64,7 @@ export const fetchVoiceLines = (): AsyncThunkResult => async (dispatch) => {
 
         dispatch(fetchVoiceLinesResolved(res.json))
     } catch (error) {
+        message.error(`Failed to get voice lines: ${error.message}`)
         dispatch(fetchVoiceLinesRejected(error))
     }
 }
@@ -88,6 +91,7 @@ export const playVoiceLines = (guildId: string, voice: string, voiceLines: strin
 
         dispatch(playVoiceLinesResolved())
     } catch (error) {
+        message.error(`Failed to play voice lines: ${error.message}`)
         dispatch(playVoiceLinesRejected(error))
     }
 }
