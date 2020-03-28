@@ -8,18 +8,24 @@ import com.github.sipe90.sackbot.handler.VoiceHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.web.reactive.function.server.RouterFunctions
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.ServerResponse.status
 import org.springframework.web.reactive.function.server.router
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.util.function.component1
+import reactor.kotlin.core.util.function.component2
+import reactor.util.function.Tuple2
+import reactor.util.function.Tuples
 
 @Configuration
 class Routes(
-    private var userHandler: UserHandler,
-    private var audioHandler: AudioHandler,
+    private val userHandler: UserHandler,
+    private val audioHandler: AudioHandler,
     private val voiceHandler: VoiceHandler,
     private val ttsHandler: TTSHandler
 ) {
@@ -30,16 +36,24 @@ class Routes(
             GET("/me", handle(userHandler::userInfo))
             GET("/guilds", handle(userHandler::mutualGuilds))
             GET("/voices", handle(voiceHandler::getVoiceLines))
-            POST("/{guildId}/voices/play", handle(voiceHandler::playVoiceLines))
-            "/{guildId}/sounds".nest {
-                GET("/", handle(audioHandler::getSoundsList))
-                POST("/play", handle(audioHandler::playSound))
-                POST("/random", handle(audioHandler::playRandomSound))
-                GET("/export", handle(audioHandler::exportSounds))
-            }
-            "{guildId}/tts".nest {
-                POST("/play", handle(ttsHandler::playTTS))
-                POST("/random", handle(ttsHandler::playRandomTTS))
+            "/{guildId}".nest {
+                filter(this@Routes::guildAccessFilter)
+                POST("/voices/play", handle(voiceHandler::playVoiceLines))
+                "/sounds".nest {
+                    GET("/", handle(audioHandler::getSoundsList))
+                    POST("/", handle(audioHandler::uploadSounds))
+                    POST("/rnd", handle(audioHandler::playRandomSound))
+                    GET("/export", handle(audioHandler::exportSounds))
+                    "/{name}".nest {
+                        POST("/", handle(audioHandler::updateSound))
+                        DELETE("/", handleAdmin(audioHandler::deleteSound))
+                        POST("/play", handle(audioHandler::playSound))
+                    }
+                }
+                "/tts".nest {
+                    POST("/play", handle(ttsHandler::playTTS))
+                    POST("/random", handle(ttsHandler::playRandomTTS))
+                }
             }
         }
     }
@@ -53,11 +67,35 @@ class Routes(
         }
     }
 
+    private fun guildAccessFilter(
+        req: ServerRequest,
+        next: (ServerRequest) -> Mono<ServerResponse>
+    ): Mono<ServerResponse> {
+        val guildId = req.pathVariable("guildId")
+        return requestWithPrincipal(req)
+            .flatMap { (req, user) -> if (user.isInGuild(guildId)) next(req) else status(HttpStatus.FORBIDDEN).build() }
+    }
+
+    private fun handleAdmin(
+        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
+    ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
+        requestWithPrincipal(req).flatMap { (req, user) ->
+            val guildId = req.pathVariable("guildId")
+            if (hasAdminAccess(user, guildId)) handler(req, user) else status(HttpStatus.FORBIDDEN).build()
+        }
+    }
+
     private fun handle(
         handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
     ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
-        req.principal()
-            .cast(OAuth2AuthenticationToken::class.java)
-            .flatMap { handler(req, it.principal as DiscordUser) }
+        requestWithPrincipal(req).flatMap { (req, user) -> handler(req, user) }
     }
+
+    private fun requestWithPrincipal(req: ServerRequest): Mono<Tuple2<ServerRequest, DiscordUser>> {
+        return req.principal()
+            .cast(OAuth2AuthenticationToken::class.java)
+            .map { Tuples.of(req, it.principal as DiscordUser) }
+    }
+
+    private fun hasAdminAccess(user: DiscordUser, guildId: String): Boolean = user.isOwner(guildId)
 }

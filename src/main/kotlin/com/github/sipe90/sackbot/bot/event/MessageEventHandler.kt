@@ -1,7 +1,7 @@
 package com.github.sipe90.sackbot.bot.event
 
 import club.minnced.jda.reactor.asMono
-import club.minnced.jda.reactor.toBytes
+import club.minnced.jda.reactor.toByteArray
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.bot.command.BotCommand
 import com.github.sipe90.sackbot.config.BotConfig
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 import reactor.util.function.Tuples
 
@@ -95,25 +95,31 @@ final class MessageEventHandler(
                     return@flatMap "Could not upload file `${fileName}`: File size cannot exceed `${config.upload.sizeLimit / 1000}kB`".toMono()
                 }
 
-                return@flatMap fileService.findAudioFile(guild.id, audioName)
-                    .flatMap exists@{
-                        if (!config.upload.overrideExisting) return@exists "Audio `${audioName}` already exists".toMono()
+                return@flatMap attachment.toByteArray().flatMap { data ->
+                    fileService.findAudioFile(guild.id, audioName)
+                        .flatMap exists@{ audioFile ->
+                            if (!config.upload.overrideExisting) return@exists "Audio `${audioName}` already exists".toMono()
 
-                        return@exists fileService.updateAudioFile(
-                                it,
-                                fileExtension,
-                                attachment.toBytes(),
+                            audioFile.extension = fileExtension
+                            audioFile.data = data
+
+                            return@exists fileService.updateAudioFile(
+                                guild.id,
+                                audioName,
+                                audioFile,
                                 event.author.id
                             )
-                            .map { "Updated audio file `${audioName}`" }
-                    }.switchIfEmpty(
-                        fileService.saveAudioFile(
-                            guild.id,
-                            audioName,
-                            fileExtension,
-                            attachment.toBytes(),
-                            event.author.id
-                        ).map { "Saved audio file `${audioName}`" }
-                    )
+                        }
+                        .map { "Updated audio file `${audioName}`" }
+                        .switchIfEmpty(
+                            fileService.saveAudioFile(
+                                guild.id,
+                                audioName,
+                                fileExtension,
+                                data,
+                                event.author.id
+                            ).map { "Saved audio file `${audioName}`" }
+                        )
+                }
             }
 }

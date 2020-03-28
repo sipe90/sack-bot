@@ -14,13 +14,20 @@ interface AudioFileService {
         guildId: String,
         name: String,
         extension: String?,
-        data: Flux<Byte>,
+        data: ByteArray,
         userId: String
     ): Mono<AudioFile>
 
-    fun updateAudioFile(audioFile: AudioFile, extension: String, data: Flux<Byte>, userId: String): Mono<Boolean>
+    fun updateAudioFile(
+        guildId: String,
+        name: String,
+        audioFile: AudioFile,
+        userId: String
+    ): Mono<Boolean>
 
     fun findAudioFile(guildId: String, name: String): Mono<AudioFile>
+
+    fun deleteAudioFile(guildId: String, name: String): Mono<Boolean>
 
     fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile>
 

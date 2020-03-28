@@ -1,13 +1,12 @@
 package com.github.sipe90.sackbot.auth
 
-import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.core.user.OAuth2User
 
 /**
  * https://discordapp.com/developers/docs/resources/user#user-object
  */
 class DiscordUser(
-    private val authorities: Collection<GrantedAuthority>,
+    private val authorities: Collection<DiscordAuthority>,
     private val attributes: Map<String, Any>
 ) : OAuth2User {
 
@@ -49,7 +48,7 @@ class DiscordUser(
         fun getForScopes(vararg scopes: String): List<String> = scopes.flatMap(this::getForScope)
     }
 
-    override fun getAuthorities(): Collection<GrantedAuthority> {
+    override fun getAuthorities(): Collection<DiscordAuthority> {
         return authorities
     }
 
@@ -58,6 +57,10 @@ class DiscordUser(
     }
 
     override fun getName() = getUsername()
+
+    fun isInGuild(guildId: String): Boolean = authorities.any { it.guildId == guildId }
+
+    fun isOwner(guildId: String): Boolean = authorities.find { it.guildId == guildId }?.isOwner ?: false
 
     // Identity scope
 
@@ -76,9 +79,4 @@ class DiscordUser(
 
     fun isVerified(): Boolean? = attributes[Attributes.VERIFIED] as Boolean?
     fun getEmail(): String? = attributes[Attributes.EMAIL] as String?
-
-    // Custom (guilds scope)
-
-    @Suppress("UNCHECKED_CAST")
-    fun getGuilds(): List<DiscordGuild> = attributes[Attributes.GUILDS] as List<DiscordGuild>
 }

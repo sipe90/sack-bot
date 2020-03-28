@@ -7,7 +7,7 @@ import org.dizitart.no2.objects.ObjectRepository
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 
 @Repository
@@ -21,7 +21,7 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
             }
     }
 
-    fun getAll(guildId: String): Flux<AudioFile> =
+    fun getAllAudioFiles(guildId: String): Flux<AudioFile> =
         repository.find(AudioFile::guildId eq guildId).sortedBy { it.name }.toFlux()
 
     fun saveAudioFile(audioFile: AudioFile): Mono<AudioFile> = Mono.defer {
@@ -29,14 +29,18 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
         Mono.just(audioFile)
     }
 
-    fun updateAudioFile(audioFile: AudioFile): Mono<Boolean> = Mono.defer {
-        (repository.update(
-            findMemberFilter(audioFile.guildId, audioFile.name),
+    fun updateAudioFile(guildId: String, name: String, audioFile: AudioFile): Mono<Boolean> = Mono.fromCallable {
+        repository.update(
+            findAudioFileFilter(guildId, name),
             audioFile,
             false
-        ).affectedCount > 0).toMono()
+        ).affectedCount > 0
     }
 
-    private fun findMemberFilter(guildId: String, name: String) =
+    fun deleteAudioFile(guildId: String, name: String) = Mono.fromCallable {
+        repository.remove(findAudioFileFilter(guildId, name)).affectedCount > 0
+    }
+
+    private fun findAudioFileFilter(guildId: String, name: String) =
         (AudioFile::guildId eq guildId) and (AudioFile::name eq name)
 }

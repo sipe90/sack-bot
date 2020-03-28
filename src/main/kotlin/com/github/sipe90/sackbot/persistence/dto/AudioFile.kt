@@ -12,7 +12,7 @@ import java.time.Instant
 )
 data class AudioFile(
     @JsonView(API::class)
-    val name: String,
+    var name: String,
     @JsonView(API::class)
     var extension: String?,
     @JsonView(API::class)

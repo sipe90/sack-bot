@@ -13,8 +13,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 @Service
-class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository, private val jdaService: JDAService) :
-    AudioFileService {
+class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository) : AudioFileService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
@@ -53,54 +52,68 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository,
     }
 
     override fun audioFileExists(guildId: String, name: String, userId: String): Mono<Boolean> {
-        validateGuild(guildId, userId)
         return findAudioFile(guildId, name).map { true }.defaultIfEmpty(false)
     }
 
     override fun getAudioFiles(guildId: String, userId: String): Flux<AudioFile> {
-        validateGuild(guildId, userId)
-        return audioFileRepository.getAll(guildId)
+        return audioFileRepository.getAllAudioFiles(guildId)
     }
 
     override fun saveAudioFile(
         guildId: String,
         name: String,
         extension: String?,
-        data: Flux<Byte>,
+        data: ByteArray,
         userId: String
     ): Mono<AudioFile> =
-        data.collectList().flatMap {
+        validateName(name).then(
             audioFileRepository.saveAudioFile(
                 AudioFile(
                     name,
                     extension,
-                    it.size,
+                    data.size,
                     guildId,
                     userId,
                     Instant.now(),
                     null,
                     null,
-                    it.toByteArray()
+                    data
                 )
             )
-        }
+        )
 
     override fun updateAudioFile(
+        guildId: String,
+        name: String,
         audioFile: AudioFile,
-        extension: String,
-        data: Flux<Byte>,
         userId: String
-    ): Mono<Boolean> =
-        data.collectList().flatMap {
-            audioFile.extension = extension
-            audioFile.data = it.toByteArray()
-            audioFile.size = it.size
+    ): Mono<Boolean> = validateName(audioFile.name).then(
+        Mono.defer {
+            if (guildId != audioFile.guildId) throw ValidationException("Guild id cannot be updated")
             audioFile.modified = Instant.now()
             audioFile.modifiedBy = userId
-            audioFileRepository.updateAudioFile(audioFile)
+            audioFileRepository.updateAudioFile(guildId, name, audioFile)
         }
+    )
 
-    private fun validateGuild(guildId: String, userId: String) {
-        if (!jdaService.isMutualGuild(guildId, userId)) throw ValidationException("Invalid guild Id")
+    override fun deleteAudioFile(guildId: String, name: String): Mono<Boolean> {
+        return audioFileRepository.deleteAudioFile(guildId, name)
+    }
+
+    private fun validateName(name: String): Mono<Void> =
+        if (BAD_NAMES.contains(name)) Mono.error(ValidationException("Bad sound name")) else Mono.empty()
+
+    companion object {
+        val BAD_NAMES: Set<String> = setOf(
+            "rnd",
+            "tts",
+            "entry",
+            "exit",
+            "help",
+            "list",
+            "say",
+            "url",
+            "volume"
+        )
     }
 }
