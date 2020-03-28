@@ -100,7 +100,7 @@ const playSoundRejected = (error: Error): PlaySoundRejectedAction => ({
 export const playSound = (guildId: string, name: string): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playSoundRequest())
-        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/play?name=${name}`)
+        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/${name}/play`)
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -126,7 +126,7 @@ const playRandomSoundRejected = (error: Error): PlayRandomSoundRejectedAction =>
 export const playRandomSound = (guildId: string): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playRandomSoundRequest())
-        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/random`)
+        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/rnd`)
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 

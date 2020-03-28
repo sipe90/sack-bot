@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import { Button, Input, Card } from 'antd'
+import { Button, Input } from 'antd'
 import { useDispatch, useSelector } from '@/util'
 import { playTTS, playRandomTTS } from '@/actions/tts'
 
@@ -44,7 +44,7 @@ const TTS: React.FC = () => {
                     disabled={playingTTS || !selectedGuild}
                     onClick={() => selectedGuild && dispatch(playTTS(selectedGuild, text))}
                 >
-                    Play
+                    Talk
                 </Button>
                 </div>
             </div>
