@@ -24,8 +24,6 @@ class DiscordUser(
         const val VERIFIED = "verified"
         const val EMAIL = "email"
 
-        const val GUILDS = "guilds"
-
         fun getForScope(scope: String): List<String> =
             when (scope) {
                 "identify" -> listOf(
@@ -41,7 +39,6 @@ class DiscordUser(
                     PREMIUM_TYPE
                 )
                 "email" -> listOf(VERIFIED, EMAIL)
-                "guilds" -> listOf(GUILDS)
                 else -> listOf()
             }
 
