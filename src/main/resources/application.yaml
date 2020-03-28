@@ -41,7 +41,6 @@ spring:
             redirectUri: '{baseUrl}/login/oauth2/code/{registrationId}'
             scope:
               - identify
-              - guilds
         provider:
           discord:
             authorizationUri: https://discordapp.com/api/oauth2/authorize
