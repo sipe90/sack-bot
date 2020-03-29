@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConstructorBinding
 data class BotConfig(
     val token: String,
+    val adminRole: String?,
     val activity: ActivityConfig,
     val chat: ChatConfig,
     val tts: TTSConfig,

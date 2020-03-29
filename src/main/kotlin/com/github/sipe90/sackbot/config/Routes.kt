@@ -24,12 +24,12 @@ import reactor.util.function.Tuples
 
 @Configuration
 class Routes(
+    private val config: BotConfig,
     private val userHandler: UserHandler,
     private val audioHandler: AudioHandler,
     private val voiceHandler: VoiceHandler,
     private val ttsHandler: TTSHandler
 ) {
-
     @Bean
     fun apiRouter() = router {
         ("/api" and accept(MediaType.APPLICATION_JSON)).nest {
@@ -99,5 +99,6 @@ class Routes(
             .map { Tuples.of(req, it.principal as DiscordUser) }
     }
 
-    private fun hasAdminAccess(user: DiscordUser, guildId: String): Boolean = user.isOwner(guildId)
+    private fun hasAdminAccess(user: DiscordUser, guildId: String): Boolean =
+        user.isOwner(guildId) || (config.adminRole != null && user.getRoles(guildId).contains(config.adminRole))
 }

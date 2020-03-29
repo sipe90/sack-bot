@@ -55,6 +55,9 @@ class DiscordUser(
 
     override fun getName() = getUsername()
 
+    fun getRoles(guildId: String): Set<String> = authorities.find { it.guildId == guildId }?.roles
+        ?: throw RuntimeException("User is not a member of this guild")
+
     fun isInGuild(guildId: String): Boolean = authorities.any { it.guildId == guildId }
 
     fun isOwner(guildId: String): Boolean = authorities.find { it.guildId == guildId }?.isOwner ?: false

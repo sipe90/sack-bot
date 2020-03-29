@@ -2,6 +2,7 @@ sackbot:
   home: ${user.home}${file.separator}sackbot
   bot:
     token: bot_token
+    adminRole: sackbot-admin
     activity:
       type: watching
       text: the hottest memes
