@@ -3,6 +3,7 @@ package com.github.sipe90.sackbot.service
 import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.persistence.AudioFileRepository
 import com.github.sipe90.sackbot.persistence.dto.AudioFile
+import com.github.sipe90.sackbot.util.withExtension
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -36,7 +37,7 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
                 ByteArrayOutputStream().use { baos ->
                     val zip = ZipOutputStream(baos)
                     it.forEach {
-                        val entry = ZipEntry(entryName(it.name, it.extension))
+                        val entry = ZipEntry(withExtension(it.name, it.extension))
                         zip.putNextEntry(entry)
                         zip.write(it.data)
                         zip.closeEntry()
@@ -45,11 +46,6 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
                     baos
                 }.toByteArray()
             }
-
-    private fun entryName(fileName: String, extension: String?): String {
-        if (extension == null) return fileName
-        return "${fileName}.${extension}"
-    }
 
     override fun audioFileExists(guildId: String, name: String, userId: String): Mono<Boolean> {
         return findAudioFile(guildId, name).map { true }.defaultIfEmpty(false)

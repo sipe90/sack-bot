@@ -7,6 +7,7 @@ import com.github.sipe90.sackbot.persistence.dto.API
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
 import com.github.sipe90.sackbot.util.stripExtension
+import com.github.sipe90.sackbot.util.withExtension
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.codec.json.Jackson2CodecSupport
@@ -50,7 +51,7 @@ class AudioHandler(
     fun getSoundsList(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
-        
+
         return ok()
             .hint(Jackson2CodecSupport.JSON_VIEW_HINT, API::class.java)
             .body(audioFileService.getAudioFiles(guildId, userId))
@@ -93,6 +94,22 @@ class AudioHandler(
         val name = request.pathVariable("name")
 
         return audioFileService.deleteAudioFile(guildId, name).flatMap { noContent().build() }
+    }
+
+    fun downloadSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+        val guildId = request.pathVariable("guildId")
+        val name = request.pathVariable("name")
+        val userId = principal.getId()
+
+        return audioFileService.findAudioFile(guildId, name).flatMap {
+            ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"${withExtension(it.name, it.extension)}\""
+                )
+                .bodyValue(it.data)
+        }
     }
 
     fun exportSounds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {

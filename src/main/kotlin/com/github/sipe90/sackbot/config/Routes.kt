@@ -44,8 +44,9 @@ class Routes(
                     GET("/", handle(audioHandler::getSoundsList))
                     POST("/", handle(audioHandler::uploadSounds))
                     POST("/rnd", handle(audioHandler::playRandomSound))
-                    GET("/export", handle(audioHandler::exportSounds))
+                    GET("/export", handleAdmin(audioHandler::exportSounds))
                     "/{name}".nest {
+                        GET("/download", handleAdmin(audioHandler::downloadSound))
                         POST("/", handle(audioHandler::updateSound))
                         DELETE("/", handleAdmin(audioHandler::deleteSound))
                         POST("/play", handle(audioHandler::playSound))
