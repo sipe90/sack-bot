@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo } from 'react'
-import { Alert, Table, Divider, Modal } from 'antd'
+import { Alert, Table, Divider, Modal, Button } from 'antd'
 import { DateTime } from 'luxon'
 import * as R from 'ramda'
-import { PlayCircleTwoTone, EditTwoTone, DeleteTwoTone, WarningOutlined } from '@ant-design/icons'
+import { PlayCircleTwoTone, DownloadOutlined, EditTwoTone, DeleteTwoTone, WarningOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, deleteSound, playSound } from '@/actions/sounds'
@@ -51,6 +51,17 @@ const buildColumns = (dispatch: AppDispatch, guildId: string | null, guildMember
         render: (userId: string) => userId ? getUsername(userId) : '',
         sorter: (a, b) => getUsername(a.modifiedBy).localeCompare(getUsername(b.modifiedBy))
     },{
+        title: () => 
+            <Button
+                style={{ float: 'right'}}
+                title='Download audio files as zip'
+                type='primary'
+                shape='round'
+                icon={<DownloadOutlined/>}
+                href={`/api/${guildId}/sounds/export`}
+            >
+                Export
+            </Button>,
         key: 'actions',
         render: (_text, { name }) => <>
                 <PlayCircleTwoTone
@@ -58,8 +69,14 @@ const buildColumns = (dispatch: AppDispatch, guildId: string | null, guildMember
                     onClick={() => guildId && dispatch(playSound(guildId, name))}
                 />
                 <Divider type='vertical'/>
+                <a download href={`/api/${guildId}/sounds/${name}/download`}>
+                    <DownloadOutlined
+                        title='Download'
+                    />
+                </a>
+                <Divider type='vertical'/>
                 <EditTwoTone
-                    title='Edit audio'
+                    title='Edit'
                 />
                 <Divider type='vertical'/>
                 <DeleteTwoTone
@@ -69,7 +86,7 @@ const buildColumns = (dispatch: AppDispatch, guildId: string | null, guildMember
                         content: `Are you sure you want to delete audio file "${name}"?`,
                         onOk: () => guildId ? dispatch(deleteSound(guildId, name)) : undefined
                     })}
-                    title='Delete audio'
+                    title='Delete'
                 />
             </>
     }]
