@@ -1,6 +1,7 @@
 package com.github.sipe90.sackbot.handler
 
 import com.github.sipe90.sackbot.auth.DiscordUser
+import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.handler.dto.GuildMemberDTO
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.JDAService
@@ -13,7 +14,11 @@ import org.springframework.web.reactive.function.server.body
 import reactor.core.publisher.Mono
 
 @Component
-class UserHandler(private val memberRepository: MemberRepository, private val jdaService: JDAService) {
+class UserHandler(
+    private val config: BotConfig,
+    private val memberRepository: MemberRepository,
+    private val jdaService: JDAService
+) {
 
     fun userInfo(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         return ok()
@@ -30,8 +35,8 @@ class UserHandler(private val memberRepository: MemberRepository, private val jd
                     it.id,
                     it.name,
                     it.iconUrl,
-                    it.ownerId == principal.getId(),
-                    memberRoles(it, user!!)
+                    hasAdminAccess(it, user!!),
+                    memberRoles(it, user)
                 )
             })
     }
@@ -54,6 +59,14 @@ class UserHandler(private val memberRepository: MemberRepository, private val jd
         val member = guild.getMember(user)
         return member!!.roles.map(Role::getName)
     }
+
+    private fun hasAdminAccess(
+        guild: net.dv8tion.jda.api.entities.Guild,
+        user: net.dv8tion.jda.api.entities.User
+    ): Boolean =
+        guild.ownerId == user.id ||
+            (config.adminRole != null &&
+                guild.getMember(user)?.roles?.any { it.name == config.adminRole } ?: false)
 
     data class Guild(
         val id: String,

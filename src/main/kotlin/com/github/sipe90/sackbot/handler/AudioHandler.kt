@@ -99,7 +99,6 @@ class AudioHandler(
     fun downloadSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
-        val userId = principal.getId()
 
         return audioFileService.findAudioFile(guildId, name).flatMap {
             ok()
