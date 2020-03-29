@@ -1,12 +1,14 @@
 package com.github.sipe90.sackbot.handler
 
 import com.github.sipe90.sackbot.auth.DiscordUser
+import com.github.sipe90.sackbot.handler.dto.GuildMemberDTO
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.JDAService
 import net.dv8tion.jda.api.entities.Role
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.ServerResponse.ok
 import org.springframework.web.reactive.function.server.body
 import reactor.core.publisher.Mono
 
@@ -14,7 +16,7 @@ import reactor.core.publisher.Mono
 class UserHandler(private val memberRepository: MemberRepository, private val jdaService: JDAService) {
 
     fun userInfo(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
-        return ServerResponse.ok()
+        return ok()
             .body(memberRepository.getUserMembers(principal.getId()))
     }
 
@@ -22,7 +24,7 @@ class UserHandler(private val memberRepository: MemberRepository, private val jd
         val userId = principal.getId()
         val user = jdaService.getUser(userId)
 
-        return ServerResponse.ok()
+        return ok()
             .bodyValue(jdaService.getMutualGuilds(principal.getId()).map {
                 Guild(
                     it.id,
@@ -32,6 +34,17 @@ class UserHandler(private val memberRepository: MemberRepository, private val jd
                     memberRoles(it, user!!)
                 )
             })
+    }
+
+    fun guildMembers(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+        val guildId = request.pathVariable("guildId")
+
+        return ok().body(
+            Mono.fromCallable {
+                val guild = jdaService.getGuild(guildId) ?: throw RuntimeException("Could not get guild")
+                guild.members.map { GuildMemberDTO(it.id, it.effectiveName) }
+            }
+        )
     }
 
     private fun memberRoles(
@@ -46,7 +59,7 @@ class UserHandler(private val memberRepository: MemberRepository, private val jd
         val id: String,
         val name: String,
         val iconUrl: String?,
-        val owner: Boolean,
+        val isAdmin: Boolean,
         val roles: List<String>
     )
 }
