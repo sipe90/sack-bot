@@ -2,13 +2,15 @@ import React from 'react'
 import {
     TableOutlined,
     RobotOutlined,
-    SoundOutlined
+    SoundOutlined,
+    SettingOutlined
   } from '@ant-design/icons'
-import styled from 'styled-components'
+import styled, { AnyStyledComponent } from 'styled-components'
 
 import Soundboard from '@/components/Soundboard'
 import Voices from '@/components/Voices'
 import TTS from '@/components/TTS'
+import Admin from '@/components/Admin'
 
 export interface IRouteDefinition {
     path: string
@@ -18,42 +20,39 @@ export interface IRouteDefinition {
     container: JSX.Element
 }
 
-const SoundBoardIcon = styled(TableOutlined)`
+const styledIcon = (icon: AnyStyledComponent) => styled(icon)`
     margin-top: 8px;
-    font-size: 24px
-`
-
-const VoicesIcon = styled(SoundOutlined)`
-    margin-top: 8px;
-    font-size: 24px
-`
-
-const TTSIcon = styled(RobotOutlined)`
-    margin-top: 8px;
-    font-size: 24px
+    font-size: 24px;
 `
 
 const routes: IRouteDefinition[] = [
     {
         container: <Soundboard />,
         exact: true,
-        icon: <SoundBoardIcon />,
+        icon: React.createElement(styledIcon(TableOutlined)),
         path: '/soundboard',
         text: 'Soundboard',
     },
     {
         container: <Voices />,
         exact: true,
-        icon: <VoicesIcon />,
+        icon: React.createElement(styledIcon(SoundOutlined)),
         path: '/voices',
         text: 'Voices',
     },
     {
         container: <TTS />,
         exact: true,
-        icon: <TTSIcon />,
+        icon: React.createElement(styledIcon(RobotOutlined)),
         path: '/tts',
         text: 'Text to speech',
+    },
+    {
+        container: <Admin />,
+        exact: true,
+        icon: React.createElement(styledIcon(SettingOutlined)),
+        path: '/admin',
+        text: 'Admin',
     }
 ]
 

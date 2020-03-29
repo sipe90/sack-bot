@@ -1,6 +1,6 @@
 import { message } from 'antd'
 
-import { IMember, IGuild, AsyncThunkResult } from "@/types"
+import { IMembership, IGuild, AsyncThunkResult, IGuildMember } from "@/types"
 import { fetchGetJson } from "@/util"
 import { fetchSounds } from "./sounds"
 
@@ -12,6 +12,10 @@ export const FETCH_GUILDS_REQUEST = "FETCH_GUILDS_REQUEST"
 export const FETCH_GUILDS_RESOLVED = "FETCH_GUILDS_RESOLVED"
 export const FETCH_GUILDS_REJECTED = "FETCH_GUILDS_REJECTED"
 
+export const FETCH_GUILD_MEMBERS_REQUEST = "FETCH_GUILD_MEMBERS_REQUEST"
+export const FETCH_GUILD_MEMBERS_RESOLVED = "FETCH_GUILD_MEMBERS_RESOLVED"
+export const FETCH_GUILD_MEMBERS_REJECTED = "FETCH_GUILD_MEMBERS_REJECTED"
+
 export const SELECT_GUILD = "SELECT_GUILD"
 
 interface FetchUserRequestAction {
@@ -20,7 +24,7 @@ interface FetchUserRequestAction {
 
 interface FetchUserResolvedAction {
     type: typeof FETCH_USER_RESOLVED,
-    payload: IMember[]
+    payload: IMembership[]
 }
 
 interface FetchUserRejectedAction {
@@ -42,6 +46,21 @@ interface FetchGuildsRejectedAction {
     payload: Error
 }
 
+
+interface FetchGuildMembersRequestAction {
+    type: typeof FETCH_GUILD_MEMBERS_REQUEST
+}
+
+interface FetchGuildMembersResolvedAction {
+    type: typeof FETCH_GUILD_MEMBERS_RESOLVED,
+    payload: { guildId: string, members: IGuildMember[] }
+}
+
+interface FetchGuildMembersRejectedAction {
+    type: typeof FETCH_GUILD_MEMBERS_REJECTED,
+    payload: Error
+}
+
 interface SelectGuildAction {
     type: typeof SELECT_GUILD,
     payload: string
@@ -49,13 +68,14 @@ interface SelectGuildAction {
 
 export type UserActions = FetchUserRequestAction | FetchUserResolvedAction | FetchUserRejectedAction | 
     FetchGuildsRequestAction | FetchGuildsResolvedAction | FetchGuildsRejectedAction |
+    FetchGuildMembersRequestAction | FetchGuildMembersResolvedAction | FetchGuildMembersRejectedAction |
     SelectGuildAction
 
 const fetchUserRequest = (): FetchUserRequestAction => ({
     type: FETCH_USER_REQUEST
 })
 
-const fetchUserResolved = (memberships: IMember[]): FetchUserResolvedAction => ({
+const fetchUserResolved = (memberships: IMembership[]): FetchUserResolvedAction => ({
     type: FETCH_USER_RESOLVED,
     payload: memberships
 })
@@ -69,7 +89,7 @@ const fetchUserRejected = (error: Error): FetchUserRejectedAction => ({
 export const fetchUser = (): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(fetchUserRequest())
-        const res = await fetchGetJson<IMember[]>('/api/me')
+        const res = await fetchGetJson<IMembership[]>('/api/me')
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -111,6 +131,34 @@ export const fetchGuilds = (): AsyncThunkResult => async (dispatch) => {
     } catch (error) {
         message.error(`Failed to get user guilds: ${error.message}`)
         dispatch(fetchGuildsRejected(error))
+    }
+}
+
+const fetchGuildMembersRequest = (): FetchGuildMembersRequestAction => ({
+    type: FETCH_GUILD_MEMBERS_REQUEST
+})
+
+const fetchGuildMembersResolved = (guildId: string, members: IGuildMember[]): FetchGuildMembersResolvedAction => ({
+    type: FETCH_GUILD_MEMBERS_RESOLVED,
+    payload: { guildId, members }
+})
+
+const fetchGuildMembersRejected = (error: Error): FetchGuildMembersRejectedAction => ({
+    type: FETCH_GUILD_MEMBERS_REJECTED,
+    payload: error
+})
+
+export const fetchGuildMembers = (guildId: string): AsyncThunkResult => async (dispatch) => {
+    try {
+        dispatch(fetchGuildMembersRequest())
+        const res = await fetchGetJson<IGuildMember[]>(`/api/${guildId}/members`)
+
+        if (!res.ok) throw new Error(res.json?.message || res.statusText)
+
+        dispatch(fetchGuildMembersResolved(guildId, res.json))
+    } catch (error) {
+        message.error(`Failed to get guild members: ${error.message}`)
+        dispatch(fetchGuildMembersRejected(error))
     }
 }
 

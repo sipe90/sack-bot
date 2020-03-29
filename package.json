@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "antd": "^4.0.3",
+    "luxon": "^1.22.2",
     "ramda": "^0.26.1",
     "react": "16.12.0",
     "react-bootstrap": "^1.0.0-beta.17",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@types/html-webpack-plugin": "^3.2.2",
     "@types/jest": "^25.1.1",
+    "@types/luxon": "^1.22.0",
     "@types/ramda": "^0.26.40",
     "@types/react": "^16.9.19",
     "@types/react-dom": "^16.9.5",

@@ -1,7 +1,7 @@
 import { message } from 'antd'
 
 import { IAudioFile, AsyncThunkResult } from "@/types"
-import { fetchGetJson, fetchPostJson } from "@/util"
+import { fetchGetJson, fetchPostJson, fetchDeleteJson } from "@/util"
 
 export const FETCH_SOUNDS_REQUEST = "FETCH_SOUNDS_REQUEST"
 export const FETCH_SOUNDS_RESOLVED = "FETCH_SOUNDS_RESOLVED"
@@ -14,6 +14,10 @@ export const PLAY_SOUND_REJECTED = "PLAY_SOUND_REJECTED"
 export const PLAY_RANDOM_SOUND_REQUEST = "PLAY_RANDOM_SOUND_REQUEST"
 export const PLAY_RANDOM_SOUND_RESOLVED = "PLAY_RANDOM_SOUND_RESOLVED"
 export const PLAY_RANDOM_SOUND_REJECTED = "PLAY_RANDOM_SOUND_REJECTED"
+
+export const DELETE_SOUND_REQUEST = "DELETE_SOUND_REQUEST"
+export const DELETE_SOUND_RESOLVED = "DELETE_SOUND_RESOLVED"
+export const DELETE_SOUND_REJECTED = "DELETE_SOUND_REJECTED"
 
 interface FetchSoundsRequestAction {
     type: typeof FETCH_SOUNDS_REQUEST
@@ -55,9 +59,24 @@ interface PlayRandomSoundRejectedAction {
     payload: Error
 }
 
+interface DeleteSoundRequestAction {
+    type: typeof DELETE_SOUND_REQUEST
+}
+
+interface DeleteSoundResolvedAction {
+    type: typeof DELETE_SOUND_RESOLVED,
+    payload:  { guildId: string, name: string }
+}
+
+interface DeleteSoundRejectedAction {
+    type: typeof DELETE_SOUND_REJECTED,
+    payload: Error
+}
+
 export type SoundsActions = FetchSoundsRequestAction | FetchSoundsResolvedAction | FetchSoundsRejectedAction |
     PlaySoundRequestAction | PlaySoundResolvedAction | PlaySoundRejectedAction |
-    PlayRandomSoundRequestAction | PlayRandomSoundResolvedAction | PlayRandomSoundRejectedAction
+    PlayRandomSoundRequestAction | PlayRandomSoundResolvedAction | PlayRandomSoundRejectedAction |
+    DeleteSoundRequestAction | DeleteSoundResolvedAction | DeleteSoundRejectedAction
 
 const fetchSoundsRequest = (): FetchSoundsRequestAction => ({
     type: FETCH_SOUNDS_REQUEST
@@ -138,5 +157,33 @@ export const playRandomSound = (guildId: string): AsyncThunkResult => async (dis
     } catch (error) {
         message.error(`Failed to play sound: ${error.message}`)
         dispatch(playRandomSoundRejected(error))
+    }
+}
+
+const deleteSoundRequest = (): DeleteSoundRequestAction => ({
+    type: DELETE_SOUND_REQUEST
+})
+
+const deleteSoundResolved = (guildId: string, name: string): DeleteSoundResolvedAction => ({
+    type: DELETE_SOUND_RESOLVED,
+    payload: { guildId, name }
+})
+
+const deleteSoundRejected = (error: Error): DeleteSoundRejectedAction => ({
+    type: DELETE_SOUND_REJECTED,
+    payload: error
+})
+
+export const deleteSound = (guildId: string, name: string): AsyncThunkResult => async (dispatch) => {
+    try {
+        dispatch(deleteSoundRequest())
+        const res = await fetchDeleteJson(`/api/${guildId}/sounds/${name}`)
+
+        if (!res.ok) throw new Error(res.json?.message || res.statusText)
+
+        dispatch(deleteSoundResolved(guildId, name))
+    } catch (error) {
+        message.error(`Failed to delete sound: ${error.message}`)
+        dispatch(deleteSoundRejected(error))
     }
 }
