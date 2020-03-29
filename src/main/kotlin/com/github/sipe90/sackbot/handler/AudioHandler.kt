@@ -50,7 +50,7 @@ class AudioHandler(
     fun getSoundsList(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
-
+        
         return ok()
             .hint(Jackson2CodecSupport.JSON_VIEW_HINT, API::class.java)
             .body(audioFileService.getAudioFiles(guildId, userId))

@@ -38,6 +38,7 @@ class Routes(
             GET("/voices", handle(voiceHandler::getVoiceLines))
             "/{guildId}".nest {
                 filter(this@Routes::guildAccessFilter)
+                GET("/members", handleAdmin(userHandler::guildMembers))
                 POST("/voices/play", handle(voiceHandler::playVoiceLines))
                 "/sounds".nest {
                     GET("/", handle(audioHandler::getSoundsList))
