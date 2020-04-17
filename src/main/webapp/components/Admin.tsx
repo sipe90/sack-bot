@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Alert, Table, Divider, Modal, Button, Form, Input, Select } from 'antd'
+import { message, Alert, Table, Divider, Modal, Button, Form, Input, Select, Upload } from 'antd'
 import { DateTime } from 'luxon'
 import * as R from 'ramda'
-import { PlayCircleTwoTone, DownloadOutlined, EditTwoTone, DeleteTwoTone, WarningOutlined } from '@ant-design/icons'
+import { PlayCircleTwoTone, PlusOutlined, DownloadOutlined, EditTwoTone, DeleteTwoTone, WarningOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, deleteSound, playSound, updateSound } from '@/actions/sounds'
 import { IAudioFile, IGuildMember, AppDispatch } from '@/types'
 import { ColumnsType } from 'antd/lib/table'
 import { fetchGuildMembers } from '@/actions/user'
+import { UploadFile } from 'antd/lib/upload/interface'
 
 const getTags = R.pipe<IAudioFile[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
@@ -57,16 +58,37 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
         sorter: (a, b) => getUsername(a.modifiedBy).localeCompare(getUsername(b.modifiedBy))
     },{
         title: () => 
-            <Button
-                style={{ float: 'right'}}
-                title='Download audio files as zip'
-                type='primary'
-                shape='round'
-                icon={<DownloadOutlined/>}
-                href={`/api/${guildId}/sounds/export`}
-            >
-                Export
-            </Button>,
+            <div style={{ float: 'right'}}>
+                <Upload
+                    action={`/api/${guildId}/sounds`}
+                    accept={'.mp3,.wav'}
+                    multiple
+                    showUploadList={false}
+                    onChange={({ file, fileList }) => {
+                        if (file.status == 'error') {
+                            message.error(`Failed to upload ${file.name}: ${file.response}`)
+                        }
+                        if (R.all<UploadFile>((file) => file.status !== 'uploading', fileList)) {
+                            message.success(`Finished uploading ${fileList.length} file(s)`)
+                            guildId && dispatch(fetchSounds(guildId))
+                        }
+                    }}
+                >
+                    <Button
+                        title='Upload files'
+                        type='primary'
+                        shape='circle'
+                        icon={<PlusOutlined/>}
+                    />
+                </Upload>
+                <Button
+                    style={{ marginLeft: 8 }}
+                    title='Download audio files as zip'
+                    shape='circle'
+                    icon={<DownloadOutlined/>}
+                    href={`/api/${guildId}/sounds/export`}
+                />
+            </div>,
         key: 'actions',
         render: (_text, audioFile) => <>
                 <PlayCircleTwoTone

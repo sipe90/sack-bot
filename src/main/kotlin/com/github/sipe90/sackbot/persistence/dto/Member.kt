@@ -7,10 +7,8 @@ data class Member(
     val userId: String,
     var entrySound: String?,
     var exitSound: String?,
-    // FIXME: Set not nullable
-    val createdBy: String?,
-    // FIXME: Set not nullable
-    val created: Instant?,
+    val createdBy: String,
+    val created: Instant,
     var modifiedBy: String?,
     var modified: Instant?
 )

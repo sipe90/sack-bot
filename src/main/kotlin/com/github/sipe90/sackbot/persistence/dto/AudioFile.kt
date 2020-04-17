@@ -16,12 +16,11 @@ data class AudioFile(
     @JsonView(API::class)
     var extension: String?,
     @JsonView(API::class)
-    var size: Int?,
+    var size: Int,
     @JsonView(API::class)
     val guildId: String,
     @JsonView(API::class)
-    // FIXME: Set not nullable
-    var tags: Set<String>?,
+    var tags: Set<String>,
     @JsonView(API::class)
     val createdBy: String,
     @JsonView(API::class)

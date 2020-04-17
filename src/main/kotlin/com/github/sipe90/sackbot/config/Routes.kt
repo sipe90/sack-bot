@@ -42,7 +42,8 @@ class Routes(
                 POST("/voices/play", handle(voiceHandler::playVoiceLines))
                 "/sounds".nest {
                     GET("/", handle(audioHandler::getSoundsList))
-                    POST("/", handle(audioHandler::uploadSounds))
+                    (POST("/") and accept(MediaType.MULTIPART_FORM_DATA))
+                            .invoke(handleAdmin(audioHandler::uploadSounds))
                     POST("/rnd", handle(audioHandler::playRandomSound))
                     GET("/export", handleAdmin(audioHandler::exportSounds))
                     "/{name}".nest {
