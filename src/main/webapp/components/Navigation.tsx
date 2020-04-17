@@ -19,7 +19,7 @@ const NavigationMenu = styled.div`
 const NavigationLink = styled(NavLink)`
     display: inline-block;
     height: 52px;
-    padding: 6px 16px 2px 16px;
+    padding: 6px 10px 6px 10px;
     color: rgba(255, 255, 255, 0.80);
 `
 

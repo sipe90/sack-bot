@@ -11,7 +11,7 @@ import { ColumnsType } from 'antd/lib/table'
 import { fetchGuildMembers } from '@/actions/user'
 
 const getTags = R.pipe<IAudioFile[], string[], string[]>(
-    R.chain<IAudioFile, string>((audioFile) => audioFile.tags),
+    R.chain<IAudioFile, string>(R.prop('tags')),
     R.uniq
 )
 
@@ -185,7 +185,7 @@ const Admin: React.FC = () => {
                         <Select 
                             mode="tags"
                         >
-                            {tags.map((tag) => <Select.Option value={tag}>{tag}</Select.Option>)}
+                            {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
                         </Select>
                     </Form.Item>
                 </Form>

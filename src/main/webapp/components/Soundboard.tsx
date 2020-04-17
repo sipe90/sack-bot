@@ -1,7 +1,7 @@
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import * as R from 'ramda'
-import { Button, Divider } from 'antd'
+import { Button, Divider, Select } from 'antd'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, playSound, playRandomSound } from '@/actions/sounds'
@@ -17,11 +17,23 @@ const Sound = styled.div`
     margin: 5px;
     flex: 0 0 0;
 `
+const isSubset = R.curry((xs: any[], ys: any[]) =>
+	R.all(R.contains(R.__, ys), xs))
 
-const groupByFirstLetter = R.groupBy<IAudioFile>(R.pipe(
-    R.pathOr('', ['name', 0]),
-    R.toUpper
-))
+const filterAndgroup = R.pipe(
+    (sounds: IAudioFile[], tagFilter: string[]) => tagFilter.length ? sounds.filter((sound) => isSubset(tagFilter, sound.tags)) : sounds,
+    R.groupBy<IAudioFile>(
+        R.pipe(
+            R.pathOr('', ['name', 0]),
+            R.toUpper
+        )
+    )
+)
+
+const getTags = R.pipe<IAudioFile[], string[], string[]>(
+    R.chain<IAudioFile, string>(R.prop('tags')),
+    R.uniq
+)
 
 const Soundboard: React.FC = () => {
 
@@ -37,27 +49,42 @@ const Soundboard: React.FC = () => {
 
     const dispatch = useDispatch()
 
+    const [tagFilter, setTagFilter] = useState<string[]>([])
+
     const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild)), [selectedGuild])
 
     useEffect(() => {
         selectedGuild && dispatch(fetchSounds(selectedGuild))
     }, [selectedGuild])
 
-    const groupedSounds = groupByFirstLetter(sounds)
-    const letters = R.keys(groupedSounds).sort()
+    const groupedSounds = useMemo(() => filterAndgroup(sounds, tagFilter), [sounds, tagFilter])
+    const letters = useMemo(() => R.keys(groupedSounds).sort(), [groupedSounds])
+    const tags = useMemo(() => getTags(sounds), [sounds])
 
     return (
         <>
-            <Sound>
+            <div style={{ display: 'flex' }}>
+                <div style={{ flexGrow: 1 }}>
+                <Select
+                    style={{ width: '100%' }}
+                    mode='multiple'
+                    allowClear
+                    placeholder='Filter by tags'
+                    value={tagFilter}
+                    onChange={setTagFilter}
+                >
+                    {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
+                </Select>
+                </div>
                 <Button
                     block
-                    style={{ width: 120 }}
+                    style={{ marginLeft: 8, width: 120 }}
                     disabled={playingSound}
                     type="primary"
                     onClick={onPlayRandomSound}>
                         <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>Random</div>
                 </Button>
-            </Sound>
+            </div>
             {letters.map((letter) => 
                 <div key={letter}>
                     <Divider>{letter}</Divider>
