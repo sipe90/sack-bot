@@ -1,16 +1,21 @@
-import React, { useEffect, useMemo } from 'react'
-import { Alert, Table, Divider, Modal, Button } from 'antd'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Alert, Table, Divider, Modal, Button, Form, Input, Select } from 'antd'
 import { DateTime } from 'luxon'
 import * as R from 'ramda'
 import { PlayCircleTwoTone, DownloadOutlined, EditTwoTone, DeleteTwoTone, WarningOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
-import { fetchSounds, deleteSound, playSound } from '@/actions/sounds'
+import { fetchSounds, deleteSound, playSound, updateSound } from '@/actions/sounds'
 import { IAudioFile, IGuildMember, AppDispatch } from '@/types'
 import { ColumnsType } from 'antd/lib/table'
 import { fetchGuildMembers } from '@/actions/user'
 
-const buildColumns = (dispatch: AppDispatch, guildId: string | null, guildMembers: { [guildId: string]: IGuildMember[]}): ColumnsType<IAudioFile> => {
+const getTags = R.pipe<IAudioFile[], string[], string[]>(
+    R.chain<IAudioFile, string>((audioFile) => audioFile.tags),
+    R.uniq
+)
+
+const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudioFile) => void, guildId: string | null, guildMembers: { [guildId: string]: IGuildMember[]}): ColumnsType<IAudioFile> => {
 
     const members = guildId ? guildMembers[guildId] || [] : []
     const membersById = R.indexBy(R.prop('id'), members)
@@ -63,13 +68,13 @@ const buildColumns = (dispatch: AppDispatch, guildId: string | null, guildMember
                 Export
             </Button>,
         key: 'actions',
-        render: (_text, { name }) => <>
+        render: (_text, audioFile) => <>
                 <PlayCircleTwoTone
                     title='Play audio'
-                    onClick={() => guildId && dispatch(playSound(guildId, name))}
+                    onClick={() => guildId && dispatch(playSound(guildId, audioFile.name))}
                 />
                 <Divider type='vertical'/>
-                <a download href={`/api/${guildId}/sounds/${name}/download`}>
+                <a download href={`/api/${guildId}/sounds/${audioFile.name}/download`}>
                     <DownloadOutlined
                         title='Download'
                     />
@@ -77,14 +82,15 @@ const buildColumns = (dispatch: AppDispatch, guildId: string | null, guildMember
                 <Divider type='vertical'/>
                 <EditTwoTone
                     title='Edit'
+                    onClick={() => onEditAudioFile(audioFile)}
                 />
                 <Divider type='vertical'/>
                 <DeleteTwoTone
                     onClick={() => Modal.confirm({
                         icon: <WarningOutlined />,
-                        title: `Delete ${name}`,
-                        content: `Are you sure you want to delete audio file "${name}"?`,
-                        onOk: () => guildId ? dispatch(deleteSound(guildId, name)) : undefined
+                        title: `Delete ${audioFile.name}`,
+                        content: `Are you sure you want to delete audio file "${audioFile.name}"?`,
+                        onOk: () => guildId ? dispatch(deleteSound(guildId, audioFile.name)) : undefined
                     })}
                     title='Delete'
                 />
@@ -119,15 +125,74 @@ const Admin: React.FC = () => {
         selectedGuild && dispatch(fetchGuildMembers(selectedGuild))
     }, [selectedGuild])
 
-    const guild = guilds.find(({ id }) => id === selectedGuild)
+    const [editModalVisible, setEditModalVisible] = useState(false)
+    const [selectedAudioFile, setSelectedAudioFile] = useState<IAudioFile | null>(null)
 
-    const columns = useMemo(() => buildColumns(dispatch, selectedGuild, guildMembers), [guildMembers, selectedGuild])
+    const [form] = Form.useForm()
+
+    const onEditAudioFile = (audioFile: IAudioFile) => {
+        setSelectedAudioFile(audioFile)
+        form.setFieldsValue(audioFile)
+        setEditModalVisible(true)
+    }
+
+    const columns = useMemo(() => buildColumns(dispatch, onEditAudioFile, selectedGuild, guildMembers), [guildMembers, selectedGuild])
+    const tags = useMemo(() => getTags(sounds), [sounds])
+
+    const guild = guilds.find(({ id }) => id === selectedGuild)
 
     if (!guild) return null
 
-    return guild.isAdmin ? (
-        <Table<IAudioFile> columns={columns} dataSource={sounds} rowKey='name' size='small' pagination={false} loading={guildsLoading ||soundsLoading || guildMembersLoading}/>
-    ) : <Alert message="You have no power here!" type="error" showIcon />
+    if (!guild.isAdmin) return <Alert message="You have no power here!" type="error" showIcon />
+
+    return (
+        <>
+            <Modal
+                title={`Edit audio file "${selectedAudioFile?.name}"`}
+                visible={editModalVisible}
+                forceRender
+                destroyOnClose={false}
+                okText="Update"
+                onOk={() => {
+                    if (!selectedAudioFile) {
+                        return
+                    }
+                    form
+                        .validateFields()
+                        .then(({ name, tags }) => dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, { ...selectedAudioFile, name, tags })))
+                        .then(() => setEditModalVisible(false))
+                        .catch(() => undefined)
+                }}
+                onCancel={() => setEditModalVisible(false)}
+                afterClose={() => setSelectedAudioFile(null)}
+            >
+                <Form
+                    form={form}
+                    labelCol={{ span: 6 }}
+                    wrapperCol={{ span: 18 }}
+                >
+                    <Form.Item
+                        label="Name"
+                        name="name"
+                        rules={[{ required: true, message: 'Name is required' }]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item
+                        label="Tags"
+                        name="tags"
+                    >
+                        <Select 
+                            mode="tags"
+                        >
+                            {tags.map((tag) => <Select.Option value={tag}>{tag}</Select.Option>)}
+                        </Select>
+                    </Form.Item>
+                </Form>
+            </Modal>
+            <Table<IAudioFile> columns={columns} dataSource={sounds} rowKey='name' size='small' pagination={false} loading={guildsLoading || soundsLoading || guildMembersLoading}/>
+        </>
+    )
 }
 
 export default Admin

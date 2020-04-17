@@ -116,6 +116,7 @@ final class MessageEventHandler(
                                 guild.id,
                                 audioName,
                                 fileExtension,
+                                HashSet(),
                                 data,
                                 event.author.id
                             ).map { "Saved audio file `${audioName}`" }

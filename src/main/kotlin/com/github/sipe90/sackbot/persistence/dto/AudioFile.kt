@@ -20,6 +20,9 @@ data class AudioFile(
     @JsonView(API::class)
     val guildId: String,
     @JsonView(API::class)
+    // FIXME: Set not nullable
+    var tags: Set<String>?,
+    @JsonView(API::class)
     val createdBy: String,
     @JsonView(API::class)
     val created: Instant,

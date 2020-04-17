@@ -69,6 +69,7 @@ class AudioHandler(
             )
             .flatMap { (dto, audioFile) ->
                 audioFile.name = dto.name
+                audioFile.tags = dto.tags
                 audioFileService.updateAudioFile(guildId, name, audioFile, userId)
             }
             .flatMap { noContent().build() }
@@ -83,6 +84,7 @@ class AudioHandler(
                 guildId,
                 it.name,
                 stripExtension(it.originalFilename ?: it.name),
+                HashSet(),
                 it.bytes,
                 userId
             )

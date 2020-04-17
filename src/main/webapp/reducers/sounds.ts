@@ -1,6 +1,6 @@
 import { IAudioFile } from "@/types";
 import { Reducer } from "redux";
-import { FETCH_SOUNDS_REQUEST, FETCH_SOUNDS_RESOLVED, FETCH_SOUNDS_REJECTED, PLAY_SOUND_REQUEST, PLAY_SOUND_RESOLVED, PLAY_SOUND_REJECTED, PLAY_RANDOM_SOUND_REQUEST, PLAY_RANDOM_SOUND_RESOLVED, PLAY_RANDOM_SOUND_REJECTED, SoundsActions, DELETE_SOUND_REQUEST, DELETE_SOUND_RESOLVED, DELETE_SOUND_REJECTED } from "@/actions/sounds";
+import { FETCH_SOUNDS_REQUEST, FETCH_SOUNDS_RESOLVED, FETCH_SOUNDS_REJECTED, PLAY_SOUND_REQUEST, PLAY_SOUND_RESOLVED, PLAY_SOUND_REJECTED, PLAY_RANDOM_SOUND_REQUEST, PLAY_RANDOM_SOUND_RESOLVED, PLAY_RANDOM_SOUND_REJECTED, SoundsActions, DELETE_SOUND_REQUEST, DELETE_SOUND_RESOLVED, DELETE_SOUND_REJECTED, UPDATE_SOUND_REQUEST, UPDATE_SOUND_RESOLVED, UPDATE_SOUND_REJECTED } from "@/actions/sounds";
 
 export interface ISoundsState {
     sounds: IAudioFile[]
@@ -38,10 +38,16 @@ const soundsReducer: Reducer<ISoundsState, SoundsActions> = (state = initialStat
             return { ...state, playingSound: false }
         case PLAY_RANDOM_SOUND_REJECTED:
             return { ...state, playingSound: false }
+        case UPDATE_SOUND_REQUEST:
+            return { ...state }
+        case UPDATE_SOUND_RESOLVED:
+            return { ...state }
+        case UPDATE_SOUND_REJECTED:
+            return { ...state }
         case DELETE_SOUND_REQUEST:
             return { ...state }
         case DELETE_SOUND_RESOLVED:
-            return { ...state, sounds: state.sounds.filter(({ name }) => name !== action.payload.name) }
+            return { ...state }
         case DELETE_SOUND_REJECTED:
             return { ...state }
         default:

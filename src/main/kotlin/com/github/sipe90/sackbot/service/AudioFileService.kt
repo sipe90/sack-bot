@@ -14,6 +14,7 @@ interface AudioFileService {
         guildId: String,
         name: String,
         extension: String?,
+        tags: Set<String>,
         data: ByteArray,
         userId: String
     ): Mono<AudioFile>

@@ -46,6 +46,7 @@ export interface IAudioFile {
     extension?: string
     size: number
     guildId: string
+    tags: string[]
     createdBy: string
     created: number
     modifiedBy: string | null

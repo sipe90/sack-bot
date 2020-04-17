@@ -59,6 +59,7 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
         guildId: String,
         name: String,
         extension: String?,
+        tags: Set<String>,
         data: ByteArray,
         userId: String
     ): Mono<AudioFile> =
@@ -69,6 +70,7 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
                     extension,
                     data.size,
                     guildId,
+                    tags,
                     userId,
                     Instant.now(),
                     null,
