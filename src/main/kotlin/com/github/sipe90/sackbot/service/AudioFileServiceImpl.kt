@@ -22,13 +22,17 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
         return audioFileRepository.findOne(guildId, name)
     }
 
-    override fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile> {
-        val paths = getAudioFiles(guildId, userId)
-        return paths
-            .count()
+    override fun randomAudioFile(guildId: String, userId: String, tags: Set<String>): Mono<AudioFile> =
+        if (tags.isEmpty()) randomAudioFile(guildId, userId)
+        else randomAudioFile(getAudioFiles(guildId, userId).filter { it.tags.containsAll(tags) })
+
+    override fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile> =
+        randomAudioFile(getAudioFiles(guildId, userId))
+
+    private fun randomAudioFile(audioFiles: Flux<AudioFile>): Mono<AudioFile> =
+        audioFiles.count()
             .map { (1..it).random() }
-            .flatMap { paths.take(it).last() }
-    }
+            .flatMap { audioFiles.take(it).last() }
 
     override fun zipFiles(guildId: String, userId: String): Mono<ByteArray> =
         getAudioFiles(guildId, userId)

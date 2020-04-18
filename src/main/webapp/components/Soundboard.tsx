@@ -51,7 +51,7 @@ const Soundboard: React.FC = () => {
 
     const [tagFilter, setTagFilter] = useState<string[]>([])
 
-    const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild)), [selectedGuild])
+    const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild, tagFilter)), [selectedGuild, tagFilter])
 
     useEffect(() => {
         selectedGuild && dispatch(fetchSounds(selectedGuild))

@@ -44,8 +44,9 @@ class AudioHandler(
     fun playRandomSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
+        val tags = request.queryParams()["tags"]
 
-        return audioFileService.randomAudioFile(guildId, userId)
+        return audioFileService.randomAudioFile(guildId, userId, tags.orEmpty().toHashSet())
             .flatMap { audioPlayerService.playAudioForUser(guildId, userId, it.name) }
             .flatMap { noContent().build() }
     }

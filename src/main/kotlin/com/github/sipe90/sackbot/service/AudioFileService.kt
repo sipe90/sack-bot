@@ -30,6 +30,8 @@ interface AudioFileService {
 
     fun deleteAudioFile(guildId: String, name: String): Mono<Boolean>
 
+    fun randomAudioFile(guildId: String, userId: String, tags: Set<String>): Mono<AudioFile>
+
     fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile>
 
     fun zipFiles(guildId: String, userId: String): Mono<ByteArray>

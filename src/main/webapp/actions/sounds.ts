@@ -1,7 +1,7 @@
 import { message } from 'antd'
 
 import { IAudioFile, AsyncThunkResult } from "@/types"
-import { fetchGetJson, fetchPostJson, fetchDeleteJson } from "@/util"
+import { fetchGetJson, fetchPostJson, fetchDeleteJson, buildQueryString } from "@/util"
 
 export const FETCH_SOUNDS_REQUEST = "FETCH_SOUNDS_REQUEST"
 export const FETCH_SOUNDS_RESOLVED = "FETCH_SOUNDS_RESOLVED"
@@ -165,10 +165,11 @@ const playRandomSoundRejected = (error: Error): PlayRandomSoundRejectedAction =>
     payload: error
 })
 
-export const playRandomSound = (guildId: string): AsyncThunkResult => async (dispatch) => {
+export const playRandomSound = (guildId: string, tags: string[] = []): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playRandomSoundRequest())
-        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/rnd`)
+        
+        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/rnd?${buildQueryString({ tags })}`)
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
