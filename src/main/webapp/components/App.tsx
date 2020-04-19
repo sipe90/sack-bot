@@ -3,7 +3,7 @@ import { Layout } from 'antd'
 import styled from 'styled-components'
 import { BrowserRouter as Router } from 'react-router-dom'
 
-import { useDispatch } from '@/util'
+import { useDispatch, fetchGetJson } from '@/util'
 import { fetchUser, fetchGuilds } from '@/actions/user'
 import Navigation from '@/components/Navigation'
 import Routes from '@/components/Routes'
@@ -47,6 +47,8 @@ const App: React.FC = () => {
     useEffect(() => {
         dispatch(fetchUser())
         dispatch(fetchGuilds())
+
+        setInterval(() => fetchGetJson('api/ping'),  5 * 60 * 1000)
     }, [])
 
     return (

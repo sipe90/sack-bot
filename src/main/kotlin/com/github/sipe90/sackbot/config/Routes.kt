@@ -33,6 +33,7 @@ class Routes(
     @Bean
     fun apiRouter() = router {
         ("/api" and accept(MediaType.APPLICATION_JSON)).nest {
+            GET("/ping") { noContent().build() }
             GET("/me", handle(userHandler::userInfo))
             GET("/guilds", handle(userHandler::mutualGuilds))
             GET("/voices", handle(voiceHandler::getVoiceLines))
