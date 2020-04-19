@@ -49,3 +49,7 @@ spring:
             userInfoUri: https://discordapp.com/api/users/@me
             userInfoAuthenticationMethod: header
             userNameAttribute: username
+
+# Set to NATIVE if running behind a reverse proxy
+server:
+  forward-headers-strategy: NONE
