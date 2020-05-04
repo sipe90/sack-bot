@@ -16,7 +16,7 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.track.AudioReference
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
+import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import net.dv8tion.jda.api.audio.AudioSendHandler
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.VoiceChannel
@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.nio.ByteBuffer
+
 
 @Service
 class AudioPlayerServiceImpl(
@@ -201,14 +202,16 @@ class AudioPlayerServiceImpl(
     }
 
     private class AudioPlayerSendHandler(private val audioPlayer: AudioPlayer) : AudioSendHandler {
-        private var lastFrame: AudioFrame? = null
+        private val buffer: ByteBuffer = ByteBuffer.allocate(1024)
+        private val frame: MutableAudioFrame = MutableAudioFrame()
+
+        init {
+            frame.setBuffer(buffer)
+        }
 
         override fun isOpus() = true
-        override fun provide20MsAudio(): ByteBuffer = ByteBuffer.wrap(lastFrame?.data)
-        override fun canProvide(): Boolean {
-            lastFrame = audioPlayer.provide()
-            return lastFrame != null
-        }
+        override fun provide20MsAudio(): ByteBuffer = buffer.flip()
+        override fun canProvide(): Boolean = audioPlayer.provide(frame)
     }
 }
 
