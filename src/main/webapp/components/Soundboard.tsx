@@ -30,9 +30,10 @@ const filterAndgroup = R.pipe(
     )
 )
 
-const getTags = R.pipe<IAudioFile[], string[], string[]>(
+const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
-    R.uniq
+    R.uniq,
+    R.invoker(0, 'sort')
 )
 
 const Soundboard: React.FC = () => {
