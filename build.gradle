@@ -84,10 +84,6 @@ task npmBuild(type: NpmTask) {
     args = ["run", "build"]
 }
 
-bootJar {
-    launchScript()
-}
-
 test {
     useJUnitPlatform()
 }
