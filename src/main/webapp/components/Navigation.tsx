@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { IRouteDefinition } from '@/routeDefs'
 import { Avatar, Button, Menu, Dropdown } from 'antd'
-import { DownOutlined } from '@ant-design/icons';
+import { DownOutlined } from '@ant-design/icons'
 import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
 

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
+import java.lang.NumberFormatException
 
 @Component
 class UrlCommand(
@@ -25,13 +26,23 @@ class UrlCommand(
 
         if (guild == null || voiceChannel == null) return@defer "Could not find guild or voice channel to perform the action".toMono()
 
-        if (command.size != 2) {
-            return@defer "Invalid url command. Correct format is `${config.chat.commandPrefix}url <url>`".toMono()
+        if (command.size > 3) {
+            return@defer "Invalid url command. Correct format is `${config.chat.commandPrefix}url <url> [volume]`".toMono()
         }
 
         val url = command[1]
+        val volumeStr = command[2]
 
-        playerService.playUrlInChannel(url, voiceChannel)
+        val volume: Int? =
+                if (command.size == 3) {
+                    try {
+                        Integer.parseInt(volumeStr).coerceIn(1, 100)
+                    } catch (e: NumberFormatException) {
+                        return@defer "Invalid volume given. Value must be a number".toMono()
+                    }
+                } else null
+
+        playerService.playUrlInChannel(url, voiceChannel, volume)
             .map {
                 return@map if (it) "Playing url `$url` in voice channel `#${voiceChannel.name}`"
                 else "Could not find a sound source with given url"

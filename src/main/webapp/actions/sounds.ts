@@ -138,10 +138,10 @@ const playSoundRejected = (error: Error): PlaySoundRejectedAction => ({
     payload: error
 })
 
-export const playSound = (guildId: string, name: string): AsyncThunkResult => async (dispatch) => {
+export const playSound = (guildId: string, name: string, vol: number): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playSoundRequest())
-        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/${name}/play`)
+        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/${name}/play?${buildQueryString({ vol })}`)
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -165,11 +165,11 @@ const playRandomSoundRejected = (error: Error): PlayRandomSoundRejectedAction =>
     payload: error
 })
 
-export const playRandomSound = (guildId: string, tags: string[] = []): AsyncThunkResult => async (dispatch) => {
+export const playRandomSound = (guildId: string, vol: number, tags: string[] = []): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playRandomSoundRequest())
         
-        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/rnd?${buildQueryString({ tags })}`)
+        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/rnd?${buildQueryString({ tags, vol })}`)
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 

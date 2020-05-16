@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
+import java.lang.NumberFormatException
 
 @Component
 class PlayCommand(
@@ -27,15 +28,25 @@ class PlayCommand(
 
         if (guild == null || voiceChannel == null) return@defer "Could not find guild or voice channel to perform the action".toMono()
 
-        if (command.size != 1) {
-            return@defer "Invalid play command. Correct format is `${config.chat.commandPrefix}<soundName>`".toMono()
+        if (command.size > 2) {
+            return@defer "Invalid play command. Correct format is `${config.chat.commandPrefix}<soundName> [volume]`".toMono()
         }
 
         val audioFileName = command[0]
+        val volumeStr = command[1]
+
+        val volume: Int? =
+                if (command.size == 2) {
+                    try {
+                        Integer.parseInt(volumeStr).coerceIn(1, 100)
+                    } catch (e: NumberFormatException) {
+                        return@defer "Invalid volume given. Value must be a number.".toMono()
+                    }
+                } else null
 
         fileService.findAudioFile(guild.id, audioFileName)
             .flatMap {
-                playerService.playAudioInChannel(it.name, voiceChannel)
+                playerService.playAudioInChannel(it.name, voiceChannel, volume)
                     .then("Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`".toMono())
             }
             .switchIfEmpty("Could not find any sounds with given name".toMono())

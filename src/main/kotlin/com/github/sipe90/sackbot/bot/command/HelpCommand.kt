@@ -16,7 +16,7 @@ class HelpCommand(private val config: BotConfig) : BotCommand {
             .append("```")
             .append(helpLine("help", "Prints this text"))
             .append(helpLine("list", "Lists all playable sound names"))
-            .append(helpLine("url <url>", "Play audio from a web source"))
+            .append(helpLine("url <url> [volume]", "Play audio from a web source"))
             .append(helpLine("rnd", "Play a random sound"))
             .append(helpLine("entry <sound_name>", "Play a sound when you enter a voice channel"))
             .append(helpLine("exit <sound_name>", "Play a sound when you exit a voice channel"))
@@ -26,10 +26,10 @@ class HelpCommand(private val config: BotConfig) : BotCommand {
             .append(
                 helpLine(
                     "volume <1-100>",
-                    "Set sound playback volume or just ${config.chat.commandPrefix}volume to get the current volume"
+                    "Set default sound playback volume or just ${config.chat.commandPrefix}volume to get the current volume"
                 )
             )
-            .append(helpLine("<sound_name>", "Plays a sound with the given name"))
+            .append(helpLine("<sound_name> [volume]", "Plays a sound with the given name"))
             .append("```\n")
             .append("You can also send me new audio files via a private message.").toString()
     }.flux()

@@ -1,6 +1,7 @@
 package com.github.sipe90.sackbot.handler
 
 import com.github.sipe90.sackbot.auth.DiscordUser
+import com.github.sipe90.sackbot.exception.BadRequestException
 import com.github.sipe90.sackbot.exception.NotFoundException
 import com.github.sipe90.sackbot.handler.dto.AudioFileUpdateDTO
 import com.github.sipe90.sackbot.persistence.dto.API
@@ -16,12 +17,9 @@ import org.springframework.http.codec.json.Jackson2CodecSupport
 import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyExtractors
-import org.springframework.web.reactive.function.server.ServerRequest
-import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.*
 import org.springframework.web.reactive.function.server.ServerResponse.noContent
 import org.springframework.web.reactive.function.server.ServerResponse.ok
-import org.springframework.web.reactive.function.server.body
-import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
@@ -35,19 +33,21 @@ class AudioHandler(
     fun playSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
+        val volume = getVolume(request)
         val userId = principal.getId()
 
-        return audioPlayerService.playAudioForUser(guildId, userId, name)
+        return audioPlayerService.playAudioForUser(guildId, userId, name, volume)
             .flatMap { noContent().build() }
     }
 
     fun playRandomSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
+        val volume = getVolume(request)
         val tags = request.queryParams()["tags"]
 
         return audioFileService.randomAudioFile(guildId, userId, tags.orEmpty().toHashSet())
-            .flatMap { audioPlayerService.playAudioForUser(guildId, userId, it.name) }
+            .flatMap { audioPlayerService.playAudioForUser(guildId, userId, it.name, volume) }
             .flatMap { noContent().build() }
     }
 
@@ -153,5 +153,14 @@ class AudioHandler(
             .contentType(MediaType.valueOf("application/zip"))
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"export.zip\"")
             .body(audioFileService.zipFiles(guildId, userId))
+    }
+
+    private fun getVolume(request: ServerRequest): Int? {
+        val volumeStr = request.queryParamOrNull("vol") ?: return null
+        try {
+            return Integer.parseInt(volumeStr).coerceIn(0, 100)
+        } catch (e: NumberFormatException) {
+            throw BadRequestException("Invalid volume parameter")
+        }
     }
 }

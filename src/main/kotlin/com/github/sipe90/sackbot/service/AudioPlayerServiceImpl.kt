@@ -51,22 +51,22 @@ class AudioPlayerServiceImpl(
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    override fun playAudioForUser(guildId: String, userId: String, name: String): Mono<Void> {
+    override fun playAudioForUser(guildId: String, userId: String, name: String, volume: Int?): Mono<Void> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
         val voiceChannel =
             getVoiceChannel(guild, user) ?: throw ValidationException("Could not find voice channel to play in")
-        return playAudioInChannel(name, voiceChannel)
+        return playAudioInChannel(name, voiceChannel, volume)
     }
 
-    override fun playAudioForUser(userId: String, name: String): Mono<Void> {
+    override fun playAudioForUser(userId: String, name: String, volume: Int?): Mono<Void> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
-        return playAudioInChannel(name, voiceChannel)
+        return playAudioInChannel(name, voiceChannel, volume)
     }
 
-    override fun playAudioInChannel(name: String, voiceChannel: VoiceChannel): Mono<Void> {
-        return playInChannel("${voiceChannel.guild.id}:${name}", voiceChannel).then()
+    override fun playAudioInChannel(name: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Void> {
+        return playInChannel("${voiceChannel.guild.id}:${name}", voiceChannel, volume).then()
     }
 
     override fun playVoiceLinesForUser(
@@ -95,12 +95,12 @@ class AudioPlayerServiceImpl(
             paths.forEach {
                 val track =
                     localAudioSourceManager.loadItem(playerManager, AudioReference(it.toString(), null)) as AudioTrack
-                trackScheduler.queue(track)
+                trackScheduler.queue(track, null)
             }
         }.then()
 
     override fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Boolean> {
-        return tts.randomPhraseToSpeech().flatMap { playInChannel(it.toString(), voiceChannel) }.defaultIfEmpty(false)
+        return tts.randomPhraseToSpeech().flatMap { playInChannel(it.toString(), voiceChannel, null) }.defaultIfEmpty(false)
     }
 
     override fun playRandomTtsForUser(guildId: String, userId: String): Mono<Boolean> {
@@ -110,7 +110,7 @@ class AudioPlayerServiceImpl(
     }
 
     override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean> {
-        return tts.textToSpeech(text).flatMap { playInChannel(it.toString(), voiceChannel) }
+        return tts.textToSpeech(text).flatMap { playInChannel(it.toString(), voiceChannel, null) }
     }
 
     override fun playTtsForUser(guildId: String, userId: String, text: String): Mono<Boolean> {
@@ -119,11 +119,11 @@ class AudioPlayerServiceImpl(
         return playTtsInChannel(text, voiceChannel)
     }
 
-    override fun playUrlInChannel(url: String, voiceChannel: VoiceChannel): Mono<Boolean> {
-        return playInChannel(url, voiceChannel)
+    override fun playUrlInChannel(url: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Boolean> {
+        return playInChannel(url, voiceChannel, volume)
     }
 
-    private fun playInChannel(identifier: String, voiceChannel: VoiceChannel): Mono<Boolean> {
+    private fun playInChannel(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Boolean> {
         val guild = voiceChannel.guild
         val audioManager = guild.audioManager
         val trackScheduler = trackSchedulers.getOrPut(guild.id, { createScheduler(guild) })
@@ -136,7 +136,7 @@ class AudioPlayerServiceImpl(
             playerManager.loadItem(identifier, FunctionalResultHandler(
                 {
                     logger.debug("Playing track {} on channel #{}", it.info.title, voiceChannel.name)
-                    trackScheduler.interrupt(it)
+                    trackScheduler.interrupt(it, volume)
                     sink.success(true)
                 },
                 {
@@ -156,34 +156,27 @@ class AudioPlayerServiceImpl(
     }
 
     override fun setVolume(guildId: String, volume: Int) {
-        val player = trackSchedulers[guildId]?.player
-        if (player == null) {
+        val scheduler = trackSchedulers[guildId]
+        if (scheduler == null) {
             logger.debug("Could not set volume for guild {}: scheduler not found", guildId)
             return
         }
-        logger.debug("Setting volume for guild {} player to {}", guildId, volume)
-        player.volume = volume
+        logger.debug("Setting default volume for guild {} player to {}", guildId, volume)
+        scheduler.defaultVolume = volume
     }
 
     override fun getVolume(guildId: String): Int? {
-        val player = trackSchedulers[guildId]?.player
-        if (player == null) {
-            logger.debug("Could not get volume for guild {}: scheduler not found", guildId)
+        val scheduler = trackSchedulers[guildId]
+        if (scheduler == null) {
+            logger.debug("Could not get default volume for guild {}: scheduler not found", guildId)
             return null
         }
-        return player.volume
-    }
-
-    private fun createPlayer(guild: Guild): AudioPlayer {
-        logger.debug("Creating new instance of AudioPlayer for Guild {} ({})", guild.name, guild.id)
-        val player = playerManager.createPlayer()
-        player.volume = 75
-        return player
+        return scheduler.defaultVolume
     }
 
     private fun createScheduler(guild: Guild): TrackScheduler {
         logger.debug("Creating new instance of TrackScheduler for Guild {} ({})", guild.name, guild.id)
-        val audioPlayer = createPlayer(guild)
+        val audioPlayer = playerManager.createPlayer()
         val scheduler = TrackScheduler(audioPlayer)
         audioPlayer.addListener(scheduler)
         return scheduler

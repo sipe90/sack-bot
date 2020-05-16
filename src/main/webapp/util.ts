@@ -67,6 +67,7 @@ export const fetchDeleteJson = <E = any> (url: string) => fetchJson<E>(url, { me
 export const buildQueryString = (params: { [key: string]: any | any[]}) => 
     Object
         .keys(params)
+        .filter(key => Array.isArray(params[key]) ? params[key].length : params[key] !== undefined)
         .map(key => Array.isArray(params[key]) ?
             params[key].map((val: any) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`).join('&') : 
             `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`

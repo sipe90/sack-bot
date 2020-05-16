@@ -1,7 +1,8 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import * as R from 'ramda'
-import { Button, Divider, Select } from 'antd'
+import { Button, Divider, Select, Slider } from 'antd'
+import { SoundOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, playSound, playRandomSound } from '@/actions/sounds'
@@ -20,7 +21,7 @@ const Sound = styled.div`
 const isSubset = R.curry((xs: any[], ys: any[]) =>
 	R.all(R.contains(R.__, ys), xs))
 
-const filterAndgroup = R.pipe(
+const filterAndGroup = R.pipe(
     (sounds: IAudioFile[], tagFilter: string[]) => tagFilter.length ? sounds.filter((sound) => isSubset(tagFilter, sound.tags)) : sounds,
     R.groupBy<IAudioFile>(
         R.pipe(
@@ -50,20 +51,29 @@ const Soundboard: React.FC = () => {
 
     const dispatch = useDispatch()
 
+    const [volume, setVolume] = useState<number>(75)
     const [tagFilter, setTagFilter] = useState<string[]>([])
 
-    const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild, tagFilter)), [selectedGuild, tagFilter])
+    const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild, volume, tagFilter)), [selectedGuild, volume, tagFilter])
 
     useEffect(() => {
         selectedGuild && dispatch(fetchSounds(selectedGuild))
     }, [selectedGuild])
 
-    const groupedSounds = useMemo(() => filterAndgroup(sounds, tagFilter), [sounds, tagFilter])
+    const groupedSounds = useMemo(() => filterAndGroup(sounds, tagFilter), [sounds, tagFilter])
     const letters = useMemo(() => R.keys(groupedSounds).sort(), [groupedSounds])
     const tags = useMemo(() => getTags(sounds), [sounds])
 
     return (
         <>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ marginRight: 8 }}>
+                    <SoundOutlined style={{ fontSize: 18 }}/>
+                </div>
+                <div style={{ flexGrow: 1 }}>
+                    <Slider value={volume} min={1} max={100} onChange={(vol) => setVolume(vol as number)} />
+                </div>
+            </div>
             <div style={{ display: 'flex' }}>
                 <div style={{ flexGrow: 1 }}>
                 <Select
@@ -96,7 +106,7 @@ const Soundboard: React.FC = () => {
                                     block
                                     style={{ width: 120 }}
                                     disabled={playingSound}
-                                    onClick={() => selectedGuild && dispatch(playSound(selectedGuild, sound.name))}>
+                                    onClick={() => selectedGuild && dispatch(playSound(selectedGuild, sound.name, volume))}>
                                         <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>{sound.name}</div>
                                 </Button>
                             </Sound>)}

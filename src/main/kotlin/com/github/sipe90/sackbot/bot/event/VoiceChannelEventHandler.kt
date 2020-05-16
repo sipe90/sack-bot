@@ -43,7 +43,7 @@ class VoiceChannelEventHandler(
                 return@flatMap fileService.audioFileExists(guildId, entrySound, userId).flatMap exists@{ exists ->
                     if (exists) {
                         logger.debug("Playing user {} entry sound in channel #{}", entrySound, voiceChannel.name)
-                        return@exists playerService.playAudioInChannel(entrySound, voiceChannel).then()
+                        return@exists playerService.playAudioInChannel(entrySound, voiceChannel, null).then()
                     }
                     logger.warn("User {} has an unknown entry sound: {}", event.member.user, entrySound)
                     return@exists Mono.empty<Void>()
@@ -63,7 +63,7 @@ class VoiceChannelEventHandler(
                 val exitSound = member.exitSound ?: return@flatMap Mono.empty<Void>()
                 return@flatMap fileService.audioFileExists(guildId, exitSound, userId).flatMap exists@{ exists ->
                     if (exists) {
-                        return@exists playerService.playAudioInChannel(exitSound, voiceChannel).then()
+                        return@exists playerService.playAudioInChannel(exitSound, voiceChannel, null).then()
                     }
                     logger.warn("User {} has an unknown exit sound: {}", event.member.user, exitSound)
                     return@exists Mono.empty<Void>()

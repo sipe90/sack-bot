@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
+import java.lang.NumberFormatException
 
 @Component
 class RandomCommand(private val fileService: AudioFileService, private val playerService: AudioPlayerService) :
@@ -19,8 +20,19 @@ class RandomCommand(private val fileService: AudioFileService, private val playe
         val voiceChannel = getVoiceChannel(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
         val user = getUser(initiator) ?: return@defer "Could not find user".toMono()
+
+        val volumeStr = command[1]
+        val volume: Int? =
+                if (command.size == 2) {
+                    try {
+                        Integer.parseInt(volumeStr).coerceIn(1, 100)
+                    } catch (e: NumberFormatException) {
+                        return@defer "Invalid volume given. Value must be a number.".toMono()
+                    }
+                } else null
+
         return@defer fileService.randomAudioFile(voiceChannel.guild.id, user.id)
-            .flatMap { audioFile -> playerService.playAudioInChannel(audioFile.name, voiceChannel).map { audioFile } }
+            .flatMap { audioFile -> playerService.playAudioInChannel(audioFile.name, voiceChannel, volume).map { audioFile } }
             .map { "Playing random sound file `${it.name}` in voice channel `#${voiceChannel.name}`" }
     }
 }
