@@ -26,3 +26,5 @@ jobs:
       uses: skx/github-action-publish-binaries@master
       with:
         args: build/libs/sack-bot-*.jar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
