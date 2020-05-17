@@ -5,7 +5,7 @@ import tsImportPluginFactory from 'ts-import-plugin'
 import { Configuration, DefinePlugin } from 'webpack'
 
 const SRC_ROOT = path.resolve(__dirname, 'src', 'main', 'webapp')
-const DEST = path.resolve(__dirname, 'build', 'resources', 'main', 'static')
+const DEST = path.resolve(__dirname, 'build', 'webapp')
 
 const config: Configuration = {
     entry: {
