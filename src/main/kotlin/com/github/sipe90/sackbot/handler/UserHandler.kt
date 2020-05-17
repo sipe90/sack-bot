@@ -5,6 +5,7 @@ import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.handler.dto.GuildMemberDTO
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.JDAService
+import com.github.sipe90.sackbot.service.MemberService
 import net.dv8tion.jda.api.entities.Role
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -16,13 +17,13 @@ import reactor.core.publisher.Mono
 @Component
 class UserHandler(
     private val config: BotConfig,
-    private val memberRepository: MemberRepository,
+    private val memberService: MemberService,
     private val jdaService: JDAService
 ) {
 
     fun userInfo(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         return ok()
-            .body(memberRepository.getUserMembers(principal.getId()))
+            .body(memberService.getUserMemberships(principal.getId()))
     }
 
     fun mutualGuilds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {

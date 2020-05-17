@@ -4,9 +4,11 @@ import com.github.sipe90.sackbot.auth.DiscordUser
 import com.github.sipe90.sackbot.exception.BadRequestException
 import com.github.sipe90.sackbot.exception.NotFoundException
 import com.github.sipe90.sackbot.handler.dto.AudioFileUpdateDTO
+import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.persistence.dto.API
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
+import com.github.sipe90.sackbot.service.MemberService
 import com.github.sipe90.sackbot.util.getExtension
 import com.github.sipe90.sackbot.util.stripExtension
 import com.github.sipe90.sackbot.util.withExtension
@@ -18,8 +20,7 @@ import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyExtractors
 import org.springframework.web.reactive.function.server.*
-import org.springframework.web.reactive.function.server.ServerResponse.noContent
-import org.springframework.web.reactive.function.server.ServerResponse.ok
+import org.springframework.web.reactive.function.server.ServerResponse.*
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
@@ -27,7 +28,8 @@ import reactor.kotlin.core.util.function.component2
 @Component
 class AudioHandler(
     private val audioPlayerService: AudioPlayerService,
-    private val audioFileService: AudioFileService
+    private val audioFileService: AudioFileService,
+    private val memberService: MemberService
 ) {
 
     fun playSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
@@ -123,11 +125,29 @@ class AudioHandler(
                 }.then(noContent().build())
     }
 
+    fun setEntrySound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+        val guildId = request.pathVariable("guildId")
+        val userId = principal.getId()
+        val name = request.queryParam("name").orElse(null)
+
+        return memberService.setMemberEntrySound(guildId, userId, name).then(ok().build())
+    }
+
+    fun setExitSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+        val guildId = request.pathVariable("guildId")
+        val userId = principal.getId()
+        val name = request.queryParam("name").orElse(null)
+
+        return memberService.setMemberExitSound(guildId, userId, name).then(ok().build())
+    }
+
     fun deleteSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
 
-        return audioFileService.deleteAudioFile(guildId, name).flatMap { noContent().build() }
+        return audioFileService.deleteAudioFile(guildId, name)
+                .flatMap { noContent().build() }
+                .switchIfEmpty(notFound().build())
     }
 
     fun downloadSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
@@ -142,7 +162,7 @@ class AudioHandler(
                     "attachment; filename=\"${withExtension(it.name, it.extension)}\""
                 )
                 .bodyValue(it.data)
-        }
+        }.switchIfEmpty(notFound().build())
     }
 
     fun exportSounds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {

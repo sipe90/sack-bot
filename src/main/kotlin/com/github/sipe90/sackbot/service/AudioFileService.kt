@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono
 
 interface AudioFileService {
 
-    fun audioFileExists(guildId: String, name: String, userId: String): Mono<Boolean>
+    fun audioFileExists(guildId: String, name: String): Mono<Boolean>
 
     fun getAudioFiles(guildId: String, userId: String): Flux<AudioFile>
 

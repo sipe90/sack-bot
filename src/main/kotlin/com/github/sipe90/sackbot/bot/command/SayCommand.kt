@@ -6,15 +6,14 @@ import com.github.sipe90.sackbot.util.getVoiceChannel
 import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 
 @Component
 class SayCommand(
     private val voiceLines: VoiceLines,
     private val playerService: AudioPlayerService
-) :
-    BotCommand {
+) : BotCommand() {
 
     override val commandPrefix = "say"
 

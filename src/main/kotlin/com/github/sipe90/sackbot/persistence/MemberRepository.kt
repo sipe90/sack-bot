@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toFlux
+import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 import java.time.Instant
 
@@ -19,7 +19,7 @@ class MemberRepository(val repository: ObjectRepository<Member>) {
 
     fun getGuildMembers(guildId: String): Flux<Member> = repository.find(Member::guildId eq guildId).toFlux()
 
-    fun getUserMembers(userId: String): Flux<Member> = repository.find(Member::userId eq userId).toFlux()
+    fun getUserMemberships(userId: String): Flux<Member> = repository.find(Member::userId eq userId).toFlux()
 
     fun findOne(guildId: String, userId: String): Mono<Member> = Mono.defer {
         repository.find((Member::guildId eq guildId) and (Member::userId eq userId)).toMono()

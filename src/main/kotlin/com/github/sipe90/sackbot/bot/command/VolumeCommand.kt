@@ -10,7 +10,7 @@ import reactor.kotlin.core.publisher.toMono
 
 @Component
 class VolumeCommand(private val config: BotConfig, private val playerService: AudioPlayerService) :
-    BotCommand {
+    BotCommand() {
 
     override val commandPrefix = "volume"
 

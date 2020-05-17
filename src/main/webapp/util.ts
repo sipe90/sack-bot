@@ -62,6 +62,13 @@ export const fetchPostJson = <E = any> (url: string, body?: object | string) =>
         method: 'POST'
     })
 
+export const fetchPutJson = <E = any> (url: string, body?: object | string) =>
+    fetchJson<E>(url, {
+        body: typeof body === 'string' ? body : JSON.stringify(body),
+        headers: typeof body === 'undefined' ? undefined : { 'content-type': 'application/json' },
+        method: 'PUT'
+    })
+
 export const fetchDeleteJson = <E = any> (url: string) => fetchJson<E>(url, { method: 'DELETE' })
 
 export const buildQueryString = (params: { [key: string]: any | any[]}) => 

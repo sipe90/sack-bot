@@ -16,7 +16,7 @@ class PlayCommand(
     private val config: BotConfig,
     private val fileService: AudioFileService,
     private val playerService: AudioPlayerService
-) : BotCommand {
+) : BotCommand() {
 
     override val commandPrefix = ""
 

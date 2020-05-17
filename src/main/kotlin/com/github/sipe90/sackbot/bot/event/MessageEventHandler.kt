@@ -60,7 +60,7 @@ final class MessageEventHandler(
         if (event.author.isBot) return Flux.empty()
         if (event.message.attachments.isNotEmpty()) return handleUploads(event)
         if (!event.message.contentRaw.startsWith(config.chat.commandPrefix)) {
-            return helpCommand.process(event)
+            return helpCommand.processCommand(event)
         }
         return processCommand(event, event.message.contentRaw)
     }
@@ -69,7 +69,7 @@ final class MessageEventHandler(
         val cmd = cmdSplitRegex.split(message.substring(1)).toTypedArray()
         val botCommand = commandsMap[cmd[0]] ?: playCommand
         if (botCommand.canProcess(*cmd)) {
-            return botCommand.process(event, *cmd)
+            return botCommand.processCommand(event, *cmd)
         }
         return Flux.empty()
     }

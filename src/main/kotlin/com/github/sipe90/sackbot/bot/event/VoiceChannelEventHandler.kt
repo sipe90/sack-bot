@@ -1,9 +1,9 @@
 package com.github.sipe90.sackbot.bot.event
 
 import com.github.sipe90.sackbot.SackException
-import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
+import com.github.sipe90.sackbot.service.MemberService
 import net.dv8tion.jda.api.events.guild.voice.GenericGuildVoiceEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono
 class VoiceChannelEventHandler(
     val fileService: AudioFileService,
     val playerService: AudioPlayerService,
-    val memberRepository: MemberRepository
+    val memberService: MemberService
 ) : EventHandler<GenericGuildVoiceEvent> {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
@@ -37,10 +37,10 @@ class VoiceChannelEventHandler(
         val voiceChannel = event.channelJoined
         val guildId = event.guild.id
 
-        return memberRepository.findOne(guildId, userId)
+        return memberService.getMember(guildId, userId)
             .flatMap { member ->
                 val entrySound = member.entrySound ?: return@flatMap Mono.empty<Void>()
-                return@flatMap fileService.audioFileExists(guildId, entrySound, userId).flatMap exists@{ exists ->
+                return@flatMap fileService.audioFileExists(guildId, entrySound).flatMap exists@{ exists ->
                     if (exists) {
                         logger.debug("Playing user {} entry sound in channel #{}", entrySound, voiceChannel.name)
                         return@exists playerService.playAudioInChannel(entrySound, voiceChannel, null).then()
@@ -58,10 +58,10 @@ class VoiceChannelEventHandler(
         val voiceChannel = event.channelLeft
         val guildId = event.guild.id
 
-        return memberRepository.findOne(guildId, userId)
+        return memberService.getMember(guildId, userId)
             .flatMap { member ->
                 val exitSound = member.exitSound ?: return@flatMap Mono.empty<Void>()
-                return@flatMap fileService.audioFileExists(guildId, exitSound, userId).flatMap exists@{ exists ->
+                return@flatMap fileService.audioFileExists(guildId, exitSound).flatMap exists@{ exists ->
                     if (exists) {
                         return@exists playerService.playAudioInChannel(exitSound, voiceChannel, null).then()
                     }

@@ -1,12 +1,14 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import * as R from 'ramda'
-import { Button, Divider, Select, Slider } from 'antd'
+import { Button, Divider, Dropdown, Menu, Select, Slider } from 'antd'
 import { SoundOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, playSound, playRandomSound } from '@/actions/sounds'
 import { IAudioFile } from '@/types'
+import {selectedGuildMembership} from "@/selectors/user";
+import {updateEntrySound, updateExitSound} from "@/actions/user";
 
 const SoundGrid = styled.div`
     display: flex;
@@ -39,15 +41,10 @@ const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
 
 const Soundboard: React.FC = () => {
 
-    const { 
-        selectedGuild, 
-        sounds, 
-        playingSound 
-    } = useSelector((state) => ({
-        selectedGuild: state.user.selectedGuild,
-        sounds: state.sounds.sounds,
-        playingSound: state.sounds.playingSound
-    }))
+    const selectedGuild = useSelector((state => state.user.selectedGuild))
+    const sounds = useSelector((state => state.sounds.sounds))
+    const playingSound = useSelector((state => state.sounds.playingSound))
+    const membership = useSelector(selectedGuildMembership)
 
     const dispatch = useDispatch()
 
@@ -102,13 +99,25 @@ const Soundboard: React.FC = () => {
                     <SoundGrid>
                         {groupedSounds[letter].map((sound) => 
                             <Sound key={sound.name}>
-                                <Button
-                                    block
-                                    style={{ width: 120 }}
-                                    disabled={playingSound}
-                                    onClick={() => selectedGuild && dispatch(playSound(selectedGuild, sound.name, volume))}>
-                                        <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>{sound.name}</div>
-                                </Button>
+                                <Dropdown
+                                    trigger={['contextMenu']}
+                                    overlay={
+                                        <Menu>
+                                            <Menu.Item onClick={() => selectedGuild && dispatch(updateEntrySound(selectedGuild, sound.name))}>Set as entry sound</Menu.Item>
+                                            <Menu.Item onClick={() => selectedGuild && dispatch(updateExitSound(selectedGuild, sound.name))}>Set as exit sound</Menu.Item>
+                                            {membership?.entrySound && <Menu.Item onClick={() => selectedGuild && dispatch(updateEntrySound(selectedGuild))}>Clear entry sound {` (${membership.entrySound})`}</Menu.Item>}
+                                            {membership?.exitSound && <Menu.Item onClick={() => selectedGuild && dispatch(updateExitSound(selectedGuild))}>Clear exit sound {` (${membership.exitSound})`}</Menu.Item>}
+                                        </Menu>
+                                    }
+                                >
+                                    <Button
+                                        block
+                                        style={{ width: 120 }}
+                                        disabled={playingSound}
+                                        onClick={() => selectedGuild && dispatch(playSound(selectedGuild, sound.name, volume))}>
+                                            <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>{sound.name}</div>
+                                    </Button>
+                                </Dropdown>
                             </Sound>)}
                     </SoundGrid>
                 </div>

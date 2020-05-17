@@ -11,7 +11,7 @@ import reactor.kotlin.core.publisher.toMono
 
 @Component
 class TTSCommand(private val config: BotConfig, private val playerService: AudioPlayerService) :
-    BotCommand {
+    BotCommand() {
 
     override val commandPrefix = "tts"
 

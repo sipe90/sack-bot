@@ -1,7 +1,7 @@
 import { message } from 'antd'
 
 import { IMembership, IGuild, AsyncThunkResult, IGuildMember } from "@/types"
-import { fetchGetJson } from "@/util"
+import {buildQueryString, fetchGetJson, fetchPutJson} from "@/util"
 import { fetchSounds } from "./sounds"
 
 export const FETCH_USER_REQUEST = "FETCH_USER_REQUEST"
@@ -15,6 +15,14 @@ export const FETCH_GUILDS_REJECTED = "FETCH_GUILDS_REJECTED"
 export const FETCH_GUILD_MEMBERS_REQUEST = "FETCH_GUILD_MEMBERS_REQUEST"
 export const FETCH_GUILD_MEMBERS_RESOLVED = "FETCH_GUILD_MEMBERS_RESOLVED"
 export const FETCH_GUILD_MEMBERS_REJECTED = "FETCH_GUILD_MEMBERS_REJECTED"
+
+export const UPDATE_ENTRY_SOUND_REQUEST = "UPDATE_ENTRY_SOUND_REQUEST"
+export const UPDATE_ENTRY_SOUND_RESOLVED = "UPDATE_ENTRY_SOUND_RESOLVED"
+export const UPDATE_ENTRY_SOUND_REJECTED = "UPDATE_ENTRY_SOUND_REJECTED"
+
+export const UPDATE_EXIT_SOUND_REQUEST = "UPDATE_EXIT_SOUND_REQUEST"
+export const UPDATE_EXIT_SOUND_RESOLVED = "UPDATE_EXIT_SOUND_RESOLVED"
+export const UPDATE_EXIT_SOUND_REJECTED = "UPDATE_EXIT_SOUND_REJECTED"
 
 export const SELECT_GUILD = "SELECT_GUILD"
 
@@ -61,6 +69,32 @@ interface FetchGuildMembersRejectedAction {
     payload: Error
 }
 
+interface UpdateEntrySoundRequestAction {
+    type: typeof UPDATE_ENTRY_SOUND_REQUEST
+}
+
+interface UpdateEntrySoundResolvedAction {
+    type: typeof UPDATE_ENTRY_SOUND_RESOLVED
+}
+
+interface UpdateEntrySoundRejectedAction {
+    type: typeof UPDATE_ENTRY_SOUND_REJECTED,
+    payload: Error
+}
+
+interface UpdateExitSoundRequestAction {
+    type: typeof UPDATE_EXIT_SOUND_REQUEST
+}
+
+interface UpdateExitSoundResolvedAction {
+    type: typeof UPDATE_EXIT_SOUND_RESOLVED
+}
+
+interface UpdateExitSoundRejectedAction {
+    type: typeof UPDATE_EXIT_SOUND_REJECTED,
+    payload: Error
+}
+
 interface SelectGuildAction {
     type: typeof SELECT_GUILD,
     payload: string
@@ -69,6 +103,8 @@ interface SelectGuildAction {
 export type UserActions = FetchUserRequestAction | FetchUserResolvedAction | FetchUserRejectedAction | 
     FetchGuildsRequestAction | FetchGuildsResolvedAction | FetchGuildsRejectedAction |
     FetchGuildMembersRequestAction | FetchGuildMembersResolvedAction | FetchGuildMembersRejectedAction |
+    UpdateEntrySoundRequestAction | UpdateEntrySoundResolvedAction | UpdateEntrySoundRejectedAction |
+    UpdateExitSoundRequestAction | UpdateExitSoundResolvedAction | UpdateExitSoundRejectedAction |
     SelectGuildAction
 
 const fetchUserRequest = (): FetchUserRequestAction => ({
@@ -126,7 +162,7 @@ export const fetchGuilds = (): AsyncThunkResult => async (dispatch) => {
         if (res.json.length) {
             const selectedGuild = res.json[0]
             dispatch(selectGuild(selectedGuild.id))
-            dispatch(fetchSounds(selectedGuild.id))
+            await dispatch(fetchSounds(selectedGuild.id))
         }
     } catch (error) {
         message.error(`Failed to get user guilds: ${error.message}`)
@@ -159,6 +195,62 @@ export const fetchGuildMembers = (guildId: string): AsyncThunkResult => async (d
     } catch (error) {
         message.error(`Failed to get guild members: ${error.message}`)
         dispatch(fetchGuildMembersRejected(error))
+    }
+}
+
+const updateEntrySoundRequest = (): UpdateEntrySoundRequestAction => ({
+    type: UPDATE_ENTRY_SOUND_REQUEST
+})
+
+const updateEntrySoundResolved = (): UpdateEntrySoundResolvedAction => ({
+    type: UPDATE_ENTRY_SOUND_RESOLVED
+})
+
+const updateEntrySoundRejected = (error: Error): UpdateEntrySoundRejectedAction => ({
+    type: UPDATE_ENTRY_SOUND_REJECTED,
+    payload: error
+})
+
+export const updateEntrySound = (guildId: string, name?: string): AsyncThunkResult => async (dispatch) => {
+    try {
+        dispatch(updateEntrySoundRequest())
+        const res = await fetchPutJson<IGuildMember[]>(`/api/${guildId}/sounds/entry?${buildQueryString({ name })}`)
+
+        if (!res.ok) throw new Error(res.json?.message || res.statusText)
+
+        dispatch(updateEntrySoundResolved())
+        await dispatch(fetchUser())
+    } catch (error) {
+        message.error(`Failed to update entry sound: ${error.message}`)
+        dispatch(updateEntrySoundRejected(error))
+    }
+}
+
+const updateExitSoundRequest = (): UpdateExitSoundRequestAction => ({
+    type: UPDATE_EXIT_SOUND_REQUEST
+})
+
+const updateExitSoundResolved = (): UpdateExitSoundResolvedAction => ({
+    type: UPDATE_EXIT_SOUND_RESOLVED
+})
+
+const updateExitSoundRejected = (error: Error): UpdateExitSoundRejectedAction => ({
+    type: UPDATE_EXIT_SOUND_REJECTED,
+    payload: error
+})
+
+export const updateExitSound = (guildId: string, name?: string): AsyncThunkResult => async (dispatch) => {
+    try {
+        dispatch(updateExitSoundRequest())
+        const res = await fetchPutJson<IGuildMember[]>(`/api/${guildId}/sounds/exit?${buildQueryString({ name })}`)
+
+        if (!res.ok) throw new Error(res.json?.message || res.statusText)
+
+        dispatch(updateExitSoundResolved())
+        await dispatch(fetchUser())
+    } catch (error) {
+        message.error(`Failed to update exit sound: ${error.message}`)
+        dispatch(updateExitSoundRejected(error))
     }
 }
 

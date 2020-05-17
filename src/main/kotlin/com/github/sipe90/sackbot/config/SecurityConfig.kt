@@ -2,7 +2,6 @@ package com.github.sipe90.sackbot.config
 
 import com.github.sipe90.sackbot.auth.DiscordAuthority
 import com.github.sipe90.sackbot.auth.DiscordUser
-import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.JDAService
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Role
@@ -53,8 +52,7 @@ class SecurityConfig {
     @Bean
     fun oauth2UserService(
         rest: WebClient,
-        jdaService: JDAService,
-        memberRepository: MemberRepository
+        jdaService: JDAService
     ): ReactiveOAuth2UserService<OAuth2UserRequest, OAuth2User> {
         val delegate = DefaultOAuth2UserService()
         return ReactiveOAuth2UserService { request ->

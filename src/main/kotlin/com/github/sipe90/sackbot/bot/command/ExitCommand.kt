@@ -3,6 +3,7 @@ package com.github.sipe90.sackbot.bot.command
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.service.AudioFileService
+import com.github.sipe90.sackbot.service.MemberService
 import com.github.sipe90.sackbot.util.getGuild
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
@@ -12,8 +13,7 @@ import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
 
 @Component
-class ExitCommand(private val fileService: AudioFileService, private val memberRepository: MemberRepository) :
-    BotCommand {
+class ExitCommand(private val memberService: MemberService) : BotCommand() {
 
     override val commandPrefix = "exit"
 
@@ -27,21 +27,14 @@ class ExitCommand(private val fileService: AudioFileService, private val memberR
             else -> throw SackException("Unsupported event type")
         }
 
-        memberRepository.findOrCreate(guild.id, user.id).flatMap { member ->
-            if (command.size == 1) return@flatMap if (member.exitSound != null) "Your exit sound is set to `${member.exitSound}`".toMono() else
-                "Your exit sound has not yet been set".toMono()
-            val audioName = command[1]
-            if (command.size == 2) return@flatMap fileService.audioFileExists(guild.id, audioName, user.id)
-                .flatMap exists@{
-                    if (it) {
-                        member.exitSound = audioName
-                        return@exists memberRepository.updateMember(member, user.id)
-                            .flatMap { "Your exit sound has been changed to `${member.entrySound}`".toMono() }
-                    } else {
-                        "Could not find any sounds with given name".toMono()
-                    }
-                }
-            "Invalid exit command.".toMono()
+        memberService.getMember(guild.id, user.id).flatMap { member ->
+            when (command.size) {
+                1 -> if (member.entrySound != null) "Your exit sound is set to `${member.exitSound}`".toMono() else
+                    "Your exit sound has not yet been set".toMono()
+                2 -> memberService.setMemberExitSound(guild.id, user.id, command[1])
+                        .map { "Your exit sound has been changed to `${command[1]}`" }
+                else -> "Invalid exit command.".toMono()
+            }
         }
     }
 }

@@ -19,10 +19,8 @@ export interface IMembership {
     userId: string
     entrySound: string | null
     exitSound: string | null
-    // FIXME: Set not nullable
-    createdBy: string | null
-    // FIXME: Set not nullable
-    created: number | null
+    createdBy: string
+    created: number
     modifiedBy: string | null
     modified: number | null
 }

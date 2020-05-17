@@ -7,7 +7,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @Component
-class HelpCommand(private val config: BotConfig) : BotCommand {
+class HelpCommand(private val config: BotConfig) : BotCommand() {
 
     override val commandPrefix = "help"
 

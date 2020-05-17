@@ -45,6 +45,8 @@ class Routes(
                     GET("/", handle(audioHandler::getSoundsList))
                     (POST("/") and accept(MediaType.MULTIPART_FORM_DATA))
                             .invoke(handleAdmin(audioHandler::uploadSounds))
+                    PUT("/entry", handle(audioHandler::setEntrySound))
+                    PUT("/exit", handle(audioHandler::setExitSound))
                     POST("/rnd", handle(audioHandler::playRandomSound))
                     GET("/export", handleAdmin(audioHandler::exportSounds))
                     "/{name}".nest {

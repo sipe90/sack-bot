@@ -14,7 +14,7 @@ import java.lang.NumberFormatException
 class UrlCommand(
     private val config: BotConfig,
     private val playerService: AudioPlayerService
-) : BotCommand {
+) : BotCommand() {
 
     override val commandPrefix = "url"
 

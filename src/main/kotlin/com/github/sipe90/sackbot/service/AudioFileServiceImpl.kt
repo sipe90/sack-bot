@@ -51,7 +51,7 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
                 }.toByteArray()
             }
 
-    override fun audioFileExists(guildId: String, name: String, userId: String): Mono<Boolean> {
+    override fun audioFileExists(guildId: String, name: String): Mono<Boolean> {
         return findAudioFile(guildId, name).map { true }.defaultIfEmpty(false)
     }
 

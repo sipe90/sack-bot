@@ -9,8 +9,7 @@ import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
 
 @Component
-class ListCommand(private val fileService: AudioFileService) :
-    BotCommand {
+class ListCommand(private val fileService: AudioFileService) : BotCommand() {
 
     override val commandPrefix = "list"
 

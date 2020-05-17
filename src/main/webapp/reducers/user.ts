@@ -1,6 +1,24 @@
-import { IMembership, IGuild, IGuildMember } from "@/types";
-import { Reducer } from "redux";
-import { FETCH_USER_REQUEST, FETCH_USER_RESOLVED, FETCH_USER_REJECTED, UserActions, FETCH_GUILDS_REQUEST, FETCH_GUILDS_RESOLVED, FETCH_GUILDS_REJECTED, SELECT_GUILD, FETCH_GUILD_MEMBERS_REQUEST, FETCH_GUILD_MEMBERS_RESOLVED, FETCH_GUILD_MEMBERS_REJECTED } from "@/actions/user";
+import {IGuild, IGuildMember, IMembership} from "@/types";
+import {Reducer} from "redux";
+import {
+    FETCH_GUILD_MEMBERS_REJECTED,
+    FETCH_GUILD_MEMBERS_REQUEST,
+    FETCH_GUILD_MEMBERS_RESOLVED,
+    FETCH_GUILDS_REJECTED,
+    FETCH_GUILDS_REQUEST,
+    FETCH_GUILDS_RESOLVED,
+    FETCH_USER_REJECTED,
+    FETCH_USER_REQUEST,
+    FETCH_USER_RESOLVED,
+    SELECT_GUILD,
+    UPDATE_ENTRY_SOUND_REJECTED,
+    UPDATE_ENTRY_SOUND_REQUEST,
+    UPDATE_ENTRY_SOUND_RESOLVED,
+    UPDATE_EXIT_SOUND_REJECTED,
+    UPDATE_EXIT_SOUND_REQUEST,
+    UPDATE_EXIT_SOUND_RESOLVED,
+    UserActions
+} from "@/actions/user";
 
 export interface IUserState {
     memberships: IMembership[]
@@ -54,6 +72,18 @@ const userReducer: Reducer<IUserState, UserActions> = (state = initialState, act
             }
         case FETCH_GUILD_MEMBERS_REJECTED:
             return { ...state, guildMembersLoading: false }
+        case UPDATE_ENTRY_SOUND_REQUEST:
+            return { ...state }
+        case UPDATE_ENTRY_SOUND_RESOLVED:
+            return { ...state }
+        case UPDATE_ENTRY_SOUND_REJECTED:
+            return { ...state }
+        case UPDATE_EXIT_SOUND_REQUEST:
+            return { ...state }
+        case UPDATE_EXIT_SOUND_RESOLVED:
+            return { ...state }
+        case UPDATE_EXIT_SOUND_REJECTED:
+            return { ...state }
         case SELECT_GUILD:
             return { ...state, selectedGuild: action.payload }
         default:

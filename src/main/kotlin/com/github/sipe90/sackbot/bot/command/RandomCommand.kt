@@ -12,7 +12,7 @@ import java.lang.NumberFormatException
 
 @Component
 class RandomCommand(private val fileService: AudioFileService, private val playerService: AudioPlayerService) :
-    BotCommand {
+    BotCommand() {
 
     override val commandPrefix = "rnd"
 
