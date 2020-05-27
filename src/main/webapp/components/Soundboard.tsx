@@ -10,16 +10,6 @@ import { IAudioFile } from '@/types'
 import {selectedGuildMembership} from "@/selectors/user";
 import {updateEntrySound, updateExitSound} from "@/actions/user";
 
-const SoundGrid = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-`
-
-const Sound = styled.div`
-    margin: 5px;
-    flex: 0 0 0;
-`
 const isSubset = R.curry((xs: any[], ys: any[]) =>
 	R.all(R.contains(R.__, ys), xs))
 
@@ -39,26 +29,31 @@ const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.invoker(0, 'sort')
 )
 
+const defVolume = 75
+
 const Soundboard: React.FC = () => {
 
     const selectedGuild = useSelector((state => state.user.selectedGuild))
     const sounds = useSelector((state => state.sounds.sounds))
-    const playingSound = useSelector((state => state.sounds.playingSound))
     const membership = useSelector(selectedGuildMembership)
 
     const dispatch = useDispatch()
 
-    const [volume, setVolume] = useState<number>(75)
+    const [volume, setVolume] = useState<number>(defVolume)
     const [tagFilter, setTagFilter] = useState<string[]>([])
 
     const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild, volume, tagFilter)), [selectedGuild, volume, tagFilter])
+
+    const onPlaySound = useCallback((sound: string) => selectedGuild && dispatch(playSound(selectedGuild, sound, volume)), [selectedGuild, volume])
+    const onUpdateEntrySound = useCallback((sound: string) => selectedGuild && dispatch(updateEntrySound(selectedGuild, sound)), [selectedGuild])
+    const onUpdateExitSound = useCallback((sound: string) => selectedGuild && dispatch(updateExitSound(selectedGuild, sound)), [selectedGuild])
+    const onClearEntrySound = useCallback(() => selectedGuild && dispatch(updateEntrySound(selectedGuild)), [selectedGuild])
+    const onClearExitSound = useCallback(() => selectedGuild && dispatch(updateExitSound(selectedGuild)), [selectedGuild])
 
     useEffect(() => {
         selectedGuild && dispatch(fetchSounds(selectedGuild))
     }, [selectedGuild])
 
-    const groupedSounds = useMemo(() => filterAndGroup(sounds, tagFilter), [sounds, tagFilter])
-    const letters = useMemo(() => R.keys(groupedSounds).sort(), [groupedSounds])
     const tags = useMemo(() => getTags(sounds), [sounds])
 
     return (
@@ -68,7 +63,7 @@ const Soundboard: React.FC = () => {
                     <SoundOutlined style={{ fontSize: 18 }}/>
                 </div>
                 <div style={{ flexGrow: 1 }}>
-                    <Slider value={volume} min={1} max={100} onChange={(vol) => setVolume(vol as number)} />
+                    <Slider defaultValue={defVolume} min={1} max={100} onAfterChange={(vol) => setVolume(vol as number)} />
                 </div>
             </div>
             <div style={{ display: 'flex' }}>
@@ -87,35 +82,91 @@ const Soundboard: React.FC = () => {
                 <Button
                     block
                     style={{ marginLeft: 8, width: 120 }}
-                    disabled={playingSound}
                     type="primary"
-                    onClick={onPlayRandomSound}>
+                    onClick={onPlayRandomSound}
+                >
                         <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>Random</div>
                 </Button>
             </div>
+            <Grid
+                sounds={sounds}
+                tagFilter={tagFilter}
+                entrySound={membership?.entrySound || null}
+                exitSound={membership?.exitSound || null}
+                onPlaySound={onPlaySound}
+                onUpdateEntrySound={onUpdateEntrySound}
+                onUpdateExitSound={onUpdateExitSound}
+                onClearEntrySound={onClearEntrySound}
+                onClearExitSound={onClearExitSound}
+            />
+        </>
+    )
+}
+
+const SoundGrid = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+`
+
+const Sound = styled.div`
+    margin: 5px;
+    flex: 0 0 0;
+`
+
+interface IGripProps {
+    sounds: IAudioFile[]
+    tagFilter: string[]
+    entrySound: string | null
+    exitSound: string | null
+    onPlaySound: (sound: string) => void
+    onUpdateEntrySound: (sound: string) => void
+    onUpdateExitSound: (sound: string) => void
+    onClearEntrySound: () => void
+    onClearExitSound: () => void
+}
+
+const Grid: React.FC<IGripProps> = React.memo((props) => {
+
+    const {
+        sounds,
+        tagFilter,
+        entrySound,
+        exitSound,
+        onPlaySound,
+        onUpdateEntrySound,
+        onUpdateExitSound,
+        onClearEntrySound,
+        onClearExitSound
+    } = props
+
+    const groupedSounds = useMemo(() => filterAndGroup(sounds, tagFilter), [sounds, tagFilter])
+    const letters = useMemo(() => R.keys(groupedSounds).sort(), [groupedSounds])
+
+    return (
+        <>
             {letters.map((letter) => 
                 <div key={letter}>
                     <Divider>{letter}</Divider>
                     <SoundGrid>
-                        {groupedSounds[letter].map((sound) => 
-                            <Sound key={sound.name}>
+                        {groupedSounds[letter].map(({ name }) => 
+                            <Sound key={name}>
                                 <Dropdown
                                     trigger={['contextMenu']}
                                     overlay={
                                         <Menu>
-                                            <Menu.Item onClick={() => selectedGuild && dispatch(updateEntrySound(selectedGuild, sound.name))}>Set as entry sound</Menu.Item>
-                                            <Menu.Item onClick={() => selectedGuild && dispatch(updateExitSound(selectedGuild, sound.name))}>Set as exit sound</Menu.Item>
-                                            {membership?.entrySound && <Menu.Item onClick={() => selectedGuild && dispatch(updateEntrySound(selectedGuild))}>Clear entry sound {` (${membership.entrySound})`}</Menu.Item>}
-                                            {membership?.exitSound && <Menu.Item onClick={() => selectedGuild && dispatch(updateExitSound(selectedGuild))}>Clear exit sound {` (${membership.exitSound})`}</Menu.Item>}
+                                            <Menu.Item onClick={() => onUpdateEntrySound(name)}>Set as entry sound</Menu.Item>
+                                            <Menu.Item onClick={() => onUpdateExitSound(name)}>Set as exit sound</Menu.Item>
+                                            {entrySound && <Menu.Item onClick={onClearEntrySound}>Clear entry sound {` (${entrySound})`}</Menu.Item>}
+                                            {exitSound && <Menu.Item onClick={onClearExitSound}>Clear exit sound {` (${exitSound})`}</Menu.Item>}
                                         </Menu>
                                     }
                                 >
                                     <Button
                                         block
                                         style={{ width: 120 }}
-                                        disabled={playingSound}
-                                        onClick={() => selectedGuild && dispatch(playSound(selectedGuild, sound.name, volume))}>
-                                            <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>{sound.name}</div>
+                                        onClick={() => onPlaySound(name)}>
+                                            <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>{name}</div>
                                     </Button>
                                 </Dropdown>
                             </Sound>)}
@@ -124,6 +175,6 @@ const Soundboard: React.FC = () => {
             )}
         </>
     )
-}
+})
 
 export default Soundboard
