@@ -48,6 +48,7 @@ class Routes(
                     PUT("/entry", handle(audioHandler::setEntrySound))
                     PUT("/exit", handle(audioHandler::setExitSound))
                     POST("/rnd", handle(audioHandler::playRandomSound))
+                    POST("/url", handle(audioHandler::playUrl))
                     GET("/export", handleAdmin(audioHandler::exportSounds))
                     "/{name}".nest {
                         GET("/download", handleAdmin(audioHandler::downloadSound))

@@ -4,7 +4,6 @@ import com.github.sipe90.sackbot.auth.DiscordUser
 import com.github.sipe90.sackbot.exception.BadRequestException
 import com.github.sipe90.sackbot.exception.NotFoundException
 import com.github.sipe90.sackbot.handler.dto.AudioFileUpdateDTO
-import com.github.sipe90.sackbot.persistence.MemberRepository
 import com.github.sipe90.sackbot.persistence.dto.API
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
@@ -51,6 +50,16 @@ class AudioHandler(
         return audioFileService.randomAudioFile(guildId, userId, tags.orEmpty().toHashSet())
             .flatMap { audioPlayerService.playAudioForUser(guildId, userId, it.name, volume) }
             .flatMap { noContent().build() }
+    }
+
+    fun playUrl(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+        val guildId = request.pathVariable("guildId")
+        val userId = principal.getId()
+        val volume = getVolume(request)
+        val url = request.queryParam("url").orElseThrow { BadRequestException("Query parameter url is required") }
+
+        return audioPlayerService.playUrlForUser(guildId, userId, url, volume)
+                .flatMap { noContent().build() }
     }
 
     fun getSoundsList(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {

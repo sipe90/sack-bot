@@ -43,9 +43,7 @@ class UrlCommand(
                 } else null
 
         playerService.playUrlInChannel(url, voiceChannel, volume)
-            .map {
-                return@map if (it) "Playing url `$url` in voice channel `#${voiceChannel.name}`"
-                else "Could not find a sound source with given url"
-            }
+            .map { "Playing url `$url` in voice channel `#${voiceChannel.name}`" }
+                .onErrorReturn("Could not find a sound source with given url")
     }
 }

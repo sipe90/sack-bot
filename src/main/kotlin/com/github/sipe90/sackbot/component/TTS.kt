@@ -57,6 +57,8 @@ class TTS(config: BotConfig) {
         }
     }
 
+    fun isRandomPhraseAvailable() = phrases.isEmpty()
+
     fun randomPhraseToSpeech(): Mono<Path> {
         if (phrases.isEmpty()) return Mono.empty()
         return textToSpeech(phrases[(0 until phrases.size).random()])

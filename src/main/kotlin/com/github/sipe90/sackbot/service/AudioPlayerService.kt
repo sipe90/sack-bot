@@ -5,27 +5,30 @@ import reactor.core.publisher.Mono
 
 interface AudioPlayerService {
 
+    fun playAudioForUser(guildId: String, userId: String, name: String, volume: Int?): Mono<Void>
+
     fun playAudioInChannel(name: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Void>
 
-    fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Boolean>
+    fun playTtsForUser(guildId: String, userId: String, text: String): Mono<Void>
 
-    fun playTtsForUser(guildId: String, userId: String, text: String): Mono<Boolean>
+    fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Void>
 
-    fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Boolean>
+    fun isRandomTtsEnabled(): Boolean
 
-    fun playRandomTtsForUser(guildId: String, userId: String): Mono<Boolean>
+    fun playRandomTtsForUser(guildId: String, userId: String): Mono<Void>
 
-    fun setVolume(guildId: String, volume: Int)
+    fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Void>
 
-    fun getVolume(guildId: String): Int?
+    fun playUrlForUser(guildId: String, userId: String, url: String, volume: Int?): Mono<Void>
 
-    fun playUrlInChannel(url: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Boolean>
+    fun playUrlInChannel(url: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Void>
 
-    fun playAudioForUser(userId: String, name: String, volume: Int?): Mono<Void>
-
-    fun playAudioForUser(guildId: String, userId: String, name: String, volume: Int?): Mono<Void>
+    fun playVoiceLinesForUser(guildId: String, userId: String, voice: String, lines: List<String>): Mono<Void>
 
     fun playVoiceLinesInChannel(voice: String, lines: List<String>, voiceChannel: VoiceChannel): Mono<Void>
 
-    fun playVoiceLinesForUser(guildId: String, userId: String, voice: String, lines: List<String>): Mono<Void>
+    fun setDefaultVolume(guildId: String, volume: Int)
+
+    fun getDefaultVolume(guildId: String): Int?
+
 }

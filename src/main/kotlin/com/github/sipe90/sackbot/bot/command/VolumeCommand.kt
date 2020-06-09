@@ -19,7 +19,7 @@ class VolumeCommand(private val config: BotConfig, private val playerService: Au
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
         if (command.size == 1) {
-            val volume = playerService.getVolume(guild.id)
+            val volume = playerService.getDefaultVolume(guild.id)
             return@defer "Current volume is set to `$volume%`".toMono()
         }
 
@@ -31,7 +31,7 @@ class VolumeCommand(private val config: BotConfig, private val playerService: Au
                 .coerceAtLeast(1)
                 .coerceAtMost(100)
 
-            playerService.setVolume(guild.id, volume)
+            playerService.setDefaultVolume(guild.id, volume)
             "Setting volume to `$volume%`".toMono()
         } catch (e: NumberFormatException) {
             "Failed to set volume. Could not parse amount".toMono()

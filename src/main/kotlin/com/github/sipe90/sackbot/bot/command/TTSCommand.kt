@@ -20,11 +20,13 @@ class TTSCommand(private val config: BotConfig, private val playerService: Audio
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
         if (command.size < 2) {
 
+            if (!playerService.isRandomTtsEnabled()) {
+                return@defer "Invalid say command. Correct format is `${config.chat.commandPrefix}say <text>`".toMono()
+            }
+
             return@defer "Playing random text to speech phrase in voice channel `#${voiceChannel.name}`".toMono()
                 .concatWith(
-                    playerService.playRandomTtsInChannel(voiceChannel).flatMap {
-                        if (it) Mono.empty() else "Invalid say command. Correct format is `${config.chat.commandPrefix}say <text>`".toMono()
-                    }
+                    playerService.playRandomTtsInChannel(voiceChannel).then(Mono.empty())
                 )
         }
 
