@@ -1,14 +1,16 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import * as R from 'ramda'
-import { Button, Divider, Dropdown, Menu, Select, Slider } from 'antd'
-import { SoundOutlined } from '@ant-design/icons'
+import { Button, Divider, Dropdown, Input, Menu, Select, Slider } from 'antd'
+import { SoundOutlined, PlayCircleOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
-import { fetchSounds, playSound, playRandomSound } from '@/actions/sounds'
+import { fetchSounds, playSound, playRandomSound, playUrl } from '@/actions/sounds'
 import { IAudioFile } from '@/types'
 import {selectedGuildMembership} from "@/selectors/user";
 import {updateEntrySound, updateExitSound} from "@/actions/user";
+
+const { Search } = Input
 
 const isSubset = R.curry((xs: any[], ys: any[]) =>
 	R.all(R.contains(R.__, ys), xs))
@@ -40,11 +42,13 @@ const Soundboard: React.FC = () => {
     const dispatch = useDispatch()
 
     const [volume, setVolume] = useState<number>(defVolume)
+    const [url, setUrl] = useState<string>("")
     const [tagFilter, setTagFilter] = useState<string[]>([])
 
     const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild, volume, tagFilter)), [selectedGuild, volume, tagFilter])
 
     const onPlaySound = useCallback((sound: string) => selectedGuild && dispatch(playSound(selectedGuild, sound, volume)), [selectedGuild, volume])
+    const onPlayUrl = useCallback((url: string) => selectedGuild && dispatch(playUrl(selectedGuild, url, volume)), [selectedGuild, volume])
     const onUpdateEntrySound = useCallback((sound: string) => selectedGuild && dispatch(updateEntrySound(selectedGuild, sound)), [selectedGuild])
     const onUpdateExitSound = useCallback((sound: string) => selectedGuild && dispatch(updateExitSound(selectedGuild, sound)), [selectedGuild])
     const onClearEntrySound = useCallback(() => selectedGuild && dispatch(updateEntrySound(selectedGuild)), [selectedGuild])
@@ -58,7 +62,7 @@ const Soundboard: React.FC = () => {
 
     return (
         <>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ marginRight: 8 }}>
                     <SoundOutlined style={{ fontSize: 18 }}/>
                 </div>
@@ -66,6 +70,16 @@ const Soundboard: React.FC = () => {
                     <Slider defaultValue={defVolume} min={1} max={100} onAfterChange={(vol) => setVolume(vol as number)} />
                 </div>
             </div>
+            <div>
+                <Search
+                    placeholder="Play from URL"
+                    enterButton={<PlayCircleOutlined style={{ fontSize: 22 }}/>}
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    onSearch={onPlayUrl}
+                />
+            </div>
+            <Divider></Divider>
             <div style={{ display: 'flex' }}>
                 <div style={{ flexGrow: 1 }}>
                 <Select

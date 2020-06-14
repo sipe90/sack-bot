@@ -15,6 +15,10 @@ export const PLAY_RANDOM_SOUND_REQUEST = "PLAY_RANDOM_SOUND_REQUEST"
 export const PLAY_RANDOM_SOUND_RESOLVED = "PLAY_RANDOM_SOUND_RESOLVED"
 export const PLAY_RANDOM_SOUND_REJECTED = "PLAY_RANDOM_SOUND_REJECTED"
 
+export const PLAY_URL_REQUEST = "PLAY_URL_REQUEST"
+export const PLAY_URL_RESOLVED = "PLAY_URL_RESOLVED"
+export const PLAY_URL_REJECTED = "PLAY_URL_REJECTED"
+
 export const UPDATE_SOUND_REQUEST = "UPDATE_SOUND_REQUEST"
 export const UPDATE_SOUND_RESOLVED = "UPDATE_SOUND_RESOLVED"
 export const UPDATE_SOUND_REJECTED = "UPDATE_SOUND_REJECTED"
@@ -63,6 +67,19 @@ interface PlayRandomSoundRejectedAction {
     payload: Error
 }
 
+interface PlayUrlRequestAction {
+    type: typeof PLAY_URL_REQUEST
+}
+
+interface PlayUrlResolvedAction {
+    type: typeof PLAY_URL_RESOLVED
+}
+
+interface PlayUrlRejectedAction {
+    type: typeof PLAY_URL_REJECTED,
+    payload: Error
+}
+
 interface UpdateSoundRequestAction {
     type: typeof UPDATE_SOUND_REQUEST
 }
@@ -94,6 +111,7 @@ interface DeleteSoundRejectedAction {
 export type SoundsActions = FetchSoundsRequestAction | FetchSoundsResolvedAction | FetchSoundsRejectedAction |
     PlaySoundRequestAction | PlaySoundResolvedAction | PlaySoundRejectedAction |
     PlayRandomSoundRequestAction | PlayRandomSoundResolvedAction | PlayRandomSoundRejectedAction |
+    PlayUrlRequestAction | PlayUrlResolvedAction | PlayUrlRejectedAction |
     UpdateSoundRequestAction | UpdateSoundResolvedAction | UpdateSoundRejectedAction |
     DeleteSoundRequestAction | DeleteSoundResolvedAction | DeleteSoundRejectedAction
 
@@ -177,6 +195,34 @@ export const playRandomSound = (guildId: string, vol: number, tags: string[] = [
     } catch (error) {
         message.error(`Failed to play sound: ${error.message}`)
         dispatch(playRandomSoundRejected(error))
+    }
+}
+
+const playUrlRequest = (): PlayUrlRequestAction => ({
+    type: PLAY_URL_REQUEST
+})
+
+const playUrlResolved = (): PlayUrlResolvedAction => ({
+    type: PLAY_URL_RESOLVED
+})
+
+const playUrlRejected = (error: Error): PlayUrlRejectedAction => ({
+    type: PLAY_URL_REJECTED,
+    payload: error
+})
+
+export const playUrl = (guildId: string, url: string, vol: number): AsyncThunkResult => async (dispatch) => {
+    try {
+        dispatch(playUrlRequest())
+        
+        const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/url?${buildQueryString({ url, vol })}`)
+
+        if (!res.ok) throw new Error(res.json?.message || res.statusText)
+
+        dispatch(playUrlResolved())
+    } catch (error) {
+        message.error(`Failed to play url: ${error.message}`)
+        dispatch(playUrlRejected(error))
     }
 }
 
