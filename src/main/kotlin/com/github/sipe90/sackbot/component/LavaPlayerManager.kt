@@ -51,12 +51,21 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
     }
 
     fun playNitriteTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> =
-            playTrack(nitriteManager, identifier, voiceChannel, volume)
+            playTrack(nitriteManager, identifier, voiceChannel, false, volume)
 
     fun playLocalTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> =
-            playTrack(localAudioSourceManager, identifier, voiceChannel, volume)
+            playTrack(localAudioSourceManager, identifier, voiceChannel, false, volume)
 
-    private fun playTrack(sourceManager: AudioSourceManager, identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> = Mono.defer {
+    fun queueLocalTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> =
+            playTrack(localAudioSourceManager, identifier, voiceChannel, true, volume)
+
+    private fun playTrack(
+            sourceManager: AudioSourceManager,
+            identifier: String,
+            voiceChannel: VoiceChannel,
+            queue: Boolean,
+            volume: Int?
+    ): Mono<AudioTrack> = Mono.defer {
         val guild = voiceChannel.guild
         val trackScheduler = getScheduler(guild)
 
@@ -64,7 +73,7 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
 
         mono {
             sourceManager.loadItem(playerManager, AudioReference(identifier, null)) as AudioTrack?
-        }.doOnSuccess{ trackScheduler.interrupt(it, volume) }
+        }.doOnSuccess{ if (queue) trackScheduler.queue(it, volume) else trackScheduler.interrupt(it, volume) }
     }
 
     fun playExternalTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioItem> {

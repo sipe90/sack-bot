@@ -39,7 +39,7 @@ class VoiceLines(private val config: BotConfig) {
         val voiceConfig = config.voices[voice] ?: throw IllegalArgumentException("Invalid voice")
         if (!voiceConfig.enabled) throw IllegalArgumentException("Voice is disabled")
 
-        return lines.map { voiceConfig.substitutions.getOrDefault(it, it) }
+        return lines.map { voiceConfig.substitutions?.getOrDefault(it, it) ?: it }
             .mapNotNull { voiceLines[voice]?.get(it) }
     }
 

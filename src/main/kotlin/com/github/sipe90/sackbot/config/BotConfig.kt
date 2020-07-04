@@ -46,7 +46,7 @@ data class BotConfig(
     data class VoiceConfig(
         val enabled: Boolean,
         val path: String,
-        val substitutions: Map<String, String>
+        val substitutions: Map<String, String>?
     )
 
     data class UploadConfig(

@@ -48,16 +48,15 @@ class AudioPlayerServiceImpl(
         return playVoiceLinesInChannel(voice, lines, voiceChannel)
     }
 
-    override fun playVoiceLinesInChannel(voice: String, lines: List<String>, voiceChannel: VoiceChannel): Mono<Void> =
-        Flux.defer {
-            val paths = voiceLines.getPaths(voice, lines)
+    override fun playVoiceLinesInChannel(voice: String, lines: List<String>, voiceChannel: VoiceChannel): Mono<Void> {
+        val paths = voiceLines.getPaths(voice, lines)
 
-            logger.debug("Queuing voice lines {} from voice {} on channel #{}", lines, voice, voiceChannel.name)
+        logger.debug("Queuing voice lines {} from voice {} on channel #{}", lines, voice, voiceChannel.name)
 
-            Flux.concat<AudioTrack> {
-                paths.map { Mono.just(playerManager.playLocalTrack(it.toString(), voiceChannel, null)) }
-            }
-        }.then()
+        val monos = paths.map { playerManager.queueLocalTrack(it.toString(), voiceChannel, null) }
+
+        return Flux.concat(monos).then()
+    }
 
     override fun isRandomTtsEnabled(): Boolean = tts.isRandomPhraseAvailable()
 

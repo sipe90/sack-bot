@@ -21,6 +21,11 @@ sackbot:
         path: ${sackbot.home}/voices/vox
         substitutions[,]: _comma
         substitutions[.]: _period
+#     custom:
+#       enabled: false
+#       path: ${sackbot.home}/voices/custom
+#       substitutions:
+#         test: 123
     tts:
       voice:
       phrasesFile: ${sackbot.home}${file.separator}phrases.txt
