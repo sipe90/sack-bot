@@ -5,7 +5,7 @@ import com.github.sipe90.sackbot.component.TTS
 import com.github.sipe90.sackbot.component.VoiceLines
 import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.util.getVoiceChannel
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import net.dv8tion.jda.api.entities.VoiceChannel
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -16,10 +16,10 @@ import java.nio.file.Path
 
 @Service
 class AudioPlayerServiceImpl(
-    private val jdaService: JDAService,
-    private val tts: TTS,
-    private val voiceLines: VoiceLines,
-    private val playerManager: LavaPlayerManager
+        private val jdaService: JDAService,
+        private val tts: TTS,
+        private val voiceLines: VoiceLines,
+        private val playerManager: LavaPlayerManager
 ) : AudioPlayerService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
@@ -28,7 +28,7 @@ class AudioPlayerServiceImpl(
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
         val voiceChannel =
-            getVoiceChannel(guild, user) ?: throw ValidationException("Could not find voice channel to play in")
+                getVoiceChannel(guild, user) ?: throw ValidationException("Could not find voice channel to play in")
         return playAudioInChannel(name, voiceChannel, volume)
     }
 
@@ -38,10 +38,10 @@ class AudioPlayerServiceImpl(
     }
 
     override fun playVoiceLinesForUser(
-        guildId: String,
-        userId: String,
-        voice: String,
-        lines: List<String>
+            guildId: String,
+            userId: String,
+            voice: String,
+            lines: List<String>
     ): Mono<Void> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
@@ -84,14 +84,14 @@ class AudioPlayerServiceImpl(
         return playerManager.playLocalTrack(file.toString(), voiceChannel, volume).then()
     }
 
-    override fun playUrlForUser(guildId: String, userId: String, url: String, volume: Int?): Mono<Void> {
+    override fun playUrlForUser(guildId: String, userId: String, url: String, volume: Int?): Mono<AudioItem> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
         return playUrlInChannel(url, voiceChannel, volume)
     }
 
-    override fun playUrlInChannel(url: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Void> {
-        return playerManager.playExternalTrack(url, voiceChannel, volume).then()
+    override fun playUrlInChannel(url: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioItem> {
+        return playerManager.playExternalTrack(url, voiceChannel, volume)
     }
 
     override fun setDefaultVolume(guildId: String, volume: Int) = playerManager.setDefaultVolume(guildId, volume)

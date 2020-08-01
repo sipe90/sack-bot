@@ -9,13 +9,12 @@ import net.dv8tion.jda.api.events.Event
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
-import java.lang.NumberFormatException
 
 @Component
 class PlayCommand(
-    private val config: BotConfig,
-    private val fileService: AudioFileService,
-    private val playerService: AudioPlayerService
+        private val config: BotConfig,
+        private val fileService: AudioFileService,
+        private val playerService: AudioPlayerService
 ) : BotCommand() {
 
     override val commandPrefix = ""
@@ -33,10 +32,10 @@ class PlayCommand(
         }
 
         val audioFileName = command[0]
-        val volumeStr = command[1]
 
         val volume: Int? =
                 if (command.size == 2) {
+                    val volumeStr = command[1]
                     try {
                         Integer.parseInt(volumeStr).coerceIn(1, 100)
                     } catch (e: NumberFormatException) {
@@ -45,10 +44,10 @@ class PlayCommand(
                 } else null
 
         fileService.findAudioFile(guild.id, audioFileName)
-            .flatMap {
-                playerService.playAudioInChannel(it.name, voiceChannel, volume)
-                    .then("Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`".toMono())
-            }
-            .switchIfEmpty("Could not find any sounds with given name".toMono())
+                .flatMap {
+                    playerService.playAudioInChannel(it.name, voiceChannel, volume)
+                            .then("Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`".toMono())
+                }
+                .switchIfEmpty("Could not find any sounds with given name".toMono())
     }
 }
