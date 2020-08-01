@@ -32,9 +32,9 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.2.3'
 
     implementation 'org.dizitart:potassium-nitrite:3.3.0'
-    implementation 'net.dv8tion:JDA:4.1.1_109'
-    implementation 'club.minnced:jda-reactor:1.0.0'
-    implementation 'com.sedmelluq:lavaplayer:1.3.49'
+    implementation 'net.dv8tion:JDA:4.2.0_168'
+    implementation 'club.minnced:jda-reactor:1.2.0'
+    implementation 'com.sedmelluq:lavaplayer:1.3.50'
     implementation 'com.sedmelluq:jda-nas:1.1.0'
 
     implementation('de.dfki.mary:marytts-lang-en:5.2') {
