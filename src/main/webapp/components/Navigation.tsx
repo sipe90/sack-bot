@@ -3,8 +3,8 @@ import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { IRouteDefinition } from '@/routeDefs'
-import { Avatar, Button, Menu, Dropdown } from 'antd'
-import { DownOutlined } from '@ant-design/icons'
+import { Avatar, Menu, Dropdown } from 'antd'
+import { CaretDownFilled } from '@ant-design/icons'
 import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
 
@@ -31,48 +31,53 @@ const activeStyle: React.CSSProperties = {
 }
 
 const Navigation: React.FC<INavigationProps> = (props) => {
-    
+
     const selectedGuild = useSelector((state) => state.user.selectedGuild)
     const guilds = useSelector((state) => state.user.guilds)
     const dispatch = useDispatch()
 
     return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
-        <NavigationMenu>
-            {props.routes.map(renderNavigationLink)}
-        </NavigationMenu>
-        <div style={{ display: "flex", alignItems: "center" }}>
-            <Avatar
-                style={{ marginRight: 10 }}
-                size="large"
-                src={selectedGuild ? guilds.find(({id}) => id == selectedGuild)?.iconUrl || undefined : undefined}>
-                    {selectedGuild ? undefined : "G"}
-            </Avatar>
-            <div style={{marginRight: 10 }}>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+            <NavigationMenu>
+                {props.routes.map(renderNavigationLink)}
+            </NavigationMenu>
+            <div style={{ display: "flex", alignItems: "center", marginRight: 10 }}>
                 <Dropdown
+                    placement="bottomRight"
                     overlay={
                         <Menu
-                            selectedKeys={selectedGuild ?[selectedGuild] : []}
+                            selectedKeys={selectedGuild ? [selectedGuild] : []}
                         >
-                            {guilds.map(({ id, name }) => (
+                            {guilds.map(({ id, name, iconUrl }) => (
                                 <Menu.Item
                                     key={id}
                                     onClick={() => dispatch(selectGuild(id))}
                                 >
+                                    <Avatar
+                                        style={{ marginRight: 10 }}
+                                        size={24}
+                                        src={iconUrl || undefined}
+                                    />
                                     {name}
                                 </Menu.Item>)
                             )}
                         </Menu>
                     }
                 >
-                    <Button>
-                        Guild <DownOutlined />
-                    </Button>
+                    <div>
+                        <Avatar
+                            style={{ marginRight: 10 }}
+                            size={34}
+                            src={selectedGuild ? guilds.find(({ id }) => id == selectedGuild)?.iconUrl || undefined : undefined}
+                        />
+                        <CaretDownFilled
+                            style={{ color: "#fff" }}
+                        />
+                    </div>
                 </Dropdown>
             </div>
         </div>
-    </div>
-)
+    )
 }
 
 const renderNavigationLink = (route: IRouteDefinition, index: number) => (
@@ -82,7 +87,7 @@ const renderNavigationLink = (route: IRouteDefinition, index: number) => (
         to={route.path}
         exact={true}
     >
-            {route.icon}
+        {route.icon}
     </NavigationLink>
 )
 
