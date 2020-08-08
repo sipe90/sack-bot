@@ -7,13 +7,13 @@ import { SoundOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, playSound, playRandomSound, playUrl } from '@/actions/sounds'
 import { IAudioFile } from '@/types'
-import {selectedGuildMembership} from "@/selectors/user";
-import {updateEntrySound, updateExitSound} from "@/actions/user";
+import { selectedGuildMembership } from "@/selectors/user"
+import { updateEntrySound, updateExitSound } from "@/actions/user"
 
 const { Search } = Input
 
 const isSubset = R.curry((xs: any[], ys: any[]) =>
-	R.all(R.contains(R.__, ys), xs))
+    R.all(R.contains(R.__, ys), xs))
 
 const filterAndGroup = R.pipe(
     (sounds: IAudioFile[], tagFilter: string[]) => tagFilter.length ? sounds.filter((sound) => isSubset(tagFilter, sound.tags)) : sounds,
@@ -35,7 +35,7 @@ const defVolume = 75
 
 const Soundboard: React.FC = () => {
 
-    const selectedGuild = useSelector((state => state.user.selectedGuild))
+    const selectedGuild = useSelector((state => state.user.selectedGuildId))
     const sounds = useSelector((state => state.sounds.sounds))
     const membership = useSelector(selectedGuildMembership)
 
@@ -64,7 +64,7 @@ const Soundboard: React.FC = () => {
         <>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ marginRight: 8 }}>
-                    <SoundOutlined style={{ fontSize: 18 }}/>
+                    <SoundOutlined style={{ fontSize: 18 }} />
                 </div>
                 <div style={{ flexGrow: 1 }}>
                     <Slider defaultValue={defVolume} min={1} max={100} onAfterChange={(vol) => setVolume(vol as number)} />
@@ -73,7 +73,7 @@ const Soundboard: React.FC = () => {
             <div>
                 <Search
                     placeholder="Play from URL"
-                    enterButton={<PlayCircleOutlined style={{ fontSize: 22 }}/>}
+                    enterButton={<PlayCircleOutlined style={{ fontSize: 22 }} />}
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onSearch={onPlayUrl}
@@ -82,16 +82,16 @@ const Soundboard: React.FC = () => {
             <Divider></Divider>
             <div style={{ display: 'flex' }}>
                 <div style={{ flexGrow: 1 }}>
-                <Select
-                    style={{ width: '100%' }}
-                    mode='multiple'
-                    allowClear
-                    placeholder='Filter by tags'
-                    value={tagFilter}
-                    onChange={setTagFilter}
-                >
-                    {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
-                </Select>
+                    <Select
+                        style={{ width: '100%' }}
+                        mode='multiple'
+                        allowClear
+                        placeholder='Filter by tags'
+                        value={tagFilter}
+                        onChange={setTagFilter}
+                    >
+                        {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
+                    </Select>
                 </div>
                 <Button
                     block
@@ -99,7 +99,7 @@ const Soundboard: React.FC = () => {
                     type="primary"
                     onClick={onPlayRandomSound}
                 >
-                        <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>Random</div>
+                    <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>Random</div>
                 </Button>
             </div>
             <Grid
@@ -159,11 +159,11 @@ const Grid: React.FC<IGripProps> = React.memo((props) => {
 
     return (
         <>
-            {letters.map((letter) => 
+            {letters.map((letter) =>
                 <div key={letter}>
                     <Divider>{letter}</Divider>
                     <SoundGrid>
-                        {groupedSounds[letter].map(({ name }) => 
+                        {groupedSounds[letter].map(({ name }) =>
                             <Sound key={name}>
                                 <Dropdown
                                     trigger={['contextMenu']}
@@ -180,7 +180,7 @@ const Grid: React.FC<IGripProps> = React.memo((props) => {
                                         block
                                         style={{ width: 120 }}
                                         onClick={() => onPlaySound(name)}>
-                                            <div style={{ overflow: "hidden", textOverflow: "ellipsis"}}>{name}</div>
+                                        <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
                                     </Button>
                                 </Dropdown>
                             </Sound>)}

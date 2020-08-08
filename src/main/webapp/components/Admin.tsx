@@ -6,10 +6,11 @@ import { PlayCircleTwoTone, PlusOutlined, DownloadOutlined, EditTwoTone, DeleteT
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, deleteSound, playSound, updateSound } from '@/actions/sounds'
-import { IAudioFile, IGuildMember, AppDispatch } from '@/types'
+import { IAudioFile, IGuildMember, AppDispatch, IGuild } from '@/types'
 import { ColumnsType } from 'antd/lib/table'
 import { fetchGuildMembers } from '@/actions/user'
 import { UploadFile } from 'antd/lib/upload/interface'
+import { selectedGuild } from '@/selectors/user'
 
 const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
@@ -17,9 +18,9 @@ const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.invoker(0, 'sort')
 )
 
-const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudioFile) => void, guildId: string | null, guildMembers: { [guildId: string]: IGuildMember[]}): ColumnsType<IAudioFile> => {
+const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudioFile) => void, guild: IGuild, guildMembers: { [guildId: string]: IGuildMember[] }): ColumnsType<IAudioFile> => {
 
-    const members = guildId ? guildMembers[guildId] || [] : []
+    const members = guildMembers[guild.id] || []
     const membersById = R.indexBy(R.prop('id'), members)
     const getUsername = (userId: string | null) => userId ? R.pathOr('Unknown', [userId, 'name'], membersById) : ''
 
@@ -37,7 +38,7 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
         dataIndex: 'size',
         render: (size: number) => `${size / 1000} KB`,
         sorter: (a, b) => a.size - b.size
-    }, { 
+    }, {
         title: 'Created',
         dataIndex: 'created',
         render: (instant: number) => DateTime.fromMillis(instant).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS),
@@ -57,11 +58,11 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
         dataIndex: 'modifiedBy',
         render: (userId: string) => userId ? getUsername(userId) : '',
         sorter: (a, b) => getUsername(a.modifiedBy).localeCompare(getUsername(b.modifiedBy))
-    },{
-        title: () => 
-            <div style={{ float: 'right'}}>
+    }, {
+        title: () =>
+            <div style={{ float: 'right' }}>
                 <Upload
-                    action={`/api/${guildId}/sounds`}
+                    action={`/api/${guild.id}/sounds`}
                     accept={'.mp3,.wav'}
                     multiple
                     showUploadList={false}
@@ -71,7 +72,7 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
                         }
                         if (R.all<UploadFile>((file) => file.status !== 'uploading', fileList)) {
                             message.success(`Finished uploading ${fileList.length} file(s)`)
-                            guildId && dispatch(fetchSounds(guildId))
+                            dispatch(fetchSounds(guild.id))
                         }
                     }}
                 >
@@ -79,61 +80,57 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
                         title='Upload files'
                         type='primary'
                         shape='circle'
-                        icon={<PlusOutlined/>}
+                        icon={<PlusOutlined />}
                     />
                 </Upload>
                 <Button
                     style={{ marginLeft: 8 }}
                     title='Download audio files as zip'
                     shape='circle'
-                    icon={<DownloadOutlined/>}
-                    href={`/api/${guildId}/sounds/export`}
+                    icon={<DownloadOutlined />}
+                    href={`/api/${guild.id}/sounds/export`}
                 />
             </div>,
         key: 'actions',
         render: (_text, audioFile) => <>
-                <PlayCircleTwoTone
-                    title='Play audio'
-                    onClick={() => guildId && dispatch(playSound(guildId, audioFile.name))}
+            <PlayCircleTwoTone
+                title='Play audio'
+                onClick={() => dispatch(playSound(guild.id, audioFile.name))}
+            />
+            <Divider type='vertical' />
+            <a download href={`/api/${guild.id}/sounds/${audioFile.name}/download`}>
+                <DownloadOutlined
+                    title='Download'
                 />
-                <Divider type='vertical'/>
-                <a download href={`/api/${guildId}/sounds/${audioFile.name}/download`}>
-                    <DownloadOutlined
-                        title='Download'
-                    />
-                </a>
-                <Divider type='vertical'/>
-                <EditTwoTone
-                    title='Edit'
-                    onClick={() => onEditAudioFile(audioFile)}
-                />
-                <Divider type='vertical'/>
-                <DeleteTwoTone
-                    onClick={() => Modal.confirm({
-                        icon: <WarningOutlined />,
-                        title: `Delete ${audioFile.name}`,
-                        content: `Are you sure you want to delete audio file "${audioFile.name}"?`,
-                        onOk: () => guildId ? dispatch(deleteSound(guildId, audioFile.name)) : undefined
-                    })}
-                    title='Delete'
-                />
-            </>
+            </a>
+            <Divider type='vertical' />
+            <EditTwoTone
+                title='Edit'
+                onClick={() => onEditAudioFile(audioFile)}
+            />
+            <Divider type='vertical' />
+            <DeleteTwoTone
+                onClick={() => Modal.confirm({
+                    icon: <WarningOutlined />,
+                    title: `Delete ${audioFile.name}`,
+                    content: `Are you sure you want to delete audio file "${audioFile.name}"?`,
+                    onOk: () => dispatch(deleteSound(guild.id, audioFile.name))
+                })}
+                title='Delete'
+            />
+        </>
     }]
 }
 
 const Admin: React.FC = () => {
 
-    const { 
-        selectedGuild, 
+    const {
         sounds,
         soundsLoading,
-        guilds,
         guildsLoading,
         guildMembers,
         guildMembersLoading
     } = useSelector((state) => ({
-        selectedGuild: state.user.selectedGuild,
-        guilds: state.user.guilds,
         guildsLoading: state.user.guildsLoading,
         sounds: state.sounds.sounds,
         soundsLoading: state.sounds.soundsLoading,
@@ -141,12 +138,14 @@ const Admin: React.FC = () => {
         guildMembersLoading: state.user.guildMembersLoading
     }))
 
+    const guild = useSelector(selectedGuild)
+
     const dispatch = useDispatch()
 
     useEffect(() => {
-        selectedGuild && dispatch(fetchSounds(selectedGuild))
-        selectedGuild && dispatch(fetchGuildMembers(selectedGuild))
-    }, [selectedGuild])
+        guild && dispatch(fetchSounds(guild.id))
+        guild && dispatch(fetchGuildMembers(guild.id))
+    }, [guild])
 
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [selectedAudioFile, setSelectedAudioFile] = useState<IAudioFile | null>(null)
@@ -159,12 +158,10 @@ const Admin: React.FC = () => {
         setEditModalVisible(true)
     }
 
-    const columns = useMemo(() => buildColumns(dispatch, onEditAudioFile, selectedGuild, guildMembers), [guildMembers, selectedGuild])
-    const tags = useMemo(() => getTags(sounds), [sounds])
-
-    const guild = guilds.find(({ id }) => id === selectedGuild)
-
     if (!guild) return null
+
+    const columns = useMemo(() => buildColumns(dispatch, onEditAudioFile, guild, guildMembers), [guildMembers, guild])
+    const tags = useMemo(() => getTags(sounds), [sounds])
 
     if (!guild.isAdmin) return <Alert message="You have no power here!" type="error" showIcon />
 
@@ -205,7 +202,7 @@ const Admin: React.FC = () => {
                         label="Tags"
                         name="tags"
                     >
-                        <Select 
+                        <Select
                             mode="tags"
                         >
                             {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
@@ -213,7 +210,7 @@ const Admin: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Modal>
-            <Table<IAudioFile> columns={columns} dataSource={sounds} rowKey='name' size='small' pagination={false} loading={guildsLoading || soundsLoading || guildMembersLoading}/>
+            <Table<IAudioFile> columns={columns} dataSource={sounds} rowKey='name' size='small' pagination={false} loading={guildsLoading || soundsLoading || guildMembersLoading} />
         </>
     )
 }

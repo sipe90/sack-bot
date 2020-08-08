@@ -1,5 +1,5 @@
-import {IGuild, IGuildMember, IMembership} from "@/types";
-import {Reducer} from "redux";
+import { IGuild, IGuildMember, IMembership } from "@/types"
+import { Reducer } from "redux"
 import {
     FETCH_GUILD_MEMBERS_REJECTED,
     FETCH_GUILD_MEMBERS_REQUEST,
@@ -18,7 +18,7 @@ import {
     UPDATE_EXIT_SOUND_REQUEST,
     UPDATE_EXIT_SOUND_RESOLVED,
     UserActions
-} from "@/actions/user";
+} from "@/actions/user"
 
 export interface IUserState {
     memberships: IMembership[]
@@ -27,7 +27,7 @@ export interface IUserState {
     guildsLoading: boolean
     guildMembers: { [guildId: string]: IGuildMember[] }
     guildMembersLoading: boolean
-    selectedGuild: string | null
+    selectedGuildId: string | null
 }
 
 const initialState: IUserState = {
@@ -37,16 +37,16 @@ const initialState: IUserState = {
     guildsLoading: false,
     guildMembers: {},
     guildMembersLoading: false,
-    selectedGuild: null
+    selectedGuildId: null
 }
 
 const userReducer: Reducer<IUserState, UserActions> = (state = initialState, action) => {
-    switch(action.type) {
+    switch (action.type) {
         case FETCH_USER_REQUEST:
             return { ...state, membershipsLoading: true }
         case FETCH_USER_RESOLVED:
-            return { 
-                ...state, 
+            return {
+                ...state,
                 membershipsLoading: false,
                 memberships: action.payload
             }
@@ -55,8 +55,8 @@ const userReducer: Reducer<IUserState, UserActions> = (state = initialState, act
         case FETCH_GUILDS_REQUEST:
             return { ...state, guildsLoading: true }
         case FETCH_GUILDS_RESOLVED:
-            return { 
-                ...state, 
+            return {
+                ...state,
                 guildsLoading: false,
                 guilds: action.payload
             }
@@ -65,8 +65,8 @@ const userReducer: Reducer<IUserState, UserActions> = (state = initialState, act
         case FETCH_GUILD_MEMBERS_REQUEST:
             return { ...state, guildMembersLoading: true }
         case FETCH_GUILD_MEMBERS_RESOLVED:
-            return { 
-                ...state, 
+            return {
+                ...state,
                 guildMembersLoading: false,
                 guildMembers: { ...state.guildMembers, [action.payload.guildId]: action.payload.members }
             }
@@ -85,7 +85,7 @@ const userReducer: Reducer<IUserState, UserActions> = (state = initialState, act
         case UPDATE_EXIT_SOUND_REJECTED:
             return { ...state }
         case SELECT_GUILD:
-            return { ...state, selectedGuild: action.payload }
+            return { ...state, selectedGuildId: action.payload }
         default:
             return state
     }

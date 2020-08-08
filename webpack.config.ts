@@ -25,7 +25,7 @@ const config: Configuration = {
                 options: {
                     transpileOnly: true,
                     getCustomTransformers: () => ({
-                        before: [ tsImportPluginFactory({ libraryName: 'antd', style: 'css', libraryDirectory: 'lib' }) ]
+                        before: [tsImportPluginFactory({ libraryName: 'antd', style: 'css', libraryDirectory: 'lib' })]
                     }),
                     compilerOptions: {
                         module: 'es2015'
@@ -45,11 +45,10 @@ const config: Configuration = {
     devServer: {
         port: 3000,
         open: true,
-        // openPage: 'oauth2/authorization/discord',
         useLocalIp: false,
         historyApiFallback: true,
         proxy: [{
-            context: ['/oauth2', '/login', '/api'],
+            context: ['/oauth2', '/login/oauth2', '/logout', '/api'],
             target: 'http://localhost:8080'
         }],
     },

@@ -1,5 +1,6 @@
 import { message } from 'antd'
 
+import history from '@/history'
 import { IAudioFile, AsyncThunkResult } from "@/types"
 import { fetchGetJson, fetchPostJson, fetchDeleteJson, buildQueryString } from "@/util"
 
@@ -134,6 +135,12 @@ export const fetchSounds = (guildId: string): AsyncThunkResult => async (dispatc
         dispatch(fetchSoundsRequest())
         const res = await fetchGetJson<IAudioFile[]>(`/api/${guildId}/sounds`)
 
+        if (res.status === 401) {
+            dispatch(fetchSoundsRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
+
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
         dispatch(fetchSoundsResolved(res.json))
@@ -161,6 +168,12 @@ export const playSound = (guildId: string, name: string, vol: number): AsyncThun
         dispatch(playSoundRequest())
         const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/${name}/play?${buildQueryString({ vol })}`)
 
+        if (res.status === 401) {
+            dispatch(playSoundRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
+
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
         dispatch(playSoundResolved())
@@ -186,8 +199,14 @@ const playRandomSoundRejected = (error: Error): PlayRandomSoundRejectedAction =>
 export const playRandomSound = (guildId: string, vol: number, tags: string[] = []): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playRandomSoundRequest())
-        
+
         const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/rnd?${buildQueryString({ tags, vol })}`)
+
+        if (res.status === 401) {
+            dispatch(playRandomSoundRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -214,8 +233,14 @@ const playUrlRejected = (error: Error): PlayUrlRejectedAction => ({
 export const playUrl = (guildId: string, url: string, vol: number): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playUrlRequest())
-        
+
         const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/url?${buildQueryString({ url, vol })}`)
+
+        if (res.status === 401) {
+            dispatch(playUrlRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -245,6 +270,12 @@ export const updateSound = (guildId: string, name: string, audioFile: IAudioFile
         dispatch(updateSoundRequest())
         const res = await fetchPostJson(`/api/${guildId}/sounds/${name}`, audioFile)
 
+        if (res.status === 401) {
+            dispatch(updateSoundRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
+
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
         dispatch(updateSoundResolved(guildId, name, audioFile))
@@ -273,6 +304,12 @@ export const deleteSound = (guildId: string, name: string): AsyncThunkResult => 
     try {
         dispatch(deleteSoundRequest())
         const res = await fetchDeleteJson(`/api/${guildId}/sounds/${name}`)
+
+        if (res.status === 401) {
+            dispatch(deleteSoundRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 

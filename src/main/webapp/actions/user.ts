@@ -1,8 +1,9 @@
 import { message } from 'antd'
 
+import history from '@/history'
 import { IMembership, IGuild, AsyncThunkResult, IGuildMember } from "@/types"
-import {buildQueryString, fetchGetJson, fetchPutJson} from "@/util"
-import { fetchSounds } from "./sounds"
+import { buildQueryString, fetchGetJson, fetchPutJson } from "@/util"
+import { fetchSounds } from "@/actions/sounds"
 
 export const FETCH_USER_REQUEST = "FETCH_USER_REQUEST"
 export const FETCH_USER_RESOLVED = "FETCH_USER_RESOLVED"
@@ -100,7 +101,7 @@ interface SelectGuildAction {
     payload: string
 }
 
-export type UserActions = FetchUserRequestAction | FetchUserResolvedAction | FetchUserRejectedAction | 
+export type UserActions = FetchUserRequestAction | FetchUserResolvedAction | FetchUserRejectedAction |
     FetchGuildsRequestAction | FetchGuildsResolvedAction | FetchGuildsRejectedAction |
     FetchGuildMembersRequestAction | FetchGuildMembersResolvedAction | FetchGuildMembersRejectedAction |
     UpdateEntrySoundRequestAction | UpdateEntrySoundResolvedAction | UpdateEntrySoundRejectedAction |
@@ -126,6 +127,12 @@ export const fetchUser = (): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(fetchUserRequest())
         const res = await fetchGetJson<IMembership[]>('/api/me')
+
+        if (res.status === 401) {
+            dispatch(fetchUserRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -154,6 +161,12 @@ export const fetchGuilds = (): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(fetchGuildsRequest())
         const res = await fetchGetJson<IGuild[]>('/api/guilds')
+
+        if (res.status === 401) {
+            dispatch(fetchGuildsRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -189,6 +202,12 @@ export const fetchGuildMembers = (guildId: string): AsyncThunkResult => async (d
         dispatch(fetchGuildMembersRequest())
         const res = await fetchGetJson<IGuildMember[]>(`/api/${guildId}/members`)
 
+        if (res.status === 401) {
+            dispatch(fetchGuildMembersRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
+
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
         dispatch(fetchGuildMembersResolved(guildId, res.json))
@@ -215,6 +234,12 @@ export const updateEntrySound = (guildId: string, name?: string): AsyncThunkResu
     try {
         dispatch(updateEntrySoundRequest())
         const res = await fetchPutJson<IGuildMember[]>(`/api/${guildId}/sounds/entry?${buildQueryString({ name })}`)
+
+        if (res.status === 401) {
+            dispatch(updateEntrySoundRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -243,6 +268,12 @@ export const updateExitSound = (guildId: string, name?: string): AsyncThunkResul
     try {
         dispatch(updateExitSoundRequest())
         const res = await fetchPutJson<IGuildMember[]>(`/api/${guildId}/sounds/exit?${buildQueryString({ name })}`)
+
+        if (res.status === 401) {
+            dispatch(updateExitSoundRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 

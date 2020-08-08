@@ -1,13 +1,19 @@
 import React, { useEffect } from 'react'
 import { Layout } from 'antd'
 import styled from 'styled-components'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { Router, Switch, Route, Redirect } from 'react-router-dom'
 
-import { useDispatch, fetchGetJson } from '@/util'
+import { useDispatch, fetchGetJson, useSelector } from '@/util'
+import history from '@/history'
 import { fetchUser, fetchGuilds } from '@/actions/user'
+import { selectedGuild } from '@/selectors/user'
 import Navigation from '@/components/Navigation'
-import Routes from '@/components/Routes'
-import routeDefs from '@/routeDefs'
+import Soundboard from '@/components/Soundboard'
+import Voices from '@/components/Voices'
+import TTS from '@/components/TTS'
+import Admin from '@/components/Admin'
+import NotFound from '@/components/NotFound'
+import Login from '@/components/Login'
 
 const { Header, Content, Footer } = Layout
 
@@ -30,9 +36,8 @@ const AppHeader = styled(Header)`
     padding: 0;
     line-height: normal;
 `
-
-const AppContent = styled(Content)`
-
+const ContentWrapper = styled(Content)`
+    padding: 6px;
 `
 
 const AppFooter = styled(Footer)`
@@ -40,31 +45,60 @@ const AppFooter = styled(Footer)`
     text-align: center;
 `
 
-const App: React.FC = () => {
+const App: React.FC = () => (
+    <Root>
+        <Router history={history}>
+            <AppLayout>
+                <Switch>
+                    <Route path='/login' exact>
+                        <Login />
+                    </Route>
+                    <Route>
+                        <AppHeader>
+                            <Navigation />
+                        </AppHeader>
+                        <AppContent />
+                    </Route>
+                </Switch>
+                <AppFooter>Sackbot {VERSION ? `v${VERSION}` : ''}</AppFooter>
+            </AppLayout>
+        </Router>
+    </Root>
+)
 
+const AppContent: React.FC = () => {
     const dispatch = useDispatch()
+
+    const guild = useSelector(selectedGuild)
+
+    const isAdmin = guild !== null && guild.isAdmin
 
     useEffect(() => {
         dispatch(fetchUser())
         dispatch(fetchGuilds())
 
-        setInterval(() => fetchGetJson('api/ping'),  5 * 60 * 1000)
+        setInterval(() => fetchGetJson('api/ping'), 5 * 60 * 1000)
     }, [])
 
     return (
-        <Root>
-            <Router>
-                <AppLayout>
-                    <AppHeader>
-                        <Navigation routes={routeDefs} />
-                    </AppHeader>
-                    <AppContent>
-                        <Routes routes={routeDefs} />
-                    </AppContent>
-                    <AppFooter>Sackbot {VERSION ? `v${VERSION}` : ''}</AppFooter>
-                </AppLayout>
-            </Router>
-        </Root>
+        <ContentWrapper>
+            <Switch>
+                <Redirect exact from='/' to='/board' />
+                <Route path='/board' exact>
+                    <Soundboard />
+                </Route>
+                <Route path='/voices' exact>
+                    <Voices />
+                </Route>
+                <Route path='/tts' exact>
+                    <TTS />
+                </Route>
+                <Route path='/admin' exact>
+                    {isAdmin ? <Admin /> : <NotFound />}
+                </Route>
+                <NotFound />
+            </Switch>
+        </ContentWrapper>
     )
 }
 

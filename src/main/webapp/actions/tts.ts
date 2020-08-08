@@ -1,5 +1,6 @@
 import { message } from 'antd'
 
+import history from '@/history'
 import { AsyncThunkResult } from "@/types"
 import { fetchPostJson } from "@/util"
 
@@ -38,7 +39,7 @@ interface PlayRandomTTSRejectedAction {
 }
 
 export type TTSActions = PlayTTSRequestAction | PlayTTSResolvedAction | PlayTTSRejectedAction |
-PlayRandomTTSRequestAction | PlayRandomTTSResolvedAction | PlayRandomTTSRejectedAction
+    PlayRandomTTSRequestAction | PlayRandomTTSResolvedAction | PlayRandomTTSRejectedAction
 
 const playTTSRequest = (): PlayTTSRequestAction => ({
     type: PLAY_TTS_REQUEST
@@ -57,6 +58,12 @@ export const playTTS = (guildId: string, text: string): AsyncThunkResult => asyn
     try {
         dispatch(playTTSRequest())
         const res = await fetchPostJson<void>(`/api/${guildId}/tts/play`, text)
+
+        if (res.status === 401) {
+            dispatch(playTTSRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -84,6 +91,12 @@ export const playRandomTTS = (guildId: string): AsyncThunkResult => async (dispa
     try {
         dispatch(playRandomTTSRequest())
         const res = await fetchPostJson<void>(`/api/${guildId}/tts/random`)
+
+        if (res.status === 401) {
+            dispatch(playRandomTTSRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 

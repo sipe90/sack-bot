@@ -1,5 +1,6 @@
 import { message } from 'antd'
 
+import history from '@/history'
 import { AsyncThunkResult, IVoiceLines } from "@/types"
 import { fetchGetJson, fetchPostJson } from "@/util"
 
@@ -39,7 +40,7 @@ interface PlayVoiceLinesRejectedAction {
 }
 
 export type VoicesActions = FetchVoiceLinesRequestAction | FetchVoiceLinesResolvedAction | FetchVoiceLinesRejectedAction |
-PlayVoiceLinesRequestAction | PlayVoiceLinesResolvedAction | PlayVoiceLinesRejectedAction
+    PlayVoiceLinesRequestAction | PlayVoiceLinesResolvedAction | PlayVoiceLinesRejectedAction
 
 const fetchVoiceLinesRequest = (): FetchVoiceLinesRequestAction => ({
     type: FETCH_VOICE_LINES_REQUEST
@@ -59,6 +60,12 @@ export const fetchVoiceLines = (): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(fetchVoiceLinesRequest())
         const res = await fetchGetJson<IVoiceLines>(`/api/voices`)
+
+        if (res.status === 401) {
+            dispatch(fetchVoiceLinesRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 
@@ -86,6 +93,12 @@ export const playVoiceLines = (guildId: string, voice: string, voiceLines: strin
     try {
         dispatch(playVoiceLinesRequest())
         const res = await fetchPostJson<void>(`/api/${guildId}/voices/play?voice=${voice}`, voiceLines)
+
+        if (res.status === 401) {
+            dispatch(playVoiceLinesRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
 
         if (!res.ok) throw new Error(res.json?.message || res.statusText)
 

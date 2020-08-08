@@ -1,16 +1,19 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import styled from 'styled-components'
-
-import { IRouteDefinition } from '@/routeDefs'
+import styled, { AnyStyledComponent } from 'styled-components'
 import { Avatar, Menu, Dropdown } from 'antd'
-import { CaretDownFilled } from '@ant-design/icons'
+import {
+    CaretDownFilled,
+    TableOutlined,
+    RobotOutlined,
+    SoundOutlined,
+    SettingOutlined
+} from '@ant-design/icons'
+
+
 import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
-
-interface INavigationProps {
-    routes: IRouteDefinition[]
-}
+import { selectedGuild } from '@/selectors/user'
 
 const NavigationMenu = styled.div`
     flex-grow: 1;
@@ -30,23 +33,60 @@ const activeStyle: React.CSSProperties = {
     borderBottom: "2px solid #fff"
 }
 
-const Navigation: React.FC<INavigationProps> = (props) => {
+const styledIcon = (icon: AnyStyledComponent) => styled(icon)`
+    margin-top: 8px;
+    font-size: 24px;
+`
 
-    const selectedGuild = useSelector((state) => state.user.selectedGuild)
+const BoardIcon = styledIcon(TableOutlined)
+const VoicesIcon = styledIcon(SoundOutlined)
+const TTSIcon = styledIcon(RobotOutlined)
+const AdminIcon = styledIcon(SettingOutlined)
+
+const Navigation: React.FC = () => {
+
+    const guild = useSelector(selectedGuild)
     const guilds = useSelector((state) => state.user.guilds)
     const dispatch = useDispatch()
 
     return (
         <div style={{ display: "flex", justifyContent: "center" }}>
             <NavigationMenu>
-                {props.routes.map(renderNavigationLink)}
+                <NavigationLink
+                    activeStyle={activeStyle}
+                    to='/board'
+                    exact
+                >
+                    <BoardIcon />
+                </NavigationLink>
+                <NavigationLink
+                    activeStyle={activeStyle}
+                    to='/voices'
+                    exact
+                >
+                    <VoicesIcon />
+                </NavigationLink>
+                <NavigationLink
+                    activeStyle={activeStyle}
+                    to='/tts'
+                    exact
+                >
+                    <TTSIcon />
+                </NavigationLink>
+                <NavigationLink
+                    activeStyle={activeStyle}
+                    to='/admin'
+                    exact
+                >
+                    <AdminIcon />
+                </NavigationLink>
             </NavigationMenu>
             <div style={{ display: "flex", alignItems: "center", marginRight: 10 }}>
                 <Dropdown
                     placement="bottomRight"
                     overlay={
                         <Menu
-                            selectedKeys={selectedGuild ? [selectedGuild] : []}
+                            selectedKeys={guild ? [guild.id] : []}
                         >
                             {guilds.map(({ id, name, iconUrl }) => (
                                 <Menu.Item
@@ -61,6 +101,12 @@ const Navigation: React.FC<INavigationProps> = (props) => {
                                     {name}
                                 </Menu.Item>)
                             )}
+                            <Menu.Divider />
+                            <Menu.Item
+                                onClick={logOut}
+                            >
+                                Log out
+                            </Menu.Item>
                         </Menu>
                     }
                 >
@@ -68,7 +114,7 @@ const Navigation: React.FC<INavigationProps> = (props) => {
                         <Avatar
                             style={{ marginRight: 10 }}
                             size={34}
-                            src={selectedGuild ? guilds.find(({ id }) => id == selectedGuild)?.iconUrl || undefined : undefined}
+                            src={guild?.iconUrl || undefined}
                         />
                         <CaretDownFilled
                             style={{ color: "#fff" }}
@@ -80,15 +126,11 @@ const Navigation: React.FC<INavigationProps> = (props) => {
     )
 }
 
-const renderNavigationLink = (route: IRouteDefinition, index: number) => (
-    <NavigationLink
-        activeStyle={activeStyle}
-        key={index}
-        to={route.path}
-        exact={true}
-    >
-        {route.icon}
-    </NavigationLink>
-)
+const logOut = async () => {
+    const res = await fetch('/logout', { method: 'POST' })
+    if (res.redirected) {
+        window.location.href = res.url
+    }
+}
 
 export default Navigation
