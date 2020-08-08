@@ -163,7 +163,7 @@ const playSoundRejected = (error: Error): PlaySoundRejectedAction => ({
     payload: error
 })
 
-export const playSound = (guildId: string, name: string, vol: number): AsyncThunkResult => async (dispatch) => {
+export const playSound = (guildId: string, name: string, vol?: number): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playSoundRequest())
         const res = await fetchPostJson<IAudioFile[]>(`/api/${guildId}/sounds/${name}/play?${buildQueryString({ vol })}`)
