@@ -75,7 +75,7 @@ class SecurityConfig {
                 val userId = user.attributes[DiscordUser.Attributes.ID] as String
                 val mutualGuilds = jdaService.getMutualGuilds(userId)
 
-                if (mutualGuilds.isEmpty() || true) {
+                if (mutualGuilds.isEmpty()) {
                     throw OAuth2AuthenticationException(OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED))
                 }
 
