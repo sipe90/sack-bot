@@ -64,7 +64,7 @@ const Soundboard: React.FC = () => {
         <>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ marginRight: 8 }}>
-                    <SoundOutlined style={{ fontSize: 18 }} />
+                    <SoundOutlined style={{ fontSize: 14 }} />
                 </div>
                 <div style={{ flexGrow: 1 }}>
                     <Slider defaultValue={defVolume} min={1} max={100} onAfterChange={(vol) => setVolume(vol as number)} />
@@ -73,7 +73,7 @@ const Soundboard: React.FC = () => {
             <div>
                 <Search
                     placeholder="Play from URL"
-                    enterButton={<PlayCircleOutlined style={{ fontSize: 22 }} />}
+                    enterButton={<PlayCircleOutlined style={{ fontSize: 14 }} />}
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onSearch={onPlayUrl}

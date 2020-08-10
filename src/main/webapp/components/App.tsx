@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Layout } from 'antd'
+import { Card, Layout } from 'antd'
 import styled from 'styled-components'
 import { Router, Switch, Route, Redirect } from 'react-router-dom'
 
@@ -21,11 +21,10 @@ const { Header, Content, Footer } = Layout
 declare var VERSION: string | void
 
 const Root = styled.div`
-    background-color: #5dabcf;
+    background-color: rgb(247, 247, 247);
 `
 const AppLayout = styled(Layout)`
-    background-color: rgb(255, 255, 255);
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.02), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
     min-height: 100vh;
     max-width: 1080px;
     margin: auto;
@@ -36,13 +35,14 @@ const AppHeader = styled(Header)`
     padding: 0;
     line-height: normal;
 `
-const ContentWrapper = styled(Content)`
-    padding: 6px;
-`
 
 const AppFooter = styled(Footer)`
-    background-color: rgb(255, 255, 255);
+    padding: 0px 0px 4px 0px;
     text-align: center;
+`
+
+const FooterCard = styled(Card)`
+    border-radius: 0;
 `
 
 const App: React.FC = () => (
@@ -60,11 +60,20 @@ const App: React.FC = () => (
                         <AppContent />
                     </Route>
                 </Switch>
-                <AppFooter>Sackbot {VERSION ? `v${VERSION}` : ''}</AppFooter>
+                <AppFooter><FooterCard bordered={false}>Sackbot {VERSION ? `v${VERSION}` : ''}</FooterCard></AppFooter>
             </AppLayout>
         </Router>
     </Root>
 )
+
+const ContentWrapper = styled(Content)`
+    display: flex;
+`
+
+const ContentCard = styled(Card)`
+    flex-grow: 1;
+    border-radius: 0;
+`
 
 const AppContent: React.FC = () => {
     const dispatch = useDispatch()
@@ -82,22 +91,26 @@ const AppContent: React.FC = () => {
 
     return (
         <ContentWrapper>
-            <Switch>
-                <Redirect exact from='/' to='/board' />
-                <Route path='/board' exact>
-                    <Soundboard />
-                </Route>
-                <Route path='/voices' exact>
-                    <Voices />
-                </Route>
-                <Route path='/tts' exact>
-                    <TTS />
-                </Route>
-                <Route path='/admin' exact>
-                    {isAdmin ? <Admin /> : <NotFound />}
-                </Route>
-                <NotFound />
-            </Switch>
+            <ContentCard
+                bordered={false}
+            >
+                <Switch>
+                    <Redirect exact from='/' to='/board' />
+                    <Route path='/board' exact>
+                        <Soundboard />
+                    </Route>
+                    <Route path='/voices' exact>
+                        <Voices />
+                    </Route>
+                    <Route path='/tts' exact>
+                        <TTS />
+                    </Route>
+                    <Route path='/admin' exact>
+                        {isAdmin ? <Admin /> : <NotFound />}
+                    </Route>
+                    <NotFound />
+                </Switch>
+            </ContentCard>
         </ContentWrapper>
     )
 }

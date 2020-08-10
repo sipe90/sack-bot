@@ -77,17 +77,19 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
                     }}
                 >
                     <Button
+                        size='small'
                         title='Upload files'
                         type='primary'
                         shape='circle'
-                        icon={<PlusOutlined />}
+                        icon={<PlusOutlined style={{ fontSize: 14 }} />}
                     />
                 </Upload>
                 <Button
+                    size='small'
                     style={{ marginLeft: 8 }}
                     title='Download audio files as zip'
                     shape='circle'
-                    icon={<DownloadOutlined />}
+                    icon={<DownloadOutlined style={{ fontSize: 14 }} />}
                     href={`/api/${guild.id}/sounds/export`}
                 />
             </div>,
