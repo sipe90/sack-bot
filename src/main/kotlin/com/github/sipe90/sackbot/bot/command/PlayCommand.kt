@@ -17,7 +17,7 @@ class PlayCommand(
         private val playerService: AudioPlayerService
 ) : BotCommand() {
 
-    override val commandPrefix = ""
+    override val commandPrefix = "play"
 
     override fun canProcess(vararg command: String) = true
 
@@ -27,15 +27,15 @@ class PlayCommand(
 
         if (guild == null || voiceChannel == null) return@defer "Could not find guild or voice channel to perform the action".toMono()
 
-        if (command.size > 2) {
-            return@defer "Invalid play command. Correct format is `${config.chat.commandPrefix}<soundName> [volume]`".toMono()
+        if (command.size > 3) {
+            return@defer "Invalid play command. Correct format is `${config.chat.commandPrefix}play <soundName> [volume]`".toMono()
         }
 
-        val audioFileName = command[0]
+        val audioFileName = command[1]
 
         val volume: Int? =
-                if (command.size == 2) {
-                    val volumeStr = command[1]
+                if (command.size == 3) {
+                    val volumeStr = command[2]
                     try {
                         Integer.parseInt(volumeStr).coerceIn(1, 100)
                     } catch (e: NumberFormatException) {

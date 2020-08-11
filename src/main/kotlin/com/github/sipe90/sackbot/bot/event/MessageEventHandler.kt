@@ -5,6 +5,7 @@ import club.minnced.jda.reactor.toByteArray
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.bot.command.BotCommand
 import com.github.sipe90.sackbot.config.BotConfig
+import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.util.getGuild
 import com.github.sipe90.sackbot.util.stripExtension
@@ -22,9 +23,9 @@ import reactor.util.function.Tuples
 
 @Component
 final class MessageEventHandler(
-    val config: BotConfig,
-    private val fileService: AudioFileService,
-    commands: List<BotCommand>
+        val config: BotConfig,
+        private val fileService: AudioFileService,
+        commands: List<BotCommand>
 ) : EventHandler<GenericEvent> {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
@@ -33,19 +34,26 @@ final class MessageEventHandler(
 
     private val commandsMap = commands.associateBy(BotCommand::commandPrefix)
     private val helpCommand = commandsMap["help"] ?: throw SackException("Help command not found")
-    private val playCommand = commandsMap[""] ?: throw SackException("Play command not found")
 
     override fun handleEvent(event: GenericEvent): Mono<Void> {
         if (event is GuildMessageReceivedEvent) {
             return processGuildMessageEvent(event)
-                .flatMap { event.channel.sendMessage(it).asMono() }
-                .then()
+                    .onErrorResume {
+                        logger.error("Error while processing guild message event", it)
+                        "Encountered an error when processing command. Please try again later.".toMono()
+                    }
+                    .flatMap { event.channel.sendMessage(it).asMono() }
+                    .then()
         }
         if (event is PrivateMessageReceivedEvent) {
             return processPrivateMessageEvent(event)
-                .flatMap { f -> Mono.defer { event.author.openPrivateChannel().asMono() }.map { m -> Tuples.of(m, f) } }
-                .flatMap { it.t1.sendMessage(it.t2).asMono() }
-                .then()
+                    .onErrorResume {
+                        logger.error("Error while processing private message event", it)
+                        "Encountered an error when processing command. Please try again later.".toMono()
+                    }
+                    .flatMap { f -> Mono.defer { event.author.openPrivateChannel().asMono() }.map { m -> Tuples.of(m, f) } }
+                    .flatMap { it.t1.sendMessage(it.t2).asMono() }
+                    .then()
         }
         throw SackException("Invalid event: ${event.javaClass.name}")
     }
@@ -67,7 +75,7 @@ final class MessageEventHandler(
 
     private fun processCommand(event: Event, message: String): Flux<String> {
         val cmd = cmdSplitRegex.split(message.substring(1)).toTypedArray()
-        val botCommand = commandsMap[cmd[0]] ?: playCommand
+        val botCommand = commandsMap[cmd[0]] ?: helpCommand
         if (botCommand.canProcess(*cmd)) {
             return botCommand.processCommand(event, *cmd)
         }
@@ -75,52 +83,54 @@ final class MessageEventHandler(
     }
 
     private fun handleUploads(event: PrivateMessageReceivedEvent): Flux<String> =
-        event.message.attachments.toFlux()
-            .flatMap flatMap@{ attachment ->
-                val guild = getGuild(event)
-                    ?: return@flatMap "Could not find guild or voice channel to perform the action".toMono()
+            event.message.attachments.toFlux()
+                    .flatMap flatMap@{ attachment ->
+                        val guild = getGuild(event)
+                                ?: return@flatMap "Could not find guild or voice channel to perform the action.".toMono()
 
-                val fileName = attachment.fileName
-                val fileExtension = attachment.fileExtension
-                val size = attachment.size
+                        val fileName = attachment.fileName
+                        val fileExtension = attachment.fileExtension
+                        val size = attachment.size
 
-                val audioName = stripExtension(fileName)
+                        val audioName = stripExtension(fileName)
 
-                logger.info("Processing attachment {}", fileName)
+                        logger.info("Processing attachment {}", fileName)
 
-                if (fileExtension != "wav" && fileExtension != "mp3") {
-                    return@flatMap "Could not upload file `${fileName}`: Unknown extension. Only mp3 and wav are supported.".toMono()
-                }
-                if (size > config.upload.sizeLimit) {
-                    return@flatMap "Could not upload file `${fileName}`: File size cannot exceed `${config.upload.sizeLimit / 1000}kB`".toMono()
-                }
-
-                return@flatMap attachment.toByteArray().flatMap { data ->
-                    fileService.findAudioFile(guild.id, audioName)
-                        .flatMap exists@{ audioFile ->
-                            if (!config.upload.overrideExisting) return@exists "Audio `${audioName}` already exists".toMono()
-
-                            audioFile.extension = fileExtension
-                            audioFile.data = data
-
-                            return@exists fileService.updateAudioFile(
-                                guild.id,
-                                audioName,
-                                audioFile,
-                                event.author.id
-                            )
+                        if (fileExtension != "wav" && fileExtension != "mp3" && fileExtension != "ogg") {
+                            return@flatMap "Could not upload file `${fileName}`: Unknown extension. Only `wav`, `.mp3` and `.ogg` are supported.".toMono()
                         }
-                        .map { "Updated audio file `${audioName}`" }
-                        .switchIfEmpty(
-                            fileService.saveAudioFile(
-                                guild.id,
-                                audioName,
-                                fileExtension,
-                                HashSet(),
-                                data,
-                                event.author.id
-                            ).map { "Saved audio file `${audioName}`" }
-                        )
-                }
-            }
+                        if (size > config.upload.sizeLimit) {
+                            return@flatMap "Could not upload file `${fileName}`: File size cannot exceed `${config.upload.sizeLimit / 1000}kB`.".toMono()
+                        }
+
+                        return@flatMap attachment.toByteArray().flatMap { data ->
+                            fileService.findAudioFile(guild.id, audioName)
+                                    .flatMap exists@{ audioFile ->
+                                        if (!config.upload.overrideExisting) return@exists "Audio `${audioName}` already exists.".toMono()
+
+                                        audioFile.extension = fileExtension
+                                        audioFile.data = data
+
+                                        return@exists fileService.updateAudioFile(
+                                                guild.id,
+                                                audioName,
+                                                audioFile,
+                                                event.author.id
+                                        )
+                                    }
+                                    .map { "Updated audio file `${audioName}`." }
+                                    .switchIfEmpty(
+                                            fileService.saveAudioFile(
+                                                    guild.id,
+                                                    audioName,
+                                                    fileExtension,
+                                                    HashSet(),
+                                                    data,
+                                                    event.author.id
+                                            ).map { "Saved audio file `${audioName}`." }
+                                    )
+                                    .onErrorResume(ValidationException::class.java)
+                                    { "Failed to upload file: ${it.message}".toMono() }
+                        }
+                    }
 }
