@@ -175,7 +175,6 @@ export const fetchGuilds = (): AsyncThunkResult => async (dispatch) => {
         if (res.json.length) {
             const selectedGuild = res.json[0]
             dispatch(selectGuild(selectedGuild.id))
-            await dispatch(fetchSounds(selectedGuild.id))
         }
     } catch (error) {
         message.error(`Failed to get user guilds: ${error.message}`)
