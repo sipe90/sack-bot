@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import * as R from 'ramda'
-import { Button, Divider, Dropdown, Input, Menu, Select, Slider } from 'antd'
+import { Button, Divider, Dropdown, Input, Menu, Select, Slider, Card, Spin } from 'antd'
 import { SoundOutlined, PlayCircleOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
@@ -36,6 +36,7 @@ const defVolume = 75
 const Soundboard: React.FC = () => {
 
     const selectedGuild = useSelector((state => state.user.selectedGuildId))
+    const soundsLoading = useSelector((state => state.sounds.soundsLoading))
     const sounds = useSelector((state => state.sounds.sounds))
     const membership = useSelector(selectedGuildMembership)
 
@@ -102,30 +103,46 @@ const Soundboard: React.FC = () => {
                     <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>Random</div>
                 </Button>
             </div>
-            <Grid
-                sounds={sounds}
-                tagFilter={tagFilter}
-                entrySound={membership?.entrySound || null}
-                exitSound={membership?.exitSound || null}
-                onPlaySound={onPlaySound}
-                onUpdateEntrySound={onUpdateEntrySound}
-                onUpdateExitSound={onUpdateExitSound}
-                onClearEntrySound={onClearEntrySound}
-                onClearExitSound={onClearExitSound}
-            />
+            <Spin tip='Loading board...' spinning={soundsLoading} style={{ marginTop: 80 }}>
+                <Grid
+                    sounds={sounds}
+                    tagFilter={tagFilter}
+                    entrySound={membership?.entrySound || null}
+                    exitSound={membership?.exitSound || null}
+                    onPlaySound={onPlaySound}
+                    onUpdateEntrySound={onUpdateEntrySound}
+                    onUpdateExitSound={onUpdateExitSound}
+                    onClearEntrySound={onClearEntrySound}
+                    onClearExitSound={onClearExitSound}
+                />
+            </Spin>
         </>
     )
 }
 
-const SoundGrid = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+const GridWrapper = styled.div`
+    &:after {
+        clear: both;
+        height: 0;
+        width: 100%;
+        content: '';
+        display: block;
+    }
 `
 
-const Sound = styled.div`
-    margin: 5px;
-    flex: 0 0 0;
+const GridCard = styled(Card.Grid)`
+    width: 120px;
+    height: 32px;
+    padding: 0;
+`
+
+const CardContent = styled.div`
+    background-color: #f7f7f74f;
+    line-height: 32px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
 `
 
 interface IGripProps {
@@ -160,32 +177,35 @@ const Grid: React.FC<IGripProps> = React.memo((props) => {
     return (
         <>
             {letters.map((letter) =>
-                <div key={letter}>
+                <React.Fragment key={letter}>
                     <Divider>{letter}</Divider>
-                    <SoundGrid>
+                    <GridWrapper>
                         {groupedSounds[letter].map(({ name }) =>
-                            <Sound key={name}>
-                                <Dropdown
-                                    trigger={['contextMenu']}
-                                    overlay={
-                                        <Menu>
-                                            <Menu.Item onClick={() => onUpdateEntrySound(name)}>Set as entry sound</Menu.Item>
-                                            <Menu.Item onClick={() => onUpdateExitSound(name)}>Set as exit sound</Menu.Item>
-                                            {entrySound && <Menu.Item onClick={onClearEntrySound}>Clear entry sound {` (${entrySound})`}</Menu.Item>}
-                                            {exitSound && <Menu.Item onClick={onClearExitSound}>Clear exit sound {` (${exitSound})`}</Menu.Item>}
-                                        </Menu>
-                                    }
-                                >
-                                    <Button
-                                        block
-                                        style={{ width: 120 }}
-                                        onClick={() => onPlaySound(name)}>
-                                        <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
-                                    </Button>
-                                </Dropdown>
-                            </Sound>)}
-                    </SoundGrid>
-                </div>
+                            <Dropdown
+                                key={name}
+                                trigger={['contextMenu']}
+                                overlay={
+                                    <Menu>
+                                        <Menu.Item onClick={() => onUpdateEntrySound(name)}>Set as entry sound</Menu.Item>
+                                        <Menu.Item onClick={() => onUpdateExitSound(name)}>Set as exit sound</Menu.Item>
+                                        {entrySound && <Menu.Item onClick={onClearEntrySound}>Clear entry sound {` (${entrySound})`}</Menu.Item>}
+                                        {exitSound && <Menu.Item onClick={onClearExitSound}>Clear exit sound {` (${exitSound})`}</Menu.Item>}
+                                    </Menu>
+                                }
+                            >
+                                <div>
+                                    <GridCard>
+                                        <CardContent
+                                            onClick={() => onPlaySound(name)}
+                                        >
+                                            {name}
+                                        </CardContent>
+                                    </GridCard>
+                                </div>
+                            </Dropdown>
+                        )}
+                    </GridWrapper>
+                </React.Fragment>
             )}
         </>
     )
