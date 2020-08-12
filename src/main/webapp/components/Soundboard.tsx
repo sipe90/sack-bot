@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import * as R from 'ramda'
-import { Button, Divider, Dropdown, Input, Menu, Select, Slider, Card, Spin } from 'antd'
+import { Button, Divider, Dropdown, Input, Menu, Select, Slider, Card, Spin, Typography } from 'antd'
 import { SoundOutlined, PlayCircleOutlined } from '@ant-design/icons'
 
 import { useDispatch, useSelector } from '@/util'
@@ -11,6 +11,7 @@ import { selectedGuildMembership } from "@/selectors/user"
 import { updateEntrySound, updateExitSound } from "@/actions/user"
 
 const { Search } = Input
+const { Text } = Typography
 
 const isSubset = R.curry((xs: any[], ys: any[]) =>
     R.all(R.contains(R.__, ys), xs))
@@ -100,7 +101,7 @@ const Soundboard: React.FC = () => {
                     type="primary"
                     onClick={onPlayRandomSound}
                 >
-                    <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>Random</div>
+                    Random
                 </Button>
             </div>
             <Spin tip='Loading board...' spinning={soundsLoading} style={{ marginTop: 80 }}>
@@ -137,11 +138,9 @@ const GridCard = styled(Card.Grid)`
 `
 
 const CardContent = styled.div`
+    padding: 4px 8px;
     background-color: #f7f7f74f;
-    line-height: 32px;
     cursor: pointer;
-    overflow: hidden;
-    text-overflow: ellipsis;
     text-align: center;
 `
 
@@ -198,7 +197,7 @@ const Grid: React.FC<IGripProps> = React.memo((props) => {
                                         <CardContent
                                             onClick={() => onPlaySound(name)}
                                         >
-                                            {name}
+                                            <Text strong style={{ width: '100%' }} ellipsis>{name}</Text>
                                         </CardContent>
                                     </GridCard>
                                 </div>
