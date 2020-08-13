@@ -21,6 +21,7 @@ import {
 } from "@/actions/user"
 
 export interface IUserState {
+    loggedIn: boolean
     memberships: IMembership[]
     membershipsLoading: boolean
     guilds: IGuild[]
@@ -31,6 +32,7 @@ export interface IUserState {
 }
 
 const initialState: IUserState = {
+    loggedIn: false,
     memberships: [],
     membershipsLoading: false,
     guilds: [],
@@ -47,6 +49,7 @@ const userReducer: Reducer<IUserState, UserActions> = (state = initialState, act
         case FETCH_USER_RESOLVED:
             return {
                 ...state,
+                loggedIn: true,
                 membershipsLoading: false,
                 memberships: action.payload
             }

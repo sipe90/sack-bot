@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Card, Layout } from 'antd'
+import { Card, Layout, Spin } from 'antd'
 import styled from 'styled-components'
 import { Router, Switch, Route, Redirect } from 'react-router-dom'
 
@@ -45,26 +45,47 @@ const FooterCard = styled(Card)`
     border-radius: 0;
 `
 
-const App: React.FC = () => (
-    <Root>
-        <Router history={history}>
-            <AppLayout>
-                <Switch>
-                    <Route path='/login' exact>
-                        <Login />
-                    </Route>
-                    <Route>
-                        <AppHeader>
-                            <Navigation />
-                        </AppHeader>
-                        <AppContent />
-                    </Route>
-                </Switch>
-                <AppFooter><FooterCard bordered={false}>Sackbot {VERSION ? `v${VERSION}` : ''}</FooterCard></AppFooter>
-            </AppLayout>
-        </Router>
-    </Root>
-)
+const App: React.FC = () => {
+
+    const dispatch = useDispatch()
+
+    const loggedIn = useSelector((state) => state.user.loggedIn)
+
+    useEffect(() => {
+        dispatch(fetchUser())
+    }, [])
+
+    return (
+        <Root>
+            <Router history={history}>
+                <AppLayout>
+                    <Switch>
+                        <Route path='/login' exact>
+                            <Login />
+                        </Route>
+                        {loggedIn && <Route>
+                            <AppHeader>
+                                <Navigation />
+                            </AppHeader>
+                            <AppContent />
+                        </Route>
+                        }
+                        <Route>
+                            <ContentWrapper>
+                                <ContentCard bordered={false} bodyStyle={{ height: '100%' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                                        <Spin tip='Loading application...' />
+                                    </div>
+                                </ContentCard>
+                            </ContentWrapper>
+                        </Route>
+                    </Switch>
+                    <AppFooter><FooterCard bordered={false}>Sackbot {VERSION ? `v${VERSION}` : ''}</FooterCard></AppFooter>
+                </AppLayout>
+            </Router>
+        </Root>
+    )
+}
 
 const ContentWrapper = styled(Content)`
     display: flex;
@@ -80,7 +101,7 @@ const AppContent: React.FC = () => {
 
     const guild = useSelector(selectedGuild)
 
-    const isAdmin = guild !== null && guild.isAdmin
+    const isAdmin = !!guild?.isAdmin
 
     useEffect(() => {
         dispatch(fetchUser())
@@ -105,9 +126,11 @@ const AppContent: React.FC = () => {
                     <Route path='/tts' exact>
                         <TTS />
                     </Route>
-                    <Route path='/admin' exact>
-                        {isAdmin ? <Admin /> : <NotFound />}
-                    </Route>
+                    {isAdmin &&
+                        <Route path='/admin' exact>
+                            <Admin />
+                        </Route>
+                    }
                     <NotFound />
                 </Switch>
             </ContentCard>
