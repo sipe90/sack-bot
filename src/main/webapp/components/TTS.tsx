@@ -8,11 +8,11 @@ const { TextArea } = Input
 
 const TTS: React.FC = () => {
 
-    const { 
-        selectedGuild, 
-        playingTTS 
+    const {
+        selectedGuildId,
+        playingTTS
     } = useSelector((state) => ({
-        selectedGuild: state.user.selectedGuild,
+        selectedGuildId: state.user.selectedGuildId,
         playingTTS: state.tts.playingTTS
     }))
 
@@ -31,20 +31,20 @@ const TTS: React.FC = () => {
                 <div style={{ flexGrow: 1 }}>
                 </div>
                 <div>
-                <Button
-                    style={{ width: 80, marginRight: 8, marginBottom: 8 }}
-                    disabled={playingTTS || !selectedGuild}
-                    onClick={() => selectedGuild && dispatch(playRandomTTS(selectedGuild))}
-                >
-                    Random
+                    <Button
+                        style={{ width: 80, marginRight: 8, marginBottom: 8 }}
+                        disabled={playingTTS || !selectedGuildId}
+                        onClick={() => selectedGuildId && dispatch(playRandomTTS(selectedGuildId))}
+                    >
+                        Random
                 </Button>
-                <Button 
-                    style={{ width: 80 }}
-                    type="primary"
-                    disabled={playingTTS || !selectedGuild}
-                    onClick={() => selectedGuild && dispatch(playTTS(selectedGuild, text))}
-                >
-                    Talk
+                    <Button
+                        style={{ width: 80 }}
+                        type="primary"
+                        disabled={playingTTS || !selectedGuildId}
+                        onClick={() => selectedGuildId && dispatch(playTTS(selectedGuildId, text))}
+                    >
+                        Talk
                 </Button>
                 </div>
             </div>
