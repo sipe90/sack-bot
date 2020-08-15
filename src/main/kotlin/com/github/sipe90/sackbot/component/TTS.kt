@@ -2,26 +2,27 @@ package com.github.sipe90.sackbot.component
 
 import com.github.sipe90.sackbot.config.BotConfig
 import marytts.LocalMaryInterface
-import marytts.MaryInterface
-import marytts.util.data.audio.MaryAudioUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toMono
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Locale
+import java.util.*
+import javax.sound.sampled.AudioFileFormat
+import javax.sound.sampled.AudioSystem
+import kotlin.collections.ArrayList
 
 @Component
 class TTS(config: BotConfig) {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
-    private final val maryTts: MaryInterface = LocalMaryInterface()
+    private final val maryTts = LocalMaryInterface()
 
     private final val phrases = ArrayList<String>()
 
@@ -59,22 +60,18 @@ class TTS(config: BotConfig) {
 
     fun isRandomPhraseAvailable() = phrases.isEmpty()
 
-    fun randomPhraseToSpeech(): Mono<Path> {
+    fun randomPhraseToSpeech(): Mono<ByteArray> {
         if (phrases.isEmpty()) return Mono.empty()
         return textToSpeech(phrases[(0 until phrases.size).random()])
     }
 
-    fun textToSpeech(text: String): Mono<Path> {
+    fun textToSpeech(text: String): Mono<ByteArray> {
         logger.debug("Converting text to speech: {}", text)
-        return Mono.fromCallable { Files.createTempFile("t2s_", ".wav") }
-            .zipWith(maryTts.generateAudio(text).toMono())
-            .map {
-                MaryAudioUtils.writeWavFile(
-                    MaryAudioUtils.getSamplesAsDoubleArray(it.t2),
-                    it.t1.toString(),
-                    it.t2.format
-                )
-                return@map it.t1
-            }
+        return maryTts.generateAudio(text).toMono()
+                .map {
+                    val baos = ByteArrayOutputStream()
+                    AudioSystem.write(it, AudioFileFormat.Type.WAVE, baos)
+                    baos.toByteArray()
+                }
     }
 }

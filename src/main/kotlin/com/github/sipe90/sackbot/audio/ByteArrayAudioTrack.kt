@@ -12,7 +12,7 @@ class ByteArrayAudioTrack(
         private val audio: ByteArray,
         trackInfo: AudioTrackInfo,
         val containerTrackFactory: MediaContainerDescriptor,
-        private val sourceManager: NitriteAudioSourceManager
+        private val sourceManager: AudioSourceManager?
 ) : DelegatedAudioTrack(trackInfo) {
 
     override fun process(localExecutor: LocalAudioTrackExecutor?) {

@@ -5,35 +5,32 @@ import com.github.sipe90.sackbot.service.AudioFileService
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerDescriptor
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerDetection
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerHints
-import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.ProbingAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.tools.io.NonSeekableInputStream
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioReference
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo
 import org.springframework.stereotype.Component
-import java.io.ByteArrayInputStream
 import java.io.DataInput
 import java.io.DataOutput
 
 @Component
 class NitriteAudioSourceManager(private val audioFileService: AudioFileService) :
-    ProbingAudioSourceManager(MediaContainerRegistry.DEFAULT_REGISTRY) {
+        ProbingAudioSourceManager(ContainerRegistries.audio) {
 
     override fun getSourceName() = "nitrite"
 
     override fun loadItem(manager: DefaultAudioPlayerManager, reference: AudioReference): AudioItem? {
         val audioFile = getAudioFile(reference.identifier) ?: return null
-        NonSeekableInputStream(ByteArrayInputStream(audioFile.data.clone())).use {
+        ByteArraySeekableInputStream(audioFile.data).use {
             return handleLoadResult(
-                MediaContainerDetection(
-                    containerRegistry,
-                    reference,
-                    it,
-                    MediaContainerHints.from(null, audioFile.extension)
-                ).detectContainer()
+                    MediaContainerDetection(
+                            containerRegistry,
+                            reference,
+                            it,
+                            MediaContainerHints.from(null, audioFile.extension)
+                    ).detectContainer()
             )
         }
     }

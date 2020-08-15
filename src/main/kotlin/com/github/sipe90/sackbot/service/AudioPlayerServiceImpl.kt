@@ -1,17 +1,22 @@
 package com.github.sipe90.sackbot.service
 
+import com.github.sipe90.sackbot.audio.ByteArrayAudioTrack
+import com.github.sipe90.sackbot.audio.ByteArraySeekableInputStream
+import com.github.sipe90.sackbot.audio.ContainerRegistries
 import com.github.sipe90.sackbot.component.LavaPlayerManager
 import com.github.sipe90.sackbot.component.TTS
 import com.github.sipe90.sackbot.component.VoiceLines
 import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.util.getVoiceChannel
+import com.sedmelluq.discord.lavaplayer.container.MediaContainerDetection
+import com.sedmelluq.discord.lavaplayer.container.MediaContainerHints
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
+import com.sedmelluq.discord.lavaplayer.track.AudioReference
 import net.dv8tion.jda.api.entities.VoiceChannel
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.nio.file.Path
 
 
 @Service
@@ -67,7 +72,9 @@ class AudioPlayerServiceImpl(
     }
 
     override fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Void> {
-        return tts.randomPhraseToSpeech().flatMap { playFileInChannel(it, voiceChannel, null) }
+        return tts.randomPhraseToSpeech()
+                .map(this::detectWavTrack)
+                .flatMap { playerManager.playTrack(it, voiceChannel, null) }.then()
     }
 
     override fun playTtsForUser(guildId: String, userId: String, text: String): Mono<Void> {
@@ -77,11 +84,9 @@ class AudioPlayerServiceImpl(
     }
 
     override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Void> {
-        return tts.textToSpeech(text).flatMap { playFileInChannel(it, voiceChannel, null) }
-    }
-
-    private fun playFileInChannel(file: Path, voiceChannel: VoiceChannel, volume: Int?): Mono<Void> {
-        return playerManager.playLocalTrack(file.toString(), voiceChannel, volume).then()
+        return tts.textToSpeech(text)
+                .map(this::detectWavTrack)
+                .flatMap { playerManager.playTrack(it, voiceChannel, null) }.then()
     }
 
     override fun playUrlForUser(guildId: String, userId: String, url: String, volume: Int?): Mono<AudioItem> {
@@ -98,5 +103,16 @@ class AudioPlayerServiceImpl(
 
     override fun getDefaultVolume(guildId: String) = playerManager.getDefaultVolume(guildId)
 
+    private fun detectWavTrack(data: ByteArray): ByteArrayAudioTrack {
+        return ByteArraySeekableInputStream(data).use {
+            val result = MediaContainerDetection(
+                    ContainerRegistries.wav,
+                    AudioReference("tts", null),
+                    it,
+                    MediaContainerHints.from(null, "wav")
+            ).detectContainer()
+            ByteArrayAudioTrack(data, result.trackInfo, result.containerDescriptor, null)
+        }
+    }
 }
 

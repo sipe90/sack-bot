@@ -1,14 +1,13 @@
 package com.github.sipe90.sackbot.service
 
 import com.github.sipe90.sackbot.audio.ByteArraySeekableInputStream
+import com.github.sipe90.sackbot.audio.ContainerRegistries
 import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.persistence.AudioFileRepository
 import com.github.sipe90.sackbot.persistence.dto.AudioFile
 import com.github.sipe90.sackbot.util.withExtension
-import com.sedmelluq.discord.lavaplayer.container.MediaContainer
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerDetection
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerHints
-import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry
 import com.sedmelluq.discord.lavaplayer.track.AudioReference
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -23,13 +22,6 @@ import java.util.zip.ZipOutputStream
 class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository) : AudioFileService {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
-
-    private final val containerRegistry = MediaContainerRegistry(
-            listOf(
-                    MediaContainer.MP3.probe,
-                    MediaContainer.OGG.probe,
-                    MediaContainer.WAV.probe
-            ))
 
     override fun findAudioFile(guildId: String, name: String): Mono<AudioFile> {
         return audioFileRepository.findOne(guildId, name)
@@ -118,7 +110,7 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
     private fun validateFile(data: ByteArray, name: String, extension: String?): Mono<Void> {
         val detectionResult = ByteArraySeekableInputStream(data).use { inputStream ->
             MediaContainerDetection(
-                    containerRegistry,
+                    ContainerRegistries.audio,
                     AudioReference("$name${if (extension !== null) ".$extension" else ""}", null),
                     inputStream,
                     MediaContainerHints.from(null, extension)
