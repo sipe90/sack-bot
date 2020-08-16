@@ -54,6 +54,7 @@ class JDAService(
         )
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .enableCache(CacheFlag.VOICE_STATE)
+                .disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOTE, CacheFlag.CLIENT_STATUS)
                 .setEventManager(eventManager)
                 .setAudioSendFactory(NativeAudioSendFactory())
                 .setStatus(OnlineStatus.DO_NOT_DISTURB)

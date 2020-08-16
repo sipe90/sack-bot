@@ -1,16 +1,26 @@
 import { Reducer } from "redux"
-import { TTSActions, PLAY_TTS_REQUEST, PLAY_TTS_RESOLVED, PLAY_TTS_REJECTED, PLAY_RANDOM_TTS_REQUEST, PLAY_RANDOM_TTS_RESOLVED, PLAY_RANDOM_TTS_REJECTED } from "@/actions/tts"
+import { TTSActions, PLAY_TTS_REQUEST, PLAY_TTS_RESOLVED, PLAY_TTS_REJECTED, PLAY_RANDOM_TTS_REQUEST, PLAY_RANDOM_TTS_RESOLVED, PLAY_RANDOM_TTS_REJECTED, GET_VOICES_REQUEST, GET_VOICES_RESOLVED, GET_VOICES_REJECTED } from "@/actions/tts"
 
 export interface ITTSState {
+    loadingVoices: boolean
+    voices: string[]
     playingTTS: boolean
 }
 
 const initialState: ITTSState = {
+    loadingVoices: false,
+    voices: [],
     playingTTS: false
 }
 
 const voicesReducer: Reducer<ITTSState, TTSActions> = (state = initialState, action) => {
-    switch(action.type) {
+    switch (action.type) {
+        case GET_VOICES_REQUEST:
+            return { ...state, loadingVoices: true }
+        case GET_VOICES_RESOLVED:
+            return { ...state, loadingVoices: false, voices: action.payload }
+        case GET_VOICES_REJECTED:
+            return { ...state, loadingVoices: false }
         case PLAY_TTS_REQUEST:
             return { ...state, playingTTS: true }
         case PLAY_TTS_RESOLVED:

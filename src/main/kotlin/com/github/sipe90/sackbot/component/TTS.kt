@@ -1,6 +1,7 @@
 package com.github.sipe90.sackbot.component
 
 import com.github.sipe90.sackbot.config.BotConfig
+import com.github.sipe90.sackbot.exception.ValidationException
 import marytts.LocalMaryInterface
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -12,13 +13,11 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.util.*
 import javax.sound.sampled.AudioFileFormat
 import javax.sound.sampled.AudioSystem
-import kotlin.collections.ArrayList
 
 @Component
-class TTS(config: BotConfig) {
+class TTS(private val config: BotConfig) {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
@@ -27,21 +26,7 @@ class TTS(config: BotConfig) {
     private final val phrases = ArrayList<String>()
 
     init {
-        val voice = config.tts.voice
         val phrasesFile = config.tts.phrasesFile
-
-        maryTts.locale = Locale.UK
-
-        if (StringUtils.isNotEmpty(voice)) {
-            if (!maryTts.availableVoices.contains(voice)) {
-                logger.warn("Invalid voice name given: {}. Available voices are: {}", voice, maryTts.availableVoices)
-                logger.info("Using default voice: {}", maryTts.voice)
-            } else {
-                maryTts.voice = voice
-            }
-        } else {
-            logger.info("Using default voice: {}", maryTts.voice)
-        }
 
         if (StringUtils.isNotEmpty(phrasesFile)) {
             val path = Paths.get(phrasesFile)
@@ -58,16 +43,26 @@ class TTS(config: BotConfig) {
         }
     }
 
+    fun getAvailableVoices(): MutableSet<String> = maryTts.availableVoices
+
     fun isRandomPhraseAvailable() = phrases.isEmpty()
 
-    fun randomPhraseToSpeech(): Mono<ByteArray> {
+    fun randomPhraseToSpeech(voice: String): Mono<ByteArray> {
         if (phrases.isEmpty()) return Mono.empty()
-        return textToSpeech(phrases[(0 until phrases.size).random()])
+        return textToSpeech(voice, phrases[(0 until phrases.size).random()])
     }
 
-    fun textToSpeech(text: String): Mono<ByteArray> {
-        logger.debug("Converting text to speech: {}", text)
-        return maryTts.generateAudio(text).toMono()
+    fun textToSpeech(voice: String, text: String): Mono<ByteArray> {
+        if (!getAvailableVoices().contains(voice)) {
+            throw ValidationException("Invalid voice: $voice")
+        }
+
+        val txt = if (text.length > config.tts.maxLength) text.slice(0 until config.tts.maxLength) else text
+
+        logger.debug("Converting text to speech using voice {}: {}", voice, txt)
+        maryTts.voice = voice
+
+        return maryTts.generateAudio(txt).toMono()
                 .map {
                     val baos = ByteArrayOutputStream()
                     AudioSystem.write(it, AudioFileFormat.Type.WAVE, baos)

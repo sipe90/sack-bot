@@ -24,11 +24,11 @@ import reactor.util.function.Tuples
 
 @Configuration
 class Routes(
-    private val config: BotConfig,
-    private val userHandler: UserHandler,
-    private val audioHandler: AudioHandler,
-    private val voiceHandler: VoiceHandler,
-    private val ttsHandler: TTSHandler
+        private val config: BotConfig,
+        private val userHandler: UserHandler,
+        private val audioHandler: AudioHandler,
+        private val voiceHandler: VoiceHandler,
+        private val ttsHandler: TTSHandler
 ) {
     @Bean
     fun apiRouter() = router {
@@ -58,6 +58,7 @@ class Routes(
                     }
                 }
                 "/tts".nest {
+                    GET("/", handle(ttsHandler::getAvailableVoices))
                     POST("/play", handle(ttsHandler::playTTS))
                     POST("/random", handle(ttsHandler::playRandomTTS))
                 }
@@ -75,16 +76,16 @@ class Routes(
     }
 
     private fun guildAccessFilter(
-        req: ServerRequest,
-        next: (ServerRequest) -> Mono<ServerResponse>
+            req: ServerRequest,
+            next: (ServerRequest) -> Mono<ServerResponse>
     ): Mono<ServerResponse> {
         val guildId = req.pathVariable("guildId")
         return requestWithPrincipal(req)
-            .flatMap { (req, user) -> if (user.isInGuild(guildId)) next(req) else status(HttpStatus.FORBIDDEN).build() }
+                .flatMap { (req, user) -> if (user.isInGuild(guildId)) next(req) else status(HttpStatus.FORBIDDEN).build() }
     }
 
     private fun handleAdmin(
-        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
+            handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
     ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
         requestWithPrincipal(req).flatMap { (req, user) ->
             val guildId = req.pathVariable("guildId")
@@ -93,17 +94,17 @@ class Routes(
     }
 
     private fun handle(
-        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
+            handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
     ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
         requestWithPrincipal(req).flatMap { (req, user) -> handler(req, user) }
     }
 
     private fun requestWithPrincipal(req: ServerRequest): Mono<Tuple2<ServerRequest, DiscordUser>> {
         return req.principal()
-            .cast(OAuth2AuthenticationToken::class.java)
-            .map { Tuples.of(req, it.principal as DiscordUser) }
+                .cast(OAuth2AuthenticationToken::class.java)
+                .map { Tuples.of(req, it.principal as DiscordUser) }
     }
 
     private fun hasAdminAccess(user: DiscordUser, guildId: String): Boolean =
-        user.isOwner(guildId) || (config.adminRole != null && user.getRoles(guildId).contains(config.adminRole))
+            user.isOwner(guildId) || (config.adminRole != null && user.getRoles(guildId).contains(config.adminRole))
 }

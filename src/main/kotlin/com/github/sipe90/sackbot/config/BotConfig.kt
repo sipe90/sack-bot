@@ -39,7 +39,7 @@ data class BotConfig(
     )
 
     data class TTSConfig(
-            val voice: String,
+            val maxLength: Int,
             val phrasesFile: String
     )
 

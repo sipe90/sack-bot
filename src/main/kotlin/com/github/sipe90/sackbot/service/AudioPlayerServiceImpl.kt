@@ -63,28 +63,30 @@ class AudioPlayerServiceImpl(
         return Flux.concat(monos).then()
     }
 
+    override fun getAvailableVoices(): Set<String> = tts.getAvailableVoices()
+
     override fun isRandomTtsEnabled(): Boolean = tts.isRandomPhraseAvailable()
 
-    override fun playRandomTtsForUser(guildId: String, userId: String): Mono<Void> {
+    override fun playRandomTtsForUser(guildId: String, userId: String, voice: String): Mono<Void> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
-        return playRandomTtsInChannel(voiceChannel)
+        return playRandomTtsInChannel(voice, voiceChannel)
     }
 
-    override fun playRandomTtsInChannel(voiceChannel: VoiceChannel): Mono<Void> {
-        return tts.randomPhraseToSpeech()
+    override fun playRandomTtsInChannel(voice: String, voiceChannel: VoiceChannel): Mono<Void> {
+        return tts.randomPhraseToSpeech(voice)
                 .map(this::detectWavTrack)
                 .flatMap { playerManager.playTrack(it, voiceChannel, null) }.then()
     }
 
-    override fun playTtsForUser(guildId: String, userId: String, text: String): Mono<Void> {
+    override fun playTtsForUser(guildId: String, userId: String, voice: String, text: String): Mono<Void> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val voiceChannel = getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
-        return playTtsInChannel(text, voiceChannel)
+        return playTtsInChannel(voice, text, voiceChannel)
     }
 
-    override fun playTtsInChannel(text: String, voiceChannel: VoiceChannel): Mono<Void> {
-        return tts.textToSpeech(text)
+    override fun playTtsInChannel(voice: String, text: String, voiceChannel: VoiceChannel): Mono<Void> {
+        return tts.textToSpeech(voice, text)
                 .map(this::detectWavTrack)
                 .flatMap { playerManager.playTrack(it, voiceChannel, null) }.then()
     }

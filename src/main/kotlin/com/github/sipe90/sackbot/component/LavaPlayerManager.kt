@@ -63,7 +63,7 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
         val trackScheduler = getScheduler(guild)
 
         connect(voiceChannel, trackScheduler.player)
-        
+
         trackScheduler.interrupt(track, volume)
         track
     }
@@ -129,13 +129,6 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
 
     private fun connect(voiceChannel: VoiceChannel, audioPlayer: AudioPlayer) {
         val audioManager = voiceChannel.guild.audioManager
-        if (audioManager.isAttemptingToConnect) {
-            val queued = audioManager.queuedAudioConnection
-            if (queued != null && queued.id != voiceChannel.id) {
-                audioManager.closeAudioConnection()
-            }
-        }
-
         audioManager.openAudioConnection(voiceChannel)
         audioManager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
     }

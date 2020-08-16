@@ -2,7 +2,11 @@ import { message } from 'antd'
 
 import history from '@/history'
 import { AsyncThunkResult } from "@/types"
-import { fetchPostJson } from "@/util"
+import { fetchPostJson, fetchGetJson, buildQueryString } from "@/util"
+
+export const GET_VOICES_REQUEST = "GET_VOICES_REQUEST"
+export const GET_VOICES_RESOLVED = "GET_VOICES_RESOLVED"
+export const GET_VOICES_REJECTED = "GET_VOICES_REJECTED"
 
 export const PLAY_TTS_REQUEST = "PLAY_TTS_REQUEST"
 export const PLAY_TTS_RESOLVED = "PLAY_TTS_RESOLVED"
@@ -11,6 +15,20 @@ export const PLAY_TTS_REJECTED = "PLAY_TTS_REJECTED"
 export const PLAY_RANDOM_TTS_REQUEST = "PLAY_RANDOM_TTS_REQUEST"
 export const PLAY_RANDOM_TTS_RESOLVED = "PLAY_RANDOM_TTS_RESOLVED"
 export const PLAY_RANDOM_TTS_REJECTED = "PLAY_RANDOM_TTS_REJECTED"
+
+interface GetVoicesRequestAction {
+    type: typeof GET_VOICES_REQUEST
+}
+
+interface GetVoicesResolvedAction {
+    type: typeof GET_VOICES_RESOLVED
+    payload: string[]
+}
+
+interface GetVoicesRejectedAction {
+    type: typeof GET_VOICES_REJECTED,
+    payload: Error
+}
 
 interface PlayTTSRequestAction {
     type: typeof PLAY_TTS_REQUEST
@@ -38,8 +56,43 @@ interface PlayRandomTTSRejectedAction {
     payload: Error
 }
 
-export type TTSActions = PlayTTSRequestAction | PlayTTSResolvedAction | PlayTTSRejectedAction |
+export type TTSActions = GetVoicesRequestAction | GetVoicesResolvedAction | GetVoicesRejectedAction |
+    PlayTTSRequestAction | PlayTTSResolvedAction | PlayTTSRejectedAction |
     PlayRandomTTSRequestAction | PlayRandomTTSResolvedAction | PlayRandomTTSRejectedAction
+
+const getVoicesRequest = (): GetVoicesRequestAction => ({
+    type: GET_VOICES_REQUEST
+})
+
+const getVoicesResolved = (voices: string[]): GetVoicesResolvedAction => ({
+    type: GET_VOICES_RESOLVED,
+    payload: voices
+})
+
+const getVoicesRejected = (error: Error): GetVoicesRejectedAction => ({
+    type: GET_VOICES_REJECTED,
+    payload: error
+})
+
+export const getVoices = (guildId: string): AsyncThunkResult => async (dispatch) => {
+    try {
+        dispatch(getVoicesRequest())
+        const res = await fetchGetJson<string[]>(`/api/${guildId}/tts`)
+
+        if (res.status === 401) {
+            dispatch(playTTSRejected(new Error('Unauthorized')))
+            history.push('/login')
+            return
+        }
+
+        if (!res.ok) throw new Error(res.json?.message || res.statusText)
+
+        dispatch(getVoicesResolved(res.json))
+    } catch (error) {
+        message.error(`Failed fetch TTS voices: ${error.message}`)
+        dispatch(getVoicesRejected(error))
+    }
+}
 
 const playTTSRequest = (): PlayTTSRequestAction => ({
     type: PLAY_TTS_REQUEST
@@ -54,10 +107,10 @@ const playTTSRejected = (error: Error): PlayTTSRejectedAction => ({
     payload: error
 })
 
-export const playTTS = (guildId: string, text: string): AsyncThunkResult => async (dispatch) => {
+export const playTTS = (guildId: string, voice: string, text: string): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playTTSRequest())
-        const res = await fetchPostJson<void>(`/api/${guildId}/tts/play`, text)
+        const res = await fetchPostJson<void>(`/api/${guildId}/tts/play?${buildQueryString({ voice })}`, text)
 
         if (res.status === 401) {
             dispatch(playTTSRejected(new Error('Unauthorized')))
@@ -87,10 +140,10 @@ const playRandomTTSRejected = (error: Error): PlayRandomTTSRejectedAction => ({
     payload: error
 })
 
-export const playRandomTTS = (guildId: string): AsyncThunkResult => async (dispatch) => {
+export const playRandomTTS = (guildId: string, voice: string): AsyncThunkResult => async (dispatch) => {
     try {
         dispatch(playRandomTTSRequest())
-        const res = await fetchPostJson<void>(`/api/${guildId}/tts/random`)
+        const res = await fetchPostJson<void>(`/api/${guildId}/tts/random?${buildQueryString({ voice })}`)
 
         if (res.status === 401) {
             dispatch(playRandomTTSRejected(new Error('Unauthorized')))
