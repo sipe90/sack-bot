@@ -29,8 +29,8 @@ export type SoundsActions = ActionGroup<typeof FETCH_SOUNDS_REQUEST, typeof FETC
     | ActionGroup<typeof PLAY_SOUND_REQUEST, typeof PLAY_SOUND_RESOLVED, typeof PLAY_SOUND_REJECTED>
     | ActionGroup<typeof PLAY_RANDOM_SOUND_REQUEST, typeof PLAY_RANDOM_SOUND_RESOLVED, typeof PLAY_RANDOM_SOUND_REJECTED>
     | ActionGroup<typeof PLAY_URL_REQUEST, typeof PLAY_URL_RESOLVED, typeof PLAY_URL_REJECTED>
-    | ActionGroup<typeof UPDATE_SOUND_REQUEST, typeof UPDATE_SOUND_RESOLVED, typeof UPDATE_SOUND_REJECTED, { guildId: string, name: string, audioFile: IAudioFile }>
-    | ActionGroup<typeof DELETE_SOUND_REQUEST, typeof DELETE_SOUND_RESOLVED, typeof DELETE_SOUND_REJECTED, { guildId: string, name: string }>
+    | ActionGroup<typeof UPDATE_SOUND_REQUEST, typeof UPDATE_SOUND_RESOLVED, typeof UPDATE_SOUND_REJECTED>
+    | ActionGroup<typeof DELETE_SOUND_REQUEST, typeof DELETE_SOUND_RESOLVED, typeof DELETE_SOUND_REJECTED>
 
 
 
@@ -57,8 +57,7 @@ export const playUrl = (guildId: string, url: string, vol: number) => apiThunk({
 export const updateSound = (guildId: string, name: string, audioFile: IAudioFile): AsyncThunk => async (dispatch) => {
     await dispatch(apiThunk({
         types: [UPDATE_SOUND_REQUEST, UPDATE_SOUND_RESOLVED, UPDATE_SOUND_REJECTED],
-        apiCall: () => fetchPostJson(`/api/${guildId}/sounds/${name}`, audioFile),
-        responseMapper: () => ({ guildId, name, audioFile })
+        apiCall: () => fetchPostJson(`/api/${guildId}/sounds/${name}`, audioFile)
     }))
     dispatch(fetchSounds(guildId))
 }
@@ -67,7 +66,6 @@ export const deleteSound = (guildId: string, name: string): AsyncThunk => async 
     await dispatch(apiThunk({
         types: [DELETE_SOUND_REQUEST, DELETE_SOUND_RESOLVED, DELETE_SOUND_REJECTED],
         apiCall: () => fetchDeleteJson(`/api/${guildId}/sounds/${name}`),
-        responseMapper: () => ({ guildId, name })
     }))
     dispatch(fetchSounds(guildId))
 }
