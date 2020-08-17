@@ -212,7 +212,7 @@ const Admin: React.FC = () => {
                     </Form.Item>
                 </Form>
             </Modal>
-            <Table<IAudioFile> columns={columns} dataSource={sounds} rowKey='name' size='small' pagination={false} loading={guildsLoading || soundsLoading || guildMembersLoading} />
+            <Table<IAudioFile> columns={columns} dataSource={sounds} rowKey='name' size='small' pagination={{ defaultPageSize: 20 }} loading={guildsLoading || soundsLoading || guildMembersLoading} />
         </>
     )
 }
