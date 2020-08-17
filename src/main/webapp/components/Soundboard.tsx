@@ -69,7 +69,7 @@ const Soundboard: React.FC = () => {
                     <SoundOutlined style={{ fontSize: 14 }} />
                 </div>
                 <div style={{ flexGrow: 1 }}>
-                    <Slider defaultValue={defVolume} min={1} max={100} onAfterChange={(vol) => setVolume(vol as number)} />
+                    <Slider defaultValue={defVolume} min={1} max={100} onAfterChange={(vol: number) => setVolume(vol)} />
                 </div>
             </div>
             <div>
