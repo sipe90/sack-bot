@@ -1,18 +1,33 @@
-import { Action, AnyAction } from "redux"
+import { Action } from "redux"
 import { ThunkDispatch, ThunkAction } from "redux-thunk"
 import { IAppState } from "@/reducers"
 
 export interface IDictionary<A> {
-    [index: string]: A;
+    [index: string]: A
 }
 
 export type AppAction = Action<string>
 export type AppReducer<S, A extends AppAction> = (state: S, action: A) => S
-export type AppDispatch = ThunkDispatch<IAppState, undefined, AnyAction>
+export type AppDispatch = ThunkDispatch<IAppState, undefined, AppAction>
 
+export type Thunk<R = void, A extends Action = AppAction> = ThunkAction<R, IAppState, unknown, A>
+export type AsyncThunk<R = void, A extends Action = AppAction> = Thunk<Promise<R>, A>
 
-export type ThunkResult<R = void, A extends Action = AnyAction> = ThunkAction<R, IAppState, undefined, A>
-export type AsyncThunkResult<R = void, A extends Action = AnyAction> = ThunkResult<Promise<R>, A>
+export type ActionGroup<T1, T2, T3, P = undefined> = RequestAction<T1> | ResolvedAction<T2, P> | RejectedAction<T3>
+
+export interface RequestAction<T> {
+    type: T
+}
+
+export interface ResolvedAction<T, P = undefined> {
+    type: T
+    payload: P
+}
+
+export interface RejectedAction<T> {
+    type: T
+    payload: Error
+}
 
 export interface IMembership {
     guildId: string
