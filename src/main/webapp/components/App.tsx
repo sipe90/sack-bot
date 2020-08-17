@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react'
-import { Card, Layout, Spin } from 'antd'
+import { Layout, Spin } from 'antd'
 import styled from 'styled-components'
-import { Router, Switch, Route, Redirect } from 'react-router-dom'
+import { Switch, Route, Redirect, useLocation } from 'react-router-dom'
 
-import { useDispatch, fetchGetJson, useSelector } from '@/util'
-import history from '@/history'
-import { fetchUser, fetchGuilds } from '@/actions/user'
+import { useDispatch, useSelector, fetchGetJson } from '@/util'
 import { selectedGuild } from '@/selectors/user'
+import { fetchUser, fetchGuilds } from '@/actions/user'
+import { Header, Footer, Content } from '@/components/layout'
 import Navigation from '@/components/Navigation'
 import Soundboard from '@/components/Soundboard'
 import Voices from '@/components/Voices'
@@ -15,10 +15,8 @@ import Admin from '@/components/Admin'
 import NotFound from '@/components/NotFound'
 import Login from '@/components/Login'
 
-const { Header, Content, Footer } = Layout
-
 // From Webpack define plugin
-declare var VERSION: string | void
+declare var VERSION: string | undefined
 
 const Root = styled.div`
     background-color: rgb(247, 247, 247);
@@ -30,19 +28,11 @@ const AppLayout = styled(Layout)`
     margin: auto;
 `
 
-const AppHeader = styled(Header)`
-    height: 52px;
-    padding: 0;
-    line-height: normal;
-`
-
-const AppFooter = styled(Footer)`
-    padding: 0px 0px 4px 0px;
-    text-align: center;
-`
-
-const FooterCard = styled(Card)`
-    border-radius: 0;
+const Loading = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 `
 
 const App: React.FC = () => {
@@ -50,91 +40,63 @@ const App: React.FC = () => {
     const dispatch = useDispatch()
 
     const loggedIn = useSelector((state) => state.user.loggedIn)
-
-    useEffect(() => {
-        dispatch(fetchUser())
-    }, [])
-
-    return (
-        <Root>
-            <Router history={history}>
-                <AppLayout>
-                    <Switch>
-                        <Route path='/login' exact>
-                            <Login />
-                        </Route>
-                        {loggedIn && <Route>
-                            <AppHeader>
-                                <Navigation />
-                            </AppHeader>
-                            <AppContent />
-                        </Route>
-                        }
-                        <Route>
-                            <ContentWrapper>
-                                <ContentCard bordered={false} bodyStyle={{ height: '100%' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                                        <Spin tip='Loading application...' />
-                                    </div>
-                                </ContentCard>
-                            </ContentWrapper>
-                        </Route>
-                    </Switch>
-                    <AppFooter><FooterCard bordered={false}>Sackbot {VERSION ? `v${VERSION}` : ''}</FooterCard></AppFooter>
-                </AppLayout>
-            </Router>
-        </Root>
-    )
-}
-
-const ContentWrapper = styled(Content)`
-    display: flex;
-`
-
-const ContentCard = styled(Card)`
-    flex-grow: 1;
-    border-radius: 0;
-`
-
-const AppContent: React.FC = () => {
-    const dispatch = useDispatch()
-
     const guild = useSelector(selectedGuild)
 
     const isAdmin = !!guild?.isAdmin
 
-    useEffect(() => {
-        dispatch(fetchUser())
-        dispatch(fetchGuilds())
+    const location = useLocation()
 
-        setInterval(() => fetchGetJson('api/ping'), 5 * 60 * 1000)
+    useEffect(() => {
+        if (location.pathname !== '/login') {
+            dispatch(fetchUser())
+            dispatch(fetchGuilds())
+
+            setInterval(() => fetchGetJson('api/ping'), 5 * 60 * 1000)
+        }
     }, [])
 
+
     return (
-        <ContentWrapper>
-            <ContentCard
-                bordered={false}
-            >
-                <Switch>
-                    <Redirect exact from='/' to='/board' />
-                    <Route path='/board' exact>
-                        <Soundboard />
-                    </Route>
-                    <Route path='/voices' exact>
-                        <Voices />
-                    </Route>
-                    <Route path='/tts' exact>
-                        <TTS />
-                    </Route>
-                    {isAdmin &&
-                        <Route path='/admin' exact>
-                            <Admin />
+        <Root>
+            <AppLayout>
+                <Header>
+                    {loggedIn && <Navigation />}
+                </Header>
+                <Content>
+                    <Switch>
+                        <Route path='/login' exact>
+                            <Login />
                         </Route>
-                    }
-                    <NotFound />
-                </Switch>
-            </ContentCard>
-        </ContentWrapper>
+                        {!loggedIn &&
+                            <Route>
+                                <Loading>
+                                    <Spin tip='Loading SackBot...' />
+                                </Loading>
+                            </Route>
+                        }
+                        <Redirect exact from='/' to='/board' />
+                        <Route path='/board' exact>
+                            <Soundboard />
+                        </Route>
+                        <Route path='/voices' exact>
+                            <Voices />
+                        </Route>
+                        <Route path='/tts' exact>
+                            <TTS />
+                        </Route>
+                        {isAdmin &&
+                            <Route path='/admin' exact>
+                                <Admin />
+                            </Route>
+                        }
+                        <NotFound />
+                    </Switch>
+                </Content>
+                <Footer>
+                    Sackbot {VERSION ? `v${VERSION}` : ''}
+                </Footer>
+            </AppLayout>
+        </Root>
     )
 }
 

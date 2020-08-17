@@ -1,7 +1,7 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom'
 import queryString from 'query-string'
-import { Alert, Button, Card, Typography } from 'antd'
+import { Alert, Button, Typography } from 'antd'
 import styled from 'styled-components'
 import Icon from '@ant-design/icons'
 
@@ -15,18 +15,12 @@ const errorMessages: { [key: string]: string } = {
     'access_denied': 'Login failed because you are not a member of any SackBot enabled Discord guild.'
 }
 
-const ContentCard = styled(Card)`
-    flex-grow: 1;
-    border-radius: 0;
-`
-
 const AlertBox = styled(Alert)`
-    margin: 24px auto 0px auto;
-    max-width: 400px;
+    margin-bottom: 12px;
 `
 
-const ContentWrapper = styled.div`
-    margin: 24px auto auto auto;
+const LoginWrapper = styled.div`
+    margin: 12px auto auto auto;
     max-width: 400px;
 `
 
@@ -55,15 +49,24 @@ const Login: React.FC = () => {
     }
 
     return (
-        <ContentCard bordered={false} >
+        <LoginWrapper>
             {error && <AlertBox message={error} type="error" showIcon closable />}
             {loggedOut && <AlertBox message="You've successfully logged out of SackBot." type="info" showIcon closable />}
-            <ContentWrapper>
-                <Title>Welcome to SackBot!</Title>
-                <Paragraph>Please log in via Discord to use the application.</Paragraph>
-                <Button block type='primary' size='large' icon={<Icon component={DiscordSvg} style={{ fill: "#fff" }} />} href='/oauth2/authorization/discord'>Log in</Button>
-            </ContentWrapper>
-        </ContentCard>
+            <Title>Welcome to SackBot!</Title>
+            <Paragraph>Please log in via Discord to use SackBot.</Paragraph>
+            <Button
+                block
+                type='primary'
+                size='large'
+                href='/oauth2/authorization/discord'
+                icon={<Icon
+                    component={DiscordSvg}
+                    style={{ fill: "#fff" }}
+                />}
+            >
+                Log in
+                </Button>
+        </LoginWrapper>
     )
 }
 

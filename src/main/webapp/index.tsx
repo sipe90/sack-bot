@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
+import { Router } from 'react-router-dom'
 import { applyMiddleware, createStore, Middleware } from 'redux'
 import { composeWithDevTools } from 'redux-devtools-extension'
 import { createLogger } from 'redux-logger'
@@ -8,8 +9,10 @@ import thunkMiddleware from 'redux-thunk'
 import { Spin, message } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 
+import history from '@/history'
 import reducers from '@/reducers'
 import App from '@/components/App'
+
 
 message.config({
     duration: 3,
@@ -33,7 +36,9 @@ const store = createStore(
 
 ReactDOM.render(
     <Provider store={store}>
-        <App />
+        <Router history={history}>
+            <App />
+        </Router>
     </Provider>,
     document.getElementById('root'),
 )
