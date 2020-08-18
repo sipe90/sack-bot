@@ -1,6 +1,10 @@
-import { IVoiceLines } from "@/types";
-import { Reducer } from "redux";
-import { FETCH_VOICE_LINES_REQUEST, FETCH_VOICE_LINES_RESOLVED, FETCH_VOICE_LINES_REJECTED, PLAY_VOICE_LINES_REQUEST, PLAY_VOICE_LINES_RESOLVED, PLAY_VOICE_LINES_REJECTED, VoicesActions } from "@/actions/voices";
+import { IVoiceLines } from "@/types"
+import { Reducer } from "redux"
+import {
+    FETCH_VOICE_LINES_REQUEST, FETCH_VOICE_LINES_RESOLVED, FETCH_VOICE_LINES_REJECTED,
+    PLAY_VOICE_LINES_REQUEST, PLAY_VOICE_LINES_RESOLVED, PLAY_VOICE_LINES_REJECTED,
+    VoicesActions
+} from "@/actions/voices"
 
 export interface IVoicesState {
     voiceLines: IVoiceLines
@@ -15,12 +19,12 @@ const initialState: IVoicesState = {
 }
 
 const voicesReducer: Reducer<IVoicesState, VoicesActions> = (state = initialState, action) => {
-    switch(action.type) {
+    switch (action.type) {
         case FETCH_VOICE_LINES_REQUEST:
             return { ...state, voiceLinesLoading: true }
         case FETCH_VOICE_LINES_RESOLVED:
-            return { 
-                ...state, 
+            return {
+                ...state,
                 voiceLinesLoading: false,
                 voiceLines: action.payload
             }

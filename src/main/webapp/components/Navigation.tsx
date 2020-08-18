@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import styled, { AnyStyledComponent } from 'styled-components'
+import styled from 'styled-components'
 import { Avatar, Menu, Dropdown } from 'antd'
 import {
     CaretDownFilled,
@@ -33,7 +33,7 @@ const activeStyle: React.CSSProperties = {
     borderBottom: "2px solid #fff"
 }
 
-const styledIcon = (icon: AnyStyledComponent) => styled(icon)`
+const styledIcon = (icon: React.ComponentType<any>) => styled(icon)`
     margin-top: 8px;
     font-size: 24px;
 `
@@ -47,6 +47,7 @@ const Navigation: React.FC = () => {
 
     const guild = useSelector(selectedGuild)
     const guilds = useSelector((state) => state.user.guilds)
+
     const dispatch = useDispatch()
 
     return (

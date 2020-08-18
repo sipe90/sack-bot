@@ -10,7 +10,7 @@ import { IAudioFile, IGuildMember, AppDispatch, IGuild } from '@/types'
 import { ColumnsType } from 'antd/lib/table'
 import { fetchGuildMembers } from '@/actions/user'
 import { UploadFile } from 'antd/lib/upload/interface'
-import { selectedGuild } from '@/selectors/user'
+import { selectedGuild, selectedGuildMembers } from '@/selectors/user'
 
 const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
@@ -18,10 +18,9 @@ const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.invoker(0, 'sort')
 )
 
-const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudioFile) => void, guild: IGuild, guildMembers: { [guildId: string]: IGuildMember[] }): ColumnsType<IAudioFile> => {
+const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudioFile) => void, guild: IGuild, guildMembers: IGuildMember[]): ColumnsType<IAudioFile> => {
 
-    const members = guildMembers[guild.id] || []
-    const membersById = R.indexBy(R.prop('id'), members)
+    const membersById = R.indexBy(R.prop('id'), guildMembers)
     const getUsername = (userId: string | null) => userId ? R.pathOr('Unknown', [userId, 'name'], membersById) : ''
 
     return [{
@@ -63,7 +62,7 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
             <div style={{ float: 'right' }}>
                 <Upload
                     action={`/api/${guild.id}/sounds`}
-                    accept={'.mp3,.wav'}
+                    accept={'.mp3,.wav,.ogg'}
                     multiple
                     showUploadList={false}
                     onChange={({ file, fileList }) => {
@@ -126,21 +125,13 @@ const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudio
 
 const Admin: React.FC = () => {
 
-    const {
-        sounds,
-        soundsLoading,
-        guildsLoading,
-        guildMembers,
-        guildMembersLoading
-    } = useSelector((state) => ({
-        guildsLoading: state.user.guildsLoading,
-        sounds: state.sounds.sounds,
-        soundsLoading: state.sounds.soundsLoading,
-        guildMembers: state.user.guildMembers,
-        guildMembersLoading: state.user.guildMembersLoading
-    }))
+    const sounds = useSelector((state) => state.sounds.sounds)
+    const soundsLoading = useSelector((state) => state.sounds.soundsLoading)
+    const guildsLoading = useSelector((state) => state.user.guildsLoading)
+    const guildMembersLoading = useSelector((state) => state.user.guildMembersLoading)
 
     const guild = useSelector(selectedGuild)
+    const guildMembers = useSelector(selectedGuildMembers)
 
     const dispatch = useDispatch()
 
@@ -162,7 +153,7 @@ const Admin: React.FC = () => {
 
     if (!guild) return null
 
-    const columns = useMemo(() => buildColumns(dispatch, onEditAudioFile, guild, guildMembers), [guildMembers, guild])
+    const columns = useMemo(() => buildColumns(dispatch, onEditAudioFile, guild, guildMembers || []), [guildMembers, guild])
     const tags = useMemo(() => getTags(sounds), [sounds])
 
     if (!guild.isAdmin) return <Alert message="You have no power here!" type="error" showIcon />

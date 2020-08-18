@@ -2,6 +2,7 @@ import * as RR from 'react-redux'
 
 import { AppDispatch } from '@/types'
 import { IAppState } from '@/reducers'
+import history from '@/history'
 
 
 export const useSelector: RR.TypedUseSelectorHook<IAppState> = RR.useSelector
@@ -80,7 +81,7 @@ export const buildQueryString = (params: { [key: string]: any | any[] }) =>
 type Types = [string, string, string]
 type ApiCall<T> = () => Promise<JsonResponse<T>>
 type ResponseMapper<T, P> = (res: T) => P
-type ErrorResponseHandler<T> = (res: JsonResponse<T>) => void
+type ErrorResponseHandler<T> = (error: Error, res: JsonResponse<T>) => void
 
 interface IThunkOpts<T, P> {
     types: Types
@@ -89,7 +90,7 @@ interface IThunkOpts<T, P> {
     responseMapper?: ResponseMapper<T, P>
 }
 
-export const apiThunk = <T = void, P = void>(opts: IThunkOpts<T, P>) => async (dispatch: AppDispatch) => {
+export const apiThunk = <T = void, P = T>(opts: IThunkOpts<T, P>) => async (dispatch: AppDispatch) => {
     const { types, apiCall, responseMapper, onError } = opts
     const [requestType, resolvedType, rejectedType] = types
 
@@ -100,7 +101,11 @@ export const apiThunk = <T = void, P = void>(opts: IThunkOpts<T, P>) => async (d
         dispatch({ type: resolvedType, payload: responseMapper ? responseMapper(res.json) : res.json })
         return res.json
     } else {
-        dispatch({ type: rejectedType, payload: new Error(res.json?.message || res.statusText) })
-        onError && onError(res)
+        const error = new Error(res.json?.message || res.statusText)
+        dispatch({ type: rejectedType, payload: error })
+        onError && onError(error, res)
+        if (res.status === 401) {
+            history.push('/login')
+        }
     }
 }
