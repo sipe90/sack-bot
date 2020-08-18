@@ -5,6 +5,7 @@ import com.github.sipe90.sackbot.audio.ContainerRegistries
 import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.persistence.AudioFileRepository
 import com.github.sipe90.sackbot.persistence.dto.AudioFile
+import com.github.sipe90.sackbot.persistence.dto.projection.LightAudioFile
 import com.github.sipe90.sackbot.util.withExtension
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerDetection
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerHints
@@ -27,20 +28,20 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
         return audioFileRepository.findOne(guildId, name)
     }
 
-    override fun randomAudioFile(guildId: String, userId: String, tags: Set<String>): Mono<AudioFile> =
-            if (tags.isEmpty()) randomAudioFile(guildId, userId)
-            else randomAudioFile(getAudioFiles(guildId, userId).filter { it.tags.containsAll(tags) })
+    override fun randomAudioFile(guildId: String, userId: String, tags: Set<String>): Mono<AudioFile> {
+        val audioFiles = audioFileRepository.getAllAudioFiles(guildId)
+                .filter { tags.isEmpty() || it.tags.containsAll(tags) }
+
+        return audioFiles.count()
+                .map { (1..it).random() }
+                .flatMap { audioFiles.take(it).last() }
+    }
 
     override fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile> =
-            randomAudioFile(getAudioFiles(guildId, userId))
-
-    private fun randomAudioFile(audioFiles: Flux<AudioFile>): Mono<AudioFile> =
-            audioFiles.count()
-                    .map { (1..it).random() }
-                    .flatMap { audioFiles.take(it).last() }
+            randomAudioFile(guildId, userId, emptySet())
 
     override fun zipFiles(guildId: String, userId: String): Mono<ByteArray> =
-            getAudioFiles(guildId, userId)
+            audioFileRepository.getAllAudioFiles(guildId)
                     .collectList()
                     .map {
                         ByteArrayOutputStream().use { baos ->
@@ -60,8 +61,8 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
         return findAudioFile(guildId, name).map { true }.defaultIfEmpty(false)
     }
 
-    override fun getAudioFiles(guildId: String, userId: String): Flux<AudioFile> {
-        return audioFileRepository.getAllAudioFiles(guildId)
+    override fun getAudioFiles(guildId: String): Flux<LightAudioFile> {
+        return audioFileRepository.getAllAudioFilesWithoutData(guildId)
     }
 
     override fun saveAudioFile(
