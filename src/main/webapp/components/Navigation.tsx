@@ -45,6 +45,7 @@ const AdminIcon = styledIcon(SettingOutlined)
 
 const Navigation: React.FC = () => {
 
+    const settings = useSelector((state) => state.settings.settings)
     const guild = useSelector(selectedGuild)
     const guilds = useSelector((state) => state.user.guilds)
 
@@ -60,27 +61,33 @@ const Navigation: React.FC = () => {
                 >
                     <BoardIcon />
                 </NavigationLink>
-                <NavigationLink
-                    activeStyle={activeStyle}
-                    to='/voices'
-                    exact
-                >
-                    <VoicesIcon />
-                </NavigationLink>
-                <NavigationLink
-                    activeStyle={activeStyle}
-                    to='/tts'
-                    exact
-                >
-                    <TTSIcon />
-                </NavigationLink>
-                <NavigationLink
-                    activeStyle={activeStyle}
-                    to='/admin'
-                    exact
-                >
-                    <AdminIcon />
-                </NavigationLink>
+                {settings.voice.enabled &&
+                    <NavigationLink
+                        activeStyle={activeStyle}
+                        to='/voices'
+                        exact
+                    >
+                        <VoicesIcon />
+                    </NavigationLink>
+                }
+                {settings.tts.enabled &&
+                    <NavigationLink
+                        activeStyle={activeStyle}
+                        to='/tts'
+                        exact
+                    >
+                        <TTSIcon />
+                    </NavigationLink>
+                }
+                {!!guild?.isAdmin &&
+                    <NavigationLink
+                        activeStyle={activeStyle}
+                        to='/admin'
+                        exact
+                    >
+                        <AdminIcon />
+                    </NavigationLink>
+                }
             </NavigationMenu>
             <div style={{ display: "flex", alignItems: "center", marginRight: 10 }}>
                 <Dropdown

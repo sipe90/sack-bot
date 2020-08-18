@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 
 import { Button, Tag, Select, Card, Spin } from 'antd'
 import { useDispatch, useSelector } from '@/util'
-import { fetchVoiceLines, playVoiceLines } from '@/actions/voices'
+import { playVoiceLines } from '@/actions/voices'
 
 const VoiceLinesContainer = styled.div`
     display: flex;
@@ -19,20 +19,18 @@ const VoiceLine = styled(Tag)`
 const Voices: React.FC = () => {
 
     const selectedGuildId = useSelector((state) => state.user.selectedGuildId)
-    const voiceLines = useSelector((state) => state.voices.voiceLines)
-    const voiceLinesLoading = useSelector((state) => state.voices.voiceLinesLoading)
+    const settings = useSelector((state) => state.settings.settings.voice)
+    const voicesLoading = useSelector((state) => state.settings.settingsLoading)
+
+    const { voices } = settings
 
     const dispatch = useDispatch()
 
     const [voice, setVoice] = useState<string>()
     const [lines, setLines] = useState<string[]>([])
 
-    useEffect(() => {
-        dispatch(fetchVoiceLines())
-    }, [])
-
     return (
-        <Spin tip='Loading voices...' spinning={voiceLinesLoading}>
+        <Spin tip='Loading voices...' spinning={voicesLoading}>
             <Card
                 bodyStyle={{ height: '100%' }}
                 title={
@@ -47,7 +45,7 @@ const Voices: React.FC = () => {
                                     setLines([])
                                 }}
                             >
-                                {Object.keys(voiceLines).map((voice) =>
+                                {Object.keys(voices).map((voice) =>
                                     <Select.Option key={voice} value={voice}>{voice}</Select.Option>)}
                             </Select>
                             <Select<string>
@@ -57,8 +55,8 @@ const Voices: React.FC = () => {
                                 showSearch
                                 onSelect={(value) => setLines(lines.concat(value))}
                             >
-                                {voice && voiceLines[voice].map((voiceLine) =>
-                                    <Select.Option key={voiceLine} value={voiceLine}>{voiceLine}</Select.Option>)}
+                                {voice && voices[voice].map((v) =>
+                                    <Select.Option key={v} value={v}>{v}</Select.Option>)}
                             </Select>
                         </div>
                         <div>

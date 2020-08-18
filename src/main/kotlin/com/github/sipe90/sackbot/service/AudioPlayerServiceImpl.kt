@@ -65,7 +65,7 @@ class AudioPlayerServiceImpl(
 
     override fun getAvailableVoices(): Set<String> = tts.getAvailableVoices()
 
-    override fun isRandomTtsEnabled(): Boolean = tts.isRandomPhraseAvailable()
+    override fun isRandomTtsEnabled(): Boolean = tts.isRandomEnabled()
 
     override fun playRandomTtsForUser(guildId: String, userId: String, voice: String): Mono<Void> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")

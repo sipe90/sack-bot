@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 
 import { Button, Input, Spin, Select, Card } from 'antd'
 import { useDispatch, useSelector } from '@/util'
-import { playTTS, playRandomTTS, getVoices } from '@/actions/tts'
+import { playTTS, playRandomTTS } from '@/actions/tts'
 
 const { TextArea } = Input
 
 const TTS: React.FC = () => {
 
     const selectedGuildId = useSelector((state) => state.user.selectedGuildId)
-    const loadingVoices = useSelector((state) => state.tts.loadingVoices)
-    const voices = useSelector((state) => state.tts.voices)
+    const loadingVoices = useSelector((state) => state.settings.settingsLoading)
+    const settings = useSelector((state) => state.settings.settings.tts)
+
+    const { voices, randomEnabled, maxLength } = settings
 
     const dispatch = useDispatch()
-
-    useEffect(() => {
-        selectedGuildId && dispatch(getVoices(selectedGuildId))
-    }, [selectedGuildId])
 
     const [voice, setVoice] = useState<string>()
     const [text, setText] = useState<string>("")
@@ -38,13 +36,15 @@ const TTS: React.FC = () => {
                             </Select>
                         </div>
                         <div>
-                            <Button
-                                style={{ width: 80, marginRight: 8, marginBottom: 8 }}
-                                disabled={!voice || !selectedGuildId}
-                                onClick={() => voice && selectedGuildId && dispatch(playRandomTTS(selectedGuildId, voice))}
-                            >
-                                Random
+                            {randomEnabled &&
+                                <Button
+                                    style={{ width: 80, marginRight: 8, marginBottom: 8 }}
+                                    disabled={!voice || !selectedGuildId}
+                                    onClick={() => voice && selectedGuildId && dispatch(playRandomTTS(selectedGuildId, voice))}
+                                >
+                                    Random
                             </Button>
+                            }
                             <Button
                                 style={{ width: 80 }}
                                 type="primary"
@@ -62,7 +62,7 @@ const TTS: React.FC = () => {
                     autoSize={{ minRows: 3 }}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    maxLength={800}
+                    maxLength={maxLength}
                 />
 
             </Card>

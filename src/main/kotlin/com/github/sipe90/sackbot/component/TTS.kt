@@ -43,9 +43,13 @@ class TTS(private val config: BotConfig) {
         }
     }
 
+    fun isEnabled() = true
+
     fun getAvailableVoices(): MutableSet<String> = maryTts.availableVoices
 
-    fun isRandomPhraseAvailable() = phrases.isEmpty()
+    fun isRandomEnabled() = phrases.isNotEmpty()
+
+    fun getMaxTextLength() = config.tts.maxLength
 
     fun randomPhraseToSpeech(voice: String): Mono<ByteArray> {
         if (phrases.isEmpty()) return Mono.empty()

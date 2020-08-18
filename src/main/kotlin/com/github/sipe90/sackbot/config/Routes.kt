@@ -1,10 +1,7 @@
 package com.github.sipe90.sackbot.config
 
 import com.github.sipe90.sackbot.auth.DiscordUser
-import com.github.sipe90.sackbot.handler.AudioHandler
-import com.github.sipe90.sackbot.handler.TTSHandler
-import com.github.sipe90.sackbot.handler.UserHandler
-import com.github.sipe90.sackbot.handler.VoiceHandler
+import com.github.sipe90.sackbot.handler.*
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
@@ -28,7 +25,8 @@ class Routes(
         private val userHandler: UserHandler,
         private val audioHandler: AudioHandler,
         private val voiceHandler: VoiceHandler,
-        private val ttsHandler: TTSHandler
+        private val ttsHandler: TTSHandler,
+        private val settingsHandler: SettingsHandler
 ) {
     @Bean
     fun apiRouter() = router {
@@ -36,7 +34,7 @@ class Routes(
             GET("/ping") { noContent().build() }
             GET("/me", handle(userHandler::userInfo))
             GET("/guilds", handle(userHandler::mutualGuilds))
-            GET("/voices", handle(voiceHandler::getVoiceLines))
+            GET("/settings", handle(settingsHandler::getSettings))
             "/{guildId}".nest {
                 filter(this@Routes::guildAccessFilter)
                 GET("/members", handleAdmin(userHandler::guildMembers))

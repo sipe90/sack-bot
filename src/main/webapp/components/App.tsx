@@ -6,6 +6,7 @@ import { Switch, Route, Redirect, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector, fetchGetJson } from '@/util'
 import { selectedGuild } from '@/selectors/user'
 import { fetchUser, fetchGuilds } from '@/actions/user'
+import { fetchSettings } from '@/actions/settings'
 import { Header, Footer, Content } from '@/components/layout'
 import Navigation from '@/components/Navigation'
 import Soundboard from '@/components/Soundboard'
@@ -40,6 +41,7 @@ const App: React.FC = () => {
     const dispatch = useDispatch()
 
     const loggedIn = useSelector((state) => state.user.loggedIn)
+    const settings = useSelector((state) => state.settings.settings)
     const guild = useSelector(selectedGuild)
 
     const isAdmin = !!guild?.isAdmin
@@ -50,6 +52,7 @@ const App: React.FC = () => {
         if (location.pathname !== '/login') {
             dispatch(fetchUser())
             dispatch(fetchGuilds())
+            dispatch(fetchSettings())
 
             setInterval(() => fetchGetJson('api/ping'), 5 * 60 * 1000)
         }
@@ -78,12 +81,16 @@ const App: React.FC = () => {
                         <Route path='/board' exact>
                             <Soundboard />
                         </Route>
-                        <Route path='/voices' exact>
-                            <Voices />
-                        </Route>
-                        <Route path='/tts' exact>
-                            <TTS />
-                        </Route>
+                        {settings.voice.enabled &&
+                            <Route path='/voices' exact>
+                                <Voices />
+                            </Route>
+                        }
+                        {settings.tts.enabled &&
+                            <Route path='/tts' exact>
+                                <TTS />
+                            </Route>
+                        }
                         {isAdmin &&
                             <Route path='/admin' exact>
                                 <Admin />
