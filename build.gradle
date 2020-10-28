@@ -34,7 +34,7 @@ dependencies {
     implementation 'org.dizitart:potassium-nitrite:3.4.2'
     implementation 'net.dv8tion:JDA:4.2.0_168'
     implementation 'club.minnced:jda-reactor:1.2.0'
-    implementation 'com.sedmelluq:lavaplayer:1.3.50'
+    implementation 'com.sedmelluq:lavaplayer:1.3.53'
     implementation 'com.sedmelluq:jda-nas:1.1.0'
 
     implementation('de.dfki.mary:marytts-lang-en:5.2') {
