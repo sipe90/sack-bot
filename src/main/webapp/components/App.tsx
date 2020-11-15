@@ -1,42 +1,60 @@
 import React, { useEffect } from 'react'
-import { Layout, Spin } from 'antd'
-import styled from 'styled-components'
+import { Spin } from 'antd'
 import { Switch, Route, Redirect, useLocation } from 'react-router-dom'
+import CssBaseline from '@material-ui/core/CssBaseline'
+import AppBar from '@material-ui/core/AppBar'
+import Typography from '@material-ui/core/Typography'
+import Container from '@material-ui/core/Container'
+import { makeStyles } from '@material-ui/core/styles'
 
 import { useDispatch, useSelector, fetchGetJson } from '@/util'
 import { selectedGuild } from '@/selectors/user'
 import { fetchUser, fetchGuilds } from '@/actions/user'
 import { fetchSettings } from '@/actions/settings'
-import { Header, Footer, Content } from '@/components/layout'
-import Navigation from '@/components/Navigation'
+
 import Soundboard from '@/components/Soundboard'
 import Voices from '@/components/Voices'
 import TTS from '@/components/TTS'
 import Admin from '@/components/Admin'
 import NotFound from '@/components/NotFound'
 import Login from '@/components/Login'
+import { Header } from '@/components/layout'
 
 // From Webpack define plugin
 declare var VERSION: string | undefined
 
-const Root = styled.div`
-    background-color: rgb(247, 247, 247);
-`
-const AppLayout = styled(Layout)`
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.02), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-    min-height: 100vh;
-    max-width: 1080px;
-    margin: auto;
-`
-
-const Loading = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-`
+const useStyles = makeStyles((theme) => ({
+    '@global': {
+        ul: {
+            margin: 0,
+            padding: 0,
+            listStyle: 'none',
+        },
+    },
+    appBar: {
+        borderBottom: `1px solid ${theme.palette.divider}`,
+    },
+    layout: {
+        width: 'auto',
+        marginLeft: theme.spacing(2),
+        marginRight: theme.spacing(2),
+        [theme.breakpoints.up(600 + theme.spacing(2) * 2)]: {
+            width: 600,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+        },
+    },
+    footer: {
+        borderTop: `1px solid ${theme.palette.divider}`,
+        marginTop: theme.spacing(8),
+        paddingTop: theme.spacing(3),
+        paddingBottom: theme.spacing(3),
+    },
+}))
 
 const App: React.FC = () => {
+
+    const classes = useStyles()
 
     const dispatch = useDispatch()
 
@@ -60,50 +78,53 @@ const App: React.FC = () => {
 
 
     return (
-        <Root>
-            <AppLayout>
-                <Header>
-                    {loggedIn && <Navigation />}
-                </Header>
-                <Content>
-                    <Switch>
-                        <Route path='/login' exact>
-                            <Login />
+        <>
+            <CssBaseline />
+            <AppBar position="sticky" color="default" elevation={0} className={classes.appBar} hidden={!loggedIn}>
+                <Container maxWidth="lg" disableGutters>
+                    <Header />
+                </Container>
+            </AppBar>
+            <main className={classes.layout}>
+                <Switch>
+                    <Route path='/login' exact>
+                        <Login />
+                    </Route>
+                    {!loggedIn &&
+                        <Route>
+                            <Typography>
+                                <Spin tip='Loading SackBot...' />
+                            </Typography>
                         </Route>
-                        {!loggedIn &&
-                            <Route>
-                                <Loading>
-                                    <Spin tip='Loading SackBot...' />
-                                </Loading>
-                            </Route>
-                        }
-                        <Redirect exact from='/' to='/board' />
-                        <Route path='/board' exact>
-                            <Soundboard />
+                    }
+                    <Redirect exact from='/' to='/board' />
+                    <Route path='/board' exact>
+                        <Soundboard />
+                    </Route>
+                    {settings.voice.enabled &&
+                        <Route path='/voices' exact>
+                            <Voices />
                         </Route>
-                        {settings.voice.enabled &&
-                            <Route path='/voices' exact>
-                                <Voices />
-                            </Route>
-                        }
-                        {settings.tts.enabled &&
-                            <Route path='/tts' exact>
-                                <TTS />
-                            </Route>
-                        }
-                        {isAdmin &&
-                            <Route path='/admin' exact>
-                                <Admin />
-                            </Route>
-                        }
-                        <NotFound />
-                    </Switch>
-                </Content>
-                <Footer>
+                    }
+                    {settings.tts.enabled &&
+                        <Route path='/tts' exact>
+                            <TTS />
+                        </Route>
+                    }
+                    {isAdmin &&
+                        <Route path='/admin' exact>
+                            <Admin />
+                        </Route>
+                    }
+                    <NotFound />
+                </Switch>
+            </main>
+            <footer className={classes.layout}>
+                <Typography variant="body2" color="textSecondary" align="center" className={classes.footer}>
                     Sackbot {VERSION ? `v${VERSION}` : ''}
-                </Footer>
-            </AppLayout>
-        </Root>
+                </Typography>
+            </footer>
+        </>
     )
 }
 
