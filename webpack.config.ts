@@ -59,8 +59,8 @@ const config: Configuration = {
                 }]
             },
             {
-                test: /\.(png|woff|woff2|eot|ttf|svg)$/,
-                loader: 'url-loader?limit=100000'
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                loader: 'file-loader',
             }
         ]
     },
@@ -77,8 +77,8 @@ const config: Configuration = {
     plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
-            template: path.resolve(SRC_ROOT, 'index.html'),
-            favicon: path.resolve(SRC_ROOT, 'favicon.ico')
+            template: path.resolve(SRC_ROOT, 'public', 'index.html'),
+            favicon: path.resolve(SRC_ROOT, 'public', 'favicon.ico')
         }),
         new DefinePlugin({
             VERSION: JSON.stringify(process.env.npm_package_version)

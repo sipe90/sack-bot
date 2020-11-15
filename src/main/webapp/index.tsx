@@ -8,6 +8,7 @@ import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
 import { Spin, message } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
+import { SnackbarProvider } from 'notistack'
 
 import history from '@/history'
 import reducers from '@/reducers'
@@ -37,7 +38,15 @@ const store = createStore(
 ReactDOM.render(
     <Provider store={store}>
         <Router history={history}>
-            <App />
+            <SnackbarProvider
+                maxSnack={5}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }}
+            >
+                <App />
+            </SnackbarProvider>
         </Router>
     </Provider>,
     document.getElementById('root'),

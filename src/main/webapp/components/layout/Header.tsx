@@ -7,6 +7,8 @@ import { selectedGuild } from '@/selectors/user'
 import { Avatar, Container, Divider, Link, ListItemAvatar, ListItemIcon, makeStyles, Menu, MenuItem, Toolbar, Typography } from '@material-ui/core'
 import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 
+import sackbotAvatar from '@/public/img/Sackbot_V3_cropped.jpg'
+
 const useStyles = makeStyles((theme) => ({
     toolbar: {
         borderBottom: `1px solid ${theme.palette.divider}`,
@@ -14,9 +16,8 @@ const useStyles = makeStyles((theme) => ({
     toolbarTitle: {
         flexBasis: 0
     },
-    toolbarSecondary: {
-        justifyContent: 'center',
-        overflowX: 'auto',
+    avatar: {
+        margin: theme.spacing(1),
     },
     toolbarLink: {
         padding: theme.spacing(1),
@@ -44,13 +45,7 @@ const Header: React.FC = () => {
     return (<>
         <Toolbar className={classes.toolbar} disableGutters>
             <Container className={classes.toolbarTitle}>
-                <Typography
-                    component="h2"
-                    variant="h5"
-                    color="inherit"
-                >
-                    SackBot
-                </Typography>
+                <Avatar className={classes.avatar} src={sackbotAvatar} />
             </Container>
             <Container component="nav">
                 <Link
@@ -90,7 +85,7 @@ const Header: React.FC = () => {
                         exact
                         activeClassName={classes.activeLink}
                     >
-                        Text to Speech
+                        TTS
                 </Link>
                 }
                 {!!guild?.isAdmin &&

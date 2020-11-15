@@ -38,8 +38,8 @@ const useStyles = makeStyles((theme) => ({
         width: 'auto',
         marginLeft: theme.spacing(2),
         marginRight: theme.spacing(2),
-        [theme.breakpoints.up(600 + theme.spacing(2) * 2)]: {
-            width: 600,
+        [theme.breakpoints.up(1080 + theme.spacing(2) * 2)]: {
+            width: 1080,
             marginLeft: 'auto',
             marginRight: 'auto',
         },
@@ -85,45 +85,47 @@ const App: React.FC = () => {
                     <Header />
                 </Container>
             </AppBar>
-            <main className={classes.layout}>
-                <Switch>
-                    <Route path='/login' exact>
-                        <Login />
-                    </Route>
-                    {!loggedIn &&
-                        <Route>
-                            <Typography>
-                                <Spin tip='Loading SackBot...' />
-                            </Typography>
+            <Switch>
+                <Route path='/login' exact>
+                    <Login />
+                </Route>
+                <main className={classes.layout}>
+                    <Switch>
+                        {!loggedIn &&
+                            <Route>
+                                <Typography>
+                                    <Spin tip='Loading SackBot...' />
+                                </Typography>
+                            </Route>
+                        }
+                        <Redirect exact from='/' to='/board' />
+                        <Route path='/board' exact>
+                            <Soundboard />
                         </Route>
-                    }
-                    <Redirect exact from='/' to='/board' />
-                    <Route path='/board' exact>
-                        <Soundboard />
-                    </Route>
-                    {settings.voice.enabled &&
-                        <Route path='/voices' exact>
-                            <Voices />
-                        </Route>
-                    }
-                    {settings.tts.enabled &&
-                        <Route path='/tts' exact>
-                            <TTS />
-                        </Route>
-                    }
-                    {isAdmin &&
-                        <Route path='/admin' exact>
-                            <Admin />
-                        </Route>
-                    }
-                    <NotFound />
-                </Switch>
-            </main>
-            <footer className={classes.layout}>
-                <Typography variant="body2" color="textSecondary" align="center" className={classes.footer}>
-                    Sackbot {VERSION ? `v${VERSION}` : ''}
-                </Typography>
-            </footer>
+                        {settings.voice.enabled &&
+                            <Route path='/voices' exact>
+                                <Voices />
+                            </Route>
+                        }
+                        {settings.tts.enabled &&
+                            <Route path='/tts' exact>
+                                <TTS />
+                            </Route>
+                        }
+                        {isAdmin &&
+                            <Route path='/admin' exact>
+                                <Admin />
+                            </Route>
+                        }
+                        <NotFound />
+                    </Switch>
+                </main>
+                <footer className={classes.layout}>
+                    <Typography variant="body2" color="textSecondary" align="center" className={classes.footer}>
+                        Sackbot {VERSION ? `v${VERSION}` : ''}
+                    </Typography>
+                </footer>
+            </Switch>
         </>
     )
 }
