@@ -1,18 +1,30 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
+import {
+    Avatar,
+    Box,
+    Container,
+    Divider,
+    IconButton,
+    Link,
+    ListItemAvatar,
+    ListItemIcon,
+    makeStyles,
+    Menu,
+    MenuItem,
+    Toolbar,
+    Typography
+} from '@material-ui/core'
+import ExitToAppIcon from '@material-ui/icons/ExitToApp'
+import MoreVertIcon from '@material-ui/icons/MoreVert'
 
 import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
 import { selectedGuild } from '@/selectors/user'
-import { Avatar, Container, Divider, Link, ListItemAvatar, ListItemIcon, makeStyles, Menu, MenuItem, Toolbar, Typography } from '@material-ui/core'
-import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 
 import sackbotAvatar from '@/public/img/Sackbot_V3_cropped.jpg'
 
 const useStyles = makeStyles((theme) => ({
-    toolbar: {
-        borderBottom: `1px solid ${theme.palette.divider}`,
-    },
     toolbarTitle: {
         flexBasis: 0
     },
@@ -27,7 +39,9 @@ const useStyles = makeStyles((theme) => ({
         color: theme.palette.primary.main
     },
     guildSelector: {
-        flexBasis: 0
+        '& > *': {
+            marginRight: theme.spacing(1),
+        }
     },
     menuAvatar: {
         width: theme.spacing(4),
@@ -43,16 +57,16 @@ const Header: React.FC = () => {
     const guild = useSelector(selectedGuild)
 
     return (<>
-        <Toolbar className={classes.toolbar} disableGutters>
+        <Toolbar disableGutters>
             <Container className={classes.toolbarTitle}>
                 <Avatar className={classes.avatar} src={sackbotAvatar} />
             </Container>
-            <Container component="nav">
+            <Container component='nav'>
                 <Link
                     component={NavLink}
-                    color="inherit"
+                    color='inherit'
                     noWrap
-                    variant="body2"
+                    variant='body2'
                     className={classes.toolbarLink}
                     to='/board'
                     exact
@@ -63,9 +77,9 @@ const Header: React.FC = () => {
                 {settings.voice.enabled &&
                     <Link
                         component={NavLink}
-                        color="inherit"
+                        color='inherit'
                         noWrap
-                        variant="body2"
+                        variant='body2'
                         className={classes.toolbarLink}
                         to='/voices'
                         exact
@@ -77,9 +91,9 @@ const Header: React.FC = () => {
                 {settings.tts.enabled &&
                     <Link
                         component={NavLink}
-                        color="inherit"
+                        color='inherit'
                         noWrap
-                        variant="body2"
+                        variant='body2'
                         className={classes.toolbarLink}
                         to='/tts'
                         exact
@@ -91,9 +105,9 @@ const Header: React.FC = () => {
                 {!!guild?.isAdmin &&
                     <Link
                         component={NavLink}
-                        color="inherit"
+                        color='inherit'
                         noWrap
-                        variant="body2"
+                        variant='body2'
                         className={classes.toolbarLink}
                         to='/admin'
                         exact
@@ -103,9 +117,7 @@ const Header: React.FC = () => {
                 </Link>
                 }
             </Container>
-            <Container className={classes.guildSelector}>
-                <GuildSelector />
-            </Container>
+            <GuildSelector />
         </Toolbar>
     </>)
 }
@@ -117,8 +129,6 @@ const GuildSelector: React.FC = () => {
 
     const guild = useSelector(selectedGuild)
     const guilds = useSelector((state) => state.user.guilds)
-
-    const debug = guilds[0] ? [guilds[0], guilds[0], guilds[0], guilds[0], guilds[0]] : []
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
 
@@ -139,20 +149,26 @@ const GuildSelector: React.FC = () => {
 
     return (
         <>
-            <div onClick={handleClickAvatar}>
+            <Box display='flex' alignItems='center' className={classes.guildSelector}>
                 <Avatar
-                    alt={guild?.name}
+                    alt={guild?.name || 'G'}
                     src={guild?.iconUrl || undefined}
                 />
-            </div>
+                <IconButton
+                    onClick={handleClickAvatar}
+                >
+                    <MoreVertIcon />
+                </IconButton>
+            </Box>
             <Menu
                 anchorEl={anchorEl}
                 keepMounted
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
             >
-                {debug.map(({ id, name, iconUrl }) => (
+                {guilds.map(({ id, name, iconUrl }) => (
                     <MenuItem
+                        key={id}
                         id={id}
                         onClick={handleSelectGuild}
                         selected={guild?.id === id}
@@ -164,7 +180,7 @@ const GuildSelector: React.FC = () => {
                                 className={classes.menuAvatar}
                             />
                         </ListItemAvatar>
-                        <Typography variant="inherit">{name}</Typography>
+                        <Typography variant='inherit'>{name}</Typography>
                     </MenuItem>
                 ))}
                 <Divider />
@@ -172,7 +188,7 @@ const GuildSelector: React.FC = () => {
                     <ListItemIcon>
                         <ExitToAppIcon />
                     </ListItemIcon>
-                    <Typography variant="inherit">Log out</Typography>
+                    <Typography variant='inherit'>Log out</Typography>
                 </MenuItem>
             </Menu>
         </>
