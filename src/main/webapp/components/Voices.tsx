@@ -6,12 +6,15 @@ import { Box, Button, Chip, CircularProgress, createStyles, FormControl, InputLa
 const useStyles = makeStyles((theme) =>
     createStyles({
         formControl: {
-            margin: theme.spacing(1),
+            marginLeft: theme.spacing(1),
+            marginRight: theme.spacing(1),
             minWidth: 180
         },
         buttonContainer: {
+            alignSelf: 'flex-end',
             '& > *': {
-                margin: theme.spacing(0.5),
+                marginLeft: theme.spacing(0.5),
+                marginRight: theme.spacing(0.5)
             }
         },
         chipContainer: {
@@ -19,7 +22,8 @@ const useStyles = makeStyles((theme) =>
             display: 'flex',
             flexWrap: 'wrap',
             '& > *': {
-                margin: theme.spacing(0.5),
+                marginLeft: theme.spacing(0.5),
+                marginRight: theme.spacing(0.5)
             }
         }
     })
@@ -71,7 +75,7 @@ const Voices: React.FC = () => {
                             onChange={(e) => setLines(lines.concat(e.target.value as string))}
                         >
                             {voice && voices[voice].map((v) =>
-                                <MenuItem key={v} value={v}>{v} </MenuItem>)}
+                                <MenuItem key={v} value={v}>{v}</MenuItem>)}
                         </Select>
                     </FormControl>
                 </Box>
