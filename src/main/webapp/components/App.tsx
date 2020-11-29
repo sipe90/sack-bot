@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react'
-import { Spin } from 'antd'
 import { Switch, Route, Redirect, useLocation } from 'react-router-dom'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import AppBar from '@material-ui/core/AppBar'
@@ -19,6 +18,7 @@ import Admin from '@/components/Admin'
 import NotFound from '@/components/NotFound'
 import Login from '@/components/Login'
 import { Header } from '@/components/layout'
+import { CircularProgress } from '@material-ui/core'
 
 // From Webpack define plugin
 declare var VERSION: string | undefined
@@ -31,8 +31,20 @@ const useStyles = makeStyles((theme) => ({
             listStyle: 'none',
         },
     },
-    appBar: {
-        borderBottom: `1px solid ${theme.palette.divider}`,
+    root: {
+        display: 'flex',
+        flexDirection: 'column',
+        margin: 0,
+        minHeight: '100vh'
+    },
+    loadingContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: theme.spacing(4),
+        '& > *': {
+            margin: theme.spacing(1),
+        }
     },
     layout: {
         width: 'auto',
@@ -44,6 +56,9 @@ const useStyles = makeStyles((theme) => ({
             marginLeft: 'auto',
             marginRight: 'auto',
         },
+    },
+    main: {
+        flex: 1,
     },
     footer: {
         borderTop: `1px solid ${theme.palette.divider}`,
@@ -79,9 +94,9 @@ const App: React.FC = () => {
 
 
     return (
-        <>
+        <div className={classes.root}>
             <CssBaseline />
-            <AppBar position="sticky" color="default" elevation={0} className={classes.appBar} hidden={!loggedIn}>
+            <AppBar position="sticky" color="default" elevation={2} hidden={!loggedIn}>
                 <Container maxWidth="lg" disableGutters>
                     <Header />
                 </Container>
@@ -91,13 +106,16 @@ const App: React.FC = () => {
                     <Login />
                 </Route>
                 <>
-                    <main className={classes.layout}>
+                    <main className={`${classes.layout} ${classes.main}`}>
                         <Switch>
                             {!loggedIn &&
                                 <Route>
-                                    <Typography>
-                                        <Spin tip='Loading SackBot...' />
-                                    </Typography>
+                                    <div className={classes.loadingContainer}>
+                                        <CircularProgress />
+                                        <Typography>
+                                            Loading SackBot..
+                                        </Typography>
+                                    </div>
                                 </Route>
                             }
                             <Redirect exact from='/' to='/board' />
@@ -129,7 +147,7 @@ const App: React.FC = () => {
                     </footer>
                 </>
             </Switch>
-        </>
+        </div>
     )
 }
 
