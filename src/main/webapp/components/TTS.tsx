@@ -1,15 +1,40 @@
 import React, { useState } from 'react'
 
-import { Button, Input, Spin, Select, Card } from 'antd'
 import { useDispatch, useSelector } from '@/util'
 import { playTTS, playRandomTTS } from '@/actions/tts'
+import { Box, Button, CircularProgress, createStyles, FormControl, InputLabel, makeStyles, MenuItem, Select, TextField } from '@material-ui/core'
 
-const { TextArea } = Input
+const useStyles = makeStyles((theme) =>
+    createStyles({
+        formControl: {
+            marginTop: theme.spacing(2),
+            width: '100%'
+        },
+        topContainer: {
+            display: 'flex',
+            '& > *': {
+                marginLeft: theme.spacing(0.5),
+                marginRight: theme.spacing(0.5)
+            }
+        },
+        buttonContainer: {
+            alignSelf: 'flex-end',
+            '& > *': {
+                marginLeft: theme.spacing(0.5),
+                marginRight: theme.spacing(0.5)
+            }
+        }
+    })
+)
+
+const LoadingIconComponent = (props: any) => <CircularProgress size={20} className={props.className} />
 
 const TTS: React.FC = () => {
 
+    const classes = useStyles()
+
     const selectedGuildId = useSelector((state) => state.user.selectedGuildId)
-    const loadingVoices = useSelector((state) => state.settings.settingsLoading)
+    const voicesLoading = useSelector((state) => state.settings.settingsLoading)
     const settings = useSelector((state) => state.settings.settings.tts)
 
     const { voices, randomEnabled, maxLength } = settings
@@ -20,53 +45,56 @@ const TTS: React.FC = () => {
     const [text, setText] = useState<string>("")
 
     return (
-        <Spin spinning={loadingVoices} tip='Loading voices...'>
-            <Card
-                title={
-                    <div style={{ display: 'flex', whiteSpace: 'normal' }}>
-                        <div style={{ flexGrow: 1 }}>
-                            <Select<string>
-                                style={{ width: 200, marginRight: 8, marginBottom: 8 }}
-                                value={voice}
-                                placeholder="Select voice"
-                                onSelect={setVoice}
-                            >
-                                {voices.map((voice) =>
-                                    <Select.Option key={voice} value={voice}>{voice}</Select.Option>)}
-                            </Select>
-                        </div>
-                        <div>
-                            {randomEnabled &&
-                                <Button
-                                    style={{ width: 80, marginRight: 8, marginBottom: 8 }}
-                                    disabled={!voice || !selectedGuildId}
-                                    onClick={() => voice && selectedGuildId && dispatch(playRandomTTS(selectedGuildId, voice))}
-                                >
-                                    Random
-                            </Button>
-                            }
-                            <Button
-                                style={{ width: 80 }}
-                                type="primary"
-                                disabled={!text.trim().length || !voice || !selectedGuildId}
-                                onClick={() => voice && selectedGuildId && dispatch(playTTS(selectedGuildId, voice, text))}
-                            >
-                                Talk
-                            </Button>
-                        </div>
-                    </div>
-                }
-            >
-                <TextArea
-                    allowClear
-                    autoSize={{ minRows: 3 }}
-                    value={text}
+        <>
+            <div className={classes.topContainer}>
+                <Box flexGrow={1}>
+                    <FormControl className={classes.formControl}>
+                        <InputLabel id='voice-select-label'>{voicesLoading ? 'Loading voices...' : 'Select voice'}</InputLabel>
+                        <Select
+                            labelId='voice-select-label'
+                            IconComponent={voicesLoading ? LoadingIconComponent : undefined}
+                            value={voice}
+                            onChange={(e) => setVoice(e.target.value as string)}
+                        >
+                            {voices.map((voice) =>
+                                <MenuItem key={voice} value={voice}>{voice}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+                </Box>
+                <div className={classes.buttonContainer}>
+                    {randomEnabled &&
+                        <Button
+                            variant='contained'
+                            color='primary'
+                            disabled={!voice || !selectedGuildId}
+                            onClick={() => voice && selectedGuildId && dispatch(playRandomTTS(selectedGuildId, voice))}
+                        >
+                            Random
+                        </Button>
+                    }
+                    <Button
+                        variant='contained'
+                        color='primary'
+                        disabled={!text.trim().length || !voice || !selectedGuildId}
+                        onClick={() => voice && selectedGuildId && dispatch(playTTS(selectedGuildId, voice, text))}
+                    >
+                        Talk
+                    </Button>
+                </div>
+            </div>
+            <FormControl className={classes.formControl}>
+                <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    variant='outlined'
                     onChange={(e) => setText(e.target.value)}
-                    maxLength={maxLength}
+                    inputProps={{
+                        maxLength
+                    }}
                 />
-
-            </Card>
-        </Spin>
+            </FormControl>
+        </>
     )
 }
 
