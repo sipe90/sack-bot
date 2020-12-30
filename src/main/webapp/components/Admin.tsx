@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Alert, Modal, Form, Input, Select } from 'antd'
+import { Form, Input, Select } from 'antd'
 import { DateTime } from 'luxon'
 import * as R from 'ramda'
 import filesize from 'filesize.js'
-import { WarningOutlined } from '@ant-design/icons'
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core'
 import PublishIcon from '@material-ui/icons/Publish'
 import GetAppIcon from '@material-ui/icons/GetApp'
 import PlayArrowIcon from '@material-ui/icons/PlayArrow'
@@ -18,6 +18,7 @@ import { IAudioFile } from '@/types'
 import { fetchGuildMembers } from '@/actions/user'
 import { selectedGuild, selectedGuildMembers } from '@/selectors/user'
 import { useSnackbar } from 'notistack'
+import { Redirect } from 'react-router-dom'
 
 const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
@@ -76,6 +77,7 @@ const Admin: React.FC = () => {
         guild && dispatch(fetchGuildMembers(guild.id))
     }, [guild])
 
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false)
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [selectedAudioFile, setSelectedAudioFile] = useState<IAudioFile | null>(null)
 
@@ -87,6 +89,11 @@ const Admin: React.FC = () => {
         setSelectedAudioFile(audioFile)
         form.setFieldsValue(audioFile)
         setEditModalVisible(true)
+    }
+
+    const onDeleteAudioFile = (audioFile: IAudioFile) => {
+        setSelectedAudioFile(audioFile)
+        setDeleteModalVisible(true)
     }
 
     if (!guild) return null
@@ -189,68 +196,88 @@ const Admin: React.FC = () => {
         },
         {
             icon: () => <DeleteIcon color='action' fontSize='small' />,
-            onClick: (_e, data) => {
-                const audioFile = data as IAudioFile
-                Modal.confirm({
-                    icon: <WarningOutlined />,
-                    title: `Delete ${audioFile.name}`,
-                    content: `Are you sure you want to delete audio file '${audioFile.name}'?`,
-                    onOk: () => dispatch(deleteSound(audioFile.guildId, audioFile.name))
-                })
-            },
+            onClick: (_e, data) => onDeleteAudioFile(data as IAudioFile),
             tooltip: 'Delete'
         }
     ], [dispatch, onEditAudioFile, guild])
 
     const tags = useMemo(() => getTags(sounds), [sounds])
 
-    if (!guild.isAdmin) return <Alert message='You have no power here!' type='error' showIcon />
+    if (!guild.isAdmin) return <Redirect to='/' />
 
     return (
         <>
-            <Modal
-                title={`Edit audio file '${selectedAudioFile?.name}'`}
-                visible={editModalVisible}
-                forceRender
-                destroyOnClose={false}
-                okText='Update'
-                onOk={() => {
-                    if (!selectedAudioFile) {
-                        return
-                    }
-                    form
-                        .validateFields()
-                        .then(({ name, tags }) => dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, { ...selectedAudioFile, name, tags })))
-                        .then(() => setEditModalVisible(false))
-                        .catch(() => undefined)
-                }}
-                onCancel={() => setEditModalVisible(false)}
-                afterClose={() => setSelectedAudioFile(null)}
+
+            <Dialog
+                open={deleteModalVisible}
             >
-                <Form
-                    form={form}
-                    labelCol={{ span: 6 }}
-                    wrapperCol={{ span: 18 }}
-                >
-                    <Form.Item
-                        label='Name'
-                        name='name'
-                        rules={[{ required: true, message: 'Name is required' }]}
+                <DialogTitle>{`Delete ${selectedAudioFile?.name}`}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {`Are you sure you want to delete sound '${selectedAudioFile?.name}'?`}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteModalVisible(false)} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={async () => {
+                        selectedAudioFile && await dispatch(deleteSound(selectedAudioFile.guildId, selectedAudioFile.name))
+                        setDeleteModalVisible(false)
+                    }} color="primary" autoFocus>
+                        Update
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                fullWidth
+                maxWidth='sm'
+                open={editModalVisible}
+            >
+                <DialogTitle>{`Edit sound '${selectedAudioFile?.name}'`}</DialogTitle>
+                <DialogContent>
+                    <Form
+                        form={form}
+                        labelCol={{ span: 6 }}
+                        wrapperCol={{ span: 18 }}
                     >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        label='Tags'
-                        name='tags'
-                    >
-                        <Select
-                            mode='tags'
+                        <Form.Item
+                            label='Name'
+                            name='name'
+                            rules={[{ required: true, message: 'Name is required' }]}
                         >
-                            {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
-                        </Select>
-                    </Form.Item>
-                </Form>
-            </Modal>
+                            <Input />
+                        </Form.Item>
+                        <Form.Item
+                            label='Tags'
+                            name='tags'
+                        >
+                            <Select
+                                mode='tags'
+                            >
+                                {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
+                            </Select>
+                        </Form.Item>
+                    </Form>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEditModalVisible(false)} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => {
+                        if (!selectedAudioFile) {
+                            return
+                        }
+                        form
+                            .validateFields()
+                            .then(({ name, tags }) => dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, { ...selectedAudioFile, name, tags })))
+                            .then(() => setEditModalVisible(false))
+                            .catch(() => undefined)
+                    }} color="primary" autoFocus>
+                        Update
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <MaterialTable<IAudioFile>
                 title='Sounds'
                 columns={columns}
