@@ -13,61 +13,17 @@ import MaterialTable, { Action, Column } from 'material-table'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, deleteSound, playSound, updateSound } from '@/actions/sounds'
-import { IAudioFile, IGuildMember, AppDispatch } from '@/types'
+import { IAudioFile } from '@/types'
 
 import { fetchGuildMembers } from '@/actions/user'
 import { selectedGuild, selectedGuildMembers } from '@/selectors/user'
+import { useSnackbar } from 'notistack'
 
 const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
     R.uniq,
     R.invoker(0, 'sort')
 )
-
-const buildColumns = (guildMembers: IGuildMember[]): Column<IAudioFile>[] => {
-
-    const membersById = R.indexBy(R.prop('id'), guildMembers)
-    const getUsername = (userId: string | null) => userId ? R.pathOr('Unknown', [userId, 'name'], membersById) : ''
-
-    const columns: Column<IAudioFile>[] = [
-        {
-            field: 'name',
-            title: 'Name'
-        },
-        {
-            field: 'extension',
-            title: 'Ext',
-            width: 80
-        },
-        {
-            title: 'Size',
-            render: ({ size }) => filesize(size)
-        },
-        {
-            field: 'created',
-            title: 'Created',
-            type: 'datetime',
-            width: 190,
-            render: ({ created }) => created ? DateTime.fromMillis(created).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS) : ''
-        },
-        {
-            title: 'Created by',
-            render: ({ createdBy }) => getUsername(createdBy)
-        },
-        {
-            field: 'modified',
-            title: 'Modified',
-            width: 190,
-            render: ({ modified }) => modified ? DateTime.fromMillis(modified).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS) : ''
-        },
-        {
-            title: 'Modified by',
-            render: ({ modifiedBy }) => getUsername(modifiedBy)
-        }
-    ]
-
-    return columns
-}
 
 const downloadZip = (guildId: string) => {
     const a = document.createElement('a')
@@ -85,61 +41,23 @@ const downloadFile = (guildId: string, name: string) => {
     document.body.removeChild(a)
 }
 
-type Actions<RowData extends object> = (Action<RowData> | ((rowData: RowData) => Action<RowData>))[]
+const uploadFiles = (guildId: string, files: FileList | null) => {
+    if (!files) return
 
-const buildActions = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudioFile) => void, guildId: string): Actions<IAudioFile> => [
-    {
-        isFreeAction: true,
-        icon: () => <>
-            <input accept='.wav,.mp3,.ogg' style={{ display: 'none' }} id='icon-button-file' type='file' multiple />
-            <label htmlFor='icon-button-file' style={{ display: 'flex' }}>
-                <PublishIcon color='primary' />
-            </label>
-        </>,
-        onClick: () => { },
-        tooltip: 'Upload sounds'
-    },
-    {
-        isFreeAction: true,
-        icon: () => <GetAppIcon color='primary' />,
-        onClick: () => downloadZip(guildId),
-        tooltip: 'Download all sounds'
-    },
-    {
-        icon: () => <PlayArrowIcon color='action' fontSize='small' />,
-        onClick: (_e, data) => {
-            const audioFile = data as IAudioFile
-            dispatch(playSound(audioFile.guildId, audioFile.name))
-        },
-        tooltip: 'Play audio'
-    },
-    {
-        icon: () => <GetAppIcon color='action' fontSize='small' />,
-        onClick: (_e, data) => {
-            const audioFile = data as IAudioFile
-            downloadFile(audioFile.guildId, audioFile.name)
-        },
-        tooltip: 'Download'
-    },
-    {
-        icon: () => <EditIcon color='action' fontSize='small' />,
-        tooltip: 'Edit',
-        onClick: (_e, data) => onEditAudioFile(data as IAudioFile)
-    },
-    {
-        icon: () => <DeleteIcon color='action' fontSize='small' />,
-        onClick: (_e, data) => {
-            const audioFile = data as IAudioFile
-            Modal.confirm({
-                icon: <WarningOutlined />,
-                title: `Delete ${audioFile.name}`,
-                content: `Are you sure you want to delete audio file '${audioFile.name}'?`,
-                onOk: () => dispatch(deleteSound(audioFile.guildId, audioFile.name))
-            })
-        },
-        tooltip: 'Delete'
+    const formData = new FormData()
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        formData.append(file.name, file, file.name)
     }
-]
+
+    return fetch(`/api/${guildId}/sounds`, {
+        method: 'POST',
+        body: formData
+    })
+}
+
+type Actions<RowData extends object> = (Action<RowData> | ((rowData: RowData) => Action<RowData>))[]
 
 const Admin: React.FC = () => {
 
@@ -163,6 +81,8 @@ const Admin: React.FC = () => {
 
     const [form] = Form.useForm()
 
+    const { enqueueSnackbar } = useSnackbar()
+
     const onEditAudioFile = (audioFile: IAudioFile) => {
         setSelectedAudioFile(audioFile)
         form.setFieldsValue(audioFile)
@@ -171,8 +91,117 @@ const Admin: React.FC = () => {
 
     if (!guild) return null
 
-    const columns = useMemo(() => buildColumns(guildMembers || []), [guildMembers])
-    const actions = useMemo(() => buildActions(dispatch, onEditAudioFile, guild.id), [dispatch, onEditAudioFile, guild])
+    const columns = useMemo(() => {
+
+        const membersById = R.indexBy(R.prop('id'), guildMembers || [])
+        const getUsername = (userId: string | null) => userId ? R.pathOr('Unknown', [userId, 'name'], membersById) : ''
+
+        const columns: Column<IAudioFile>[] = [
+            {
+                field: 'name',
+                title: 'Name'
+            },
+            {
+                field: 'extension',
+                title: 'Ext',
+                width: 80
+            },
+            {
+                title: 'Size',
+                render: ({ size }) => filesize(size)
+            },
+            {
+                field: 'created',
+                title: 'Created',
+                type: 'datetime',
+                width: 190,
+                render: ({ created }) => created ? DateTime.fromMillis(created).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS) : ''
+            },
+            {
+                title: 'Created by',
+                render: ({ createdBy }) => getUsername(createdBy)
+            },
+            {
+                field: 'modified',
+                title: 'Modified',
+                width: 190,
+                render: ({ modified }) => modified ? DateTime.fromMillis(modified).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS) : ''
+            },
+            {
+                title: 'Modified by',
+                render: ({ modifiedBy }) => getUsername(modifiedBy)
+            }
+        ]
+
+        return columns
+    }, [guildMembers])
+
+    const actions: Actions<IAudioFile> = useMemo(() => [
+        {
+            isFreeAction: true,
+            icon: () => <>
+                <input
+                    accept='.wav,.mp3,.ogg'
+                    style={{ display: 'none' }}
+                    id='icon-button-file'
+                    type='file'
+                    multiple
+                    onChange={(e) => {
+                        const files = e.target.files
+                        uploadFiles(guild.id, files)
+                            ?.then(() => enqueueSnackbar(`Successfully uploaded ${files?.length} sounds`, { variant: 'success' }))
+                            .catch(() => enqueueSnackbar('Failed to upload files', { variant: 'error' }))
+                    }}
+                />
+                <label htmlFor='icon-button-file' style={{ display: 'flex' }}>
+                    <PublishIcon color='primary' />
+                </label>
+            </>,
+            onClick: () => { },
+            tooltip: 'Upload sounds'
+        },
+        {
+            isFreeAction: true,
+            icon: () => <GetAppIcon color='primary' />,
+            onClick: () => downloadZip(guild.id),
+            tooltip: 'Download all sounds'
+        },
+        {
+            icon: () => <PlayArrowIcon color='action' fontSize='small' />,
+            onClick: (_e, data) => {
+                const audioFile = data as IAudioFile
+                dispatch(playSound(audioFile.guildId, audioFile.name))
+            },
+            tooltip: 'Play audio'
+        },
+        {
+            icon: () => <GetAppIcon color='action' fontSize='small' />,
+            onClick: (_e, data) => {
+                const audioFile = data as IAudioFile
+                downloadFile(audioFile.guildId, audioFile.name)
+            },
+            tooltip: 'Download'
+        },
+        {
+            icon: () => <EditIcon color='action' fontSize='small' />,
+            tooltip: 'Edit',
+            onClick: (_e, data) => onEditAudioFile(data as IAudioFile)
+        },
+        {
+            icon: () => <DeleteIcon color='action' fontSize='small' />,
+            onClick: (_e, data) => {
+                const audioFile = data as IAudioFile
+                Modal.confirm({
+                    icon: <WarningOutlined />,
+                    title: `Delete ${audioFile.name}`,
+                    content: `Are you sure you want to delete audio file '${audioFile.name}'?`,
+                    onOk: () => dispatch(deleteSound(audioFile.guildId, audioFile.name))
+                })
+            },
+            tooltip: 'Delete'
+        }
+    ], [dispatch, onEditAudioFile, guild])
+
     const tags = useMemo(() => getTags(sounds), [sounds])
 
     if (!guild.isAdmin) return <Alert message='You have no power here!' type='error' showIcon />
