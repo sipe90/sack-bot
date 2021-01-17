@@ -1,9 +1,6 @@
 import { CleanWebpackPlugin } from 'clean-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import path from 'path'
-// @ts-ignore
-import { getThemeVariables } from 'antd/dist/theme'
-import tsImportPluginFactory from 'ts-import-plugin'
 import { Configuration, DefinePlugin } from 'webpack'
 
 const SRC_ROOT = path.resolve(__dirname, 'src', 'main', 'webapp')
@@ -26,37 +23,10 @@ const config: Configuration = {
                 loader: 'ts-loader',
                 options: {
                     transpileOnly: true,
-                    getCustomTransformers: () => ({
-                        before: [tsImportPluginFactory({ libraryName: 'antd', style: true, libraryDirectory: 'lib' })]
-                    }),
                     compilerOptions: {
                         module: 'es2015'
                     }
                 }
-            },
-            {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader']
-            },
-            {
-                test: /\.less$/,
-                // include: /node_modules\/antd\/lib/,
-                use: [{
-                    loader: 'style-loader',
-                }, {
-                    loader: 'css-loader',
-                }, {
-                    loader: 'less-loader',
-                    options: {
-                        lessOptions: {
-                            modifyVars: getThemeVariables({
-                                dark: false,
-                                compact: true
-                            }),
-                            javascriptEnabled: true
-                        },
-                    },
-                }]
             },
             {
                 test: /\.(png|svg|jpg|jpeg|gif)$/i,

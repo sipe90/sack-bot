@@ -1,5 +1,3 @@
-import { message } from "antd"
-
 import { ActionGroup } from "@/types"
 import { fetchPostJson, apiThunk } from "@/util"
 
@@ -11,6 +9,5 @@ export type VoicesActions = ActionGroup<typeof PLAY_VOICE_LINES_REQUEST, typeof 
 
 export const playVoiceLines = (guildId: string, voice: string, voiceLines: string[]) => apiThunk({
     types: [PLAY_VOICE_LINES_REQUEST, PLAY_VOICE_LINES_RESOLVED, PLAY_VOICE_LINES_REJECTED],
-    apiCall: () => fetchPostJson(`/api/${guildId}/voices/play?voice=${voice}`, voiceLines),
-    onError: (err) => message.error(`Failed to play voice lines: ${err.message}`)
+    apiCall: () => fetchPostJson(`/api/${guildId}/voices/play?voice=${voice}`, voiceLines)
 })

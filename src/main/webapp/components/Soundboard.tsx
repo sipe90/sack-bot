@@ -27,6 +27,7 @@ import { IAudioFile, IDictionary } from '@/types'
 import { selectedGuildMembership } from '@/selectors/user'
 import { updateEntrySound, updateExitSound } from '@/actions/user'
 import Divider from '@/components/Divider'
+import { useSnackbar } from 'notistack'
 
 type GroupBy = 'alphabetic' | 'tag'
 
@@ -96,19 +97,34 @@ const Soundboard: React.FC = () => {
 
     const dispatch = useDispatch()
 
+    const { enqueueSnackbar } = useSnackbar()
+
     const [volume, setVolume] = useState<number>(defVolume)
     const [url, setUrl] = useState<string>('')
     const [tagFilter, setTagFilter] = useState<string[]>([])
     const [groupBy, setGroupBy] = useState<GroupBy>('alphabetic')
 
-    const onPlayRandomSound = useCallback(() => selectedGuild && dispatch(playRandomSound(selectedGuild, volume, tagFilter)), [selectedGuild, volume, tagFilter])
-
-    const onPlaySound = useCallback((sound: string) => selectedGuild && dispatch(playSound(selectedGuild, sound, volume)), [selectedGuild, volume])
-    const onPlayUrl = useCallback(() => selectedGuild && dispatch(playUrl(selectedGuild, url, volume)), [selectedGuild, url, volume])
-    const onUpdateEntrySound = useCallback((sound: string) => selectedGuild && dispatch(updateEntrySound(selectedGuild, sound)), [selectedGuild])
-    const onUpdateExitSound = useCallback((sound: string) => selectedGuild && dispatch(updateExitSound(selectedGuild, sound)), [selectedGuild])
-    const onClearEntrySound = useCallback(() => selectedGuild && dispatch(updateEntrySound(selectedGuild)), [selectedGuild])
-    const onClearExitSound = useCallback(() => selectedGuild && dispatch(updateExitSound(selectedGuild)), [selectedGuild])
+    const onPlayRandomSound = useCallback(() => selectedGuild &&
+        dispatch(playRandomSound(selectedGuild, volume, tagFilter))
+            .catch((err) => enqueueSnackbar('Failed to play sound: ' + err.message, { variant: 'error' })), [selectedGuild, volume, tagFilter])
+    const onPlaySound = useCallback((sound: string) => selectedGuild &&
+        dispatch(playSound(selectedGuild, sound, volume))
+            .catch((err) => enqueueSnackbar('Failed to play sound: ' + err.message, { variant: 'error' })), [selectedGuild, volume])
+    const onPlayUrl = useCallback(() => selectedGuild &&
+        dispatch(playUrl(selectedGuild, url, volume))
+            .catch((err) => enqueueSnackbar('Failed to play from URL: ' + err.message, { variant: 'error' })), [selectedGuild, url, volume])
+    const onUpdateEntrySound = useCallback((sound: string) => selectedGuild &&
+        dispatch(updateEntrySound(selectedGuild, sound))
+            .catch((err) => enqueueSnackbar('Failed to update entry sound: ' + err.message, { variant: 'error' })), [selectedGuild])
+    const onUpdateExitSound = useCallback((sound: string) => selectedGuild &&
+        dispatch(updateExitSound(selectedGuild, sound))
+            .catch((err) => enqueueSnackbar('Failed to update exit sound: ' + err.message, { variant: 'error' })), [selectedGuild])
+    const onClearEntrySound = useCallback(() => selectedGuild &&
+        dispatch(updateEntrySound(selectedGuild))
+            .catch((err) => enqueueSnackbar('Failed to clear entry sound: ' + err.message, { variant: 'error' })), [selectedGuild])
+    const onClearExitSound = useCallback(() => selectedGuild &&
+        dispatch(updateExitSound(selectedGuild))
+            .catch((err) => enqueueSnackbar('Failed to clear exit sound: ' + err.message, { variant: 'error' })), [selectedGuild])
 
     useEffect(() => {
         selectedGuild && dispatch(fetchSounds(selectedGuild))

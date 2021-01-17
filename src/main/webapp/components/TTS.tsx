@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useDispatch, useSelector } from '@/util'
 import { playTTS, playRandomTTS } from '@/actions/tts'
 import { Box, Button, CircularProgress, createStyles, FormControl, InputLabel, makeStyles, MenuItem, Select, TextField } from '@material-ui/core'
+import { useSnackbar } from 'notistack'
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -41,6 +42,8 @@ const TTS: React.FC = () => {
 
     const dispatch = useDispatch()
 
+    const { enqueueSnackbar } = useSnackbar()
+
     const [voice, setVoice] = useState<string>()
     const [text, setText] = useState<string>("")
 
@@ -67,7 +70,11 @@ const TTS: React.FC = () => {
                             variant='contained'
                             color='primary'
                             disabled={!voice || !selectedGuildId}
-                            onClick={() => voice && selectedGuildId && dispatch(playRandomTTS(selectedGuildId, voice))}
+                            onClick={
+                                () => voice && selectedGuildId &&
+                                    dispatch(playRandomTTS(selectedGuildId, voice))
+                                        .catch((err) => enqueueSnackbar('Failed to play text: ' + err.message, { variant: 'error' }))
+                            }
                         >
                             Random
                         </Button>
@@ -76,7 +83,11 @@ const TTS: React.FC = () => {
                         variant='contained'
                         color='primary'
                         disabled={!text.trim().length || !voice || !selectedGuildId}
-                        onClick={() => voice && selectedGuildId && dispatch(playTTS(selectedGuildId, voice, text))}
+                        onClick={
+                            () => voice && selectedGuildId &&
+                                dispatch(playTTS(selectedGuildId, voice, text))
+                                    .catch((err) => enqueueSnackbar('Failed to play text: ' + err.message, { variant: 'error' }))
+                        }
                     >
                         Talk
                     </Button>

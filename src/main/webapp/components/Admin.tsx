@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Form, Input, Select } from 'antd'
+import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import { DateTime } from 'luxon'
 import * as R from 'ramda'
 import filesize from 'filesize.js'
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@material-ui/core'
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@material-ui/core'
+import Autocomplete from '@material-ui/lab/Autocomplete'
 import PublishIcon from '@material-ui/icons/Publish'
 import GetAppIcon from '@material-ui/icons/GetApp'
 import PlayArrowIcon from '@material-ui/icons/PlayArrow'
@@ -26,17 +26,12 @@ const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.invoker(0, 'sort')
 )
 
-const downloadZip = (guildId: string) => {
-    const a = document.createElement('a')
-    a.href = `/api/${guildId}/sounds/export`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-}
+const downloadZip = (guildId: string) => downloadFile(`/api/${guildId}/sounds/export`)
+const downloadSound = (guildId: string, name: string) => downloadFile(`/api/${guildId}/sounds/${name}/download`)
 
-const downloadFile = (guildId: string, name: string) => {
+const downloadFile = (url: string) => {
     const a = document.createElement('a')
-    a.href = `/api/${guildId}/sounds/${name}/download`
+    a.href = url
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -72,28 +67,39 @@ const Admin: React.FC = () => {
 
     const dispatch = useDispatch()
 
+    const { enqueueSnackbar } = useSnackbar()
+
     useEffect(() => {
         guild && dispatch(fetchSounds(guild.id))
+            .catch((err) => enqueueSnackbar('Failed to fetch sounds: ' + err.message))
         guild && dispatch(fetchGuildMembers(guild.id))
+            .catch((err) => enqueueSnackbar('Failed to fetch guild members: ' + err.message))
     }, [guild])
 
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [selectedAudioFile, setSelectedAudioFile] = useState<IAudioFile | null>(null)
-
-    const [form] = Form.useForm()
-
-    const { enqueueSnackbar } = useSnackbar()
+    const [updateAudioFile, setUpdateAudioFile] = useState<Pick<IAudioFile, 'name' | 'tags'> | null>(null)
 
     const onEditAudioFile = (audioFile: IAudioFile) => {
         setSelectedAudioFile(audioFile)
-        form.setFieldsValue(audioFile)
+        setUpdateAudioFile({ name: audioFile.name, tags: audioFile.tags })
         setEditModalVisible(true)
     }
 
     const onDeleteAudioFile = (audioFile: IAudioFile) => {
-        setSelectedAudioFile(audioFile)
+        setSelectedAudioFile({ ...audioFile })
         setDeleteModalVisible(true)
+    }
+
+    const onNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        if (!updateAudioFile) return
+        setUpdateAudioFile({ ...updateAudioFile, name: event.target.value })
+    }
+
+    const onTagsChange = (_event: ChangeEvent<{}>, tags: string[]) => {
+        if (!updateAudioFile) return
+        setUpdateAudioFile({ ...updateAudioFile, tags })
     }
 
     if (!guild) return null
@@ -157,7 +163,8 @@ const Admin: React.FC = () => {
                         const files = e.target.files
                         uploadFiles(guild.id, files)
                             ?.then(() => enqueueSnackbar(`Successfully uploaded ${files?.length} sounds`, { variant: 'success' }))
-                            .catch(() => enqueueSnackbar('Failed to upload files', { variant: 'error' }))
+                            .then(() => dispatch(fetchSounds(guild.id)))
+                            .catch((err) => enqueueSnackbar('Failed to upload files: ' + err.message, { variant: 'error' }))
                     }}
                 />
                 <label htmlFor='icon-button-file' style={{ display: 'flex' }}>
@@ -178,6 +185,7 @@ const Admin: React.FC = () => {
             onClick: (_e, data) => {
                 const audioFile = data as IAudioFile
                 dispatch(playSound(audioFile.guildId, audioFile.name))
+                    .catch((err) => enqueueSnackbar('Failed to play audio: ' + err.message, { variant: 'error' }))
             },
             tooltip: 'Play audio'
         },
@@ -185,7 +193,7 @@ const Admin: React.FC = () => {
             icon: () => <GetAppIcon color='action' fontSize='small' />,
             onClick: (_e, data) => {
                 const audioFile = data as IAudioFile
-                downloadFile(audioFile.guildId, audioFile.name)
+                downloadSound(audioFile.guildId, audioFile.name)
             },
             tooltip: 'Download'
         },
@@ -221,11 +229,12 @@ const Admin: React.FC = () => {
                     <Button onClick={() => setDeleteModalVisible(false)} color="secondary">
                         Cancel
                     </Button>
-                    <Button onClick={async () => {
-                        selectedAudioFile && await dispatch(deleteSound(selectedAudioFile.guildId, selectedAudioFile.name))
-                        setDeleteModalVisible(false)
+                    <Button onClick={() => {
+                        selectedAudioFile && dispatch(deleteSound(selectedAudioFile.guildId, selectedAudioFile.name))
+                            .then(() => setDeleteModalVisible(false))
+                            .catch((err) => enqueueSnackbar('Failed to delete audio: ' + err.message, { variant: 'error' }))
                     }} color="primary" autoFocus>
-                        Update
+                        Delete
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -233,46 +242,51 @@ const Admin: React.FC = () => {
                 fullWidth
                 maxWidth='sm'
                 open={editModalVisible}
+                onExited={() => {
+                    setSelectedAudioFile(null)
+                    setUpdateAudioFile(null)
+                }}
             >
                 <DialogTitle>{`Edit sound '${selectedAudioFile?.name}'`}</DialogTitle>
                 <DialogContent>
-                    <Form
-                        form={form}
-                        labelCol={{ span: 6 }}
-                        wrapperCol={{ span: 18 }}
-                    >
-                        <Form.Item
-                            label='Name'
-                            name='name'
-                            rules={[{ required: true, message: 'Name is required' }]}
-                        >
-                            <Input />
-                        </Form.Item>
-                        <Form.Item
-                            label='Tags'
-                            name='tags'
-                        >
-                            <Select
-                                mode='tags'
-                            >
-                                {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
-                            </Select>
-                        </Form.Item>
-                    </Form>
+                    <TextField
+                        size='small'
+                        label='Name'
+                        error={!updateAudioFile?.name.length}
+                        value={updateAudioFile?.name}
+                        onChange={onNameChange}
+                        variant='outlined'
+                        margin='normal'
+                    />
+                    <Autocomplete<string, true>
+                        multiple
+                        size='small'
+                        options={tags}
+                        value={updateAudioFile?.tags}
+                        onChange={onTagsChange}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label='Tags'
+                                variant='outlined'
+                            />
+                        )}
+                    />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setEditModalVisible(false)} color="secondary">
+                    <Button onClick={() => {
+                        setEditModalVisible(false)
+                    }} color="secondary">
                         Cancel
                     </Button>
                     <Button onClick={() => {
-                        if (!selectedAudioFile) {
+                        if (!updateAudioFile || !selectedAudioFile) {
                             return
                         }
-                        form
-                            .validateFields()
-                            .then(({ name, tags }) => dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, { ...selectedAudioFile, name, tags })))
+                        const updated = { ...selectedAudioFile, name: updateAudioFile.name, tags: updateAudioFile.tags }
+                        dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, updated))
                             .then(() => setEditModalVisible(false))
-                            .catch(() => undefined)
+                            .catch((err) => enqueueSnackbar('Failed to update audio: ' + err.message, { variant: 'error' }))
                     }} color="primary" autoFocus>
                         Update
                     </Button>
