@@ -1,22 +1,40 @@
 import React, { useState } from 'react'
-import styled from 'styled-components'
-
-import { Button, Tag, Select, Card, Spin } from 'antd'
 import { useDispatch, useSelector } from '@/util'
 import { playVoiceLines } from '@/actions/voices'
+import { Box, Button, Chip, CircularProgress, createStyles, FormControl, InputLabel, makeStyles, MenuItem, Select } from '@material-ui/core'
+import { useSnackbar } from 'notistack'
 
-const VoiceLinesContainer = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-`
+const useStyles = makeStyles((theme) =>
+    createStyles({
+        formControl: {
+            marginLeft: theme.spacing(1),
+            marginRight: theme.spacing(1),
+            minWidth: 180
+        },
+        buttonContainer: {
+            alignSelf: 'flex-end',
+            '& > *': {
+                marginLeft: theme.spacing(0.5),
+                marginRight: theme.spacing(0.5)
+            }
+        },
+        chipContainer: {
+            marginTop: theme.spacing(2),
+            display: 'flex',
+            flexWrap: 'wrap',
+            '& > *': {
+                marginLeft: theme.spacing(0.5),
+                marginRight: theme.spacing(0.5)
+            }
+        }
+    })
+)
 
-const VoiceLine = styled(Tag)`
-    margin: 5px;
-    flex: 0 0 0;
-`
+const LoadingIconComponent = (props: any) => <CircularProgress size={20} className={props.className} />
 
 const Voices: React.FC = () => {
+
+    const classes = useStyles()
 
     const selectedGuildId = useSelector((state) => state.user.selectedGuildId)
     const settings = useSelector((state) => state.settings.settings.voice)
@@ -26,74 +44,80 @@ const Voices: React.FC = () => {
 
     const dispatch = useDispatch()
 
-    const [voice, setVoice] = useState<string>()
+    const { enqueueSnackbar } = useSnackbar()
+
+    const [voice, setVoice] = useState<string>('')
     const [lines, setLines] = useState<string[]>([])
 
     return (
-        <Spin tip='Loading voices...' spinning={voicesLoading}>
-            <Card
-                bodyStyle={{ height: '100%' }}
-                title={
-                    <div style={{ display: 'flex', whiteSpace: 'normal' }}>
-                        <div style={{ flexGrow: 1 }}>
-                            <Select<string>
-                                style={{ width: 200, marginRight: 8, marginBottom: 8 }}
-                                value={voice}
-                                placeholder="Select voice"
-                                onSelect={(value) => {
-                                    setVoice(value)
-                                    setLines([])
-                                }}
-                            >
-                                {Object.keys(voices).map((voice) =>
-                                    <Select.Option key={voice} value={voice}>{voice}</Select.Option>)}
-                            </Select>
-                            <Select<string>
-                                style={{ width: 200 }}
-                                value=""
-                                disabled={!voice}
-                                showSearch
-                                onSelect={(value) => setLines(lines.concat(value))}
-                            >
-                                {voice && voices[voice].map((v) =>
-                                    <Select.Option key={v} value={v}>{v}</Select.Option>)}
-                            </Select>
-                        </div>
-                        <div>
-                            <Button
-                                style={{ width: 60, marginRight: 8, marginBottom: 8 }}
-                                onClick={() => setLines([])}
-                            >
-                                Clear
-                    </Button>
-                            <Button
-                                style={{ width: 60 }}
-                                type="primary"
-                                disabled={lines.length === 0 || !selectedGuildId}
-                                onClick={() => selectedGuildId && voice && dispatch(playVoiceLines(selectedGuildId, voice, lines))}
-                            >
-                                Play
-                    </Button>
-                        </div>
-                    </div>
-                }
-            >
-                <VoiceLinesContainer>
-                    {lines.map((line, idx) =>
-                        <VoiceLine
-                            key={idx}
-                            closable
-                            onClose={(e: Event) => {
-                                e.preventDefault()
-                                setLines(lines.filter((_line, i) => i !== idx))
+        <>
+            <Box display='flex'>
+                <Box flexGrow={1}>
+                    <FormControl className={classes.formControl}>
+                        <InputLabel id='voice-select-label'>{voicesLoading ? 'Loading voices...' : 'Select voice'}</InputLabel>
+                        <Select
+                            labelId='voice-select-label'
+                            IconComponent={voicesLoading ? LoadingIconComponent : undefined}
+                            value={voice}
+                            onChange={(e) => {
+                                setVoice(e.target.value as string)
+                                setLines([])
                             }}
                         >
-                            {line}
-                        </VoiceLine>
-                    )}
-                </VoiceLinesContainer>
-            </Card>
-        </Spin>
+                            {Object.keys(voices).map((voice) =>
+                                <MenuItem key={voice} value={voice}>{voice}</MenuItem>
+                            )}
+                        </Select>
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                        <InputLabel id='line-select-label'>Add line</InputLabel>
+                        <Select
+                            labelId='line-select-label'
+                            value=''
+                            disabled={!voice}
+                            onChange={(e) => setLines(lines.concat(e.target.value as string))}
+                        >
+                            {voice && voices[voice].map((v) =>
+                                <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+                </Box>
+                <Box className={classes.buttonContainer}>
+                    <Button
+                        variant='contained'
+                        color='secondary'
+                        onClick={() => setLines([])}
+                    >
+                        Clear
+                    </Button>
+                    <Button
+                        variant='contained'
+                        color='primary'
+                        disabled={lines.length === 0 || !selectedGuildId}
+                        onClick={
+                            () => selectedGuildId && voice &&
+                                dispatch(playVoiceLines(selectedGuildId, voice, lines))
+                                    .catch((err) => enqueueSnackbar('Failed to play voice lines: ' + err.message, { variant: 'error' }))
+                        }
+                    >
+                        Play
+                    </Button>
+                </Box>
+            </Box>
+            <div className={classes.chipContainer}>
+                {lines.map((line, idx) =>
+                    <Chip
+                        key={idx}
+                        size='small'
+                        label={line}
+                        onDelete={(e: Event) => {
+                            e.preventDefault()
+                            setLines(lines.filter((_line, i) => i !== idx))
+                        }}
+                    />
+                )}
+            </div>
+        </>
     )
 }
 

@@ -1,9 +1,6 @@
 import { CleanWebpackPlugin } from 'clean-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import path from 'path'
-// @ts-ignore
-import { getThemeVariables } from 'antd/dist/theme'
-import tsImportPluginFactory from 'ts-import-plugin'
 import { Configuration, DefinePlugin } from 'webpack'
 
 const SRC_ROOT = path.resolve(__dirname, 'src', 'main', 'webapp')
@@ -26,41 +23,14 @@ const config: Configuration = {
                 loader: 'ts-loader',
                 options: {
                     transpileOnly: true,
-                    getCustomTransformers: () => ({
-                        before: [tsImportPluginFactory({ libraryName: 'antd', style: true, libraryDirectory: 'lib' })]
-                    }),
                     compilerOptions: {
                         module: 'es2015'
                     }
                 }
             },
             {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader']
-            },
-            {
-                test: /\.less$/,
-                // include: /node_modules\/antd\/lib/,
-                use: [{
-                    loader: 'style-loader',
-                }, {
-                    loader: 'css-loader',
-                }, {
-                    loader: 'less-loader',
-                    options: {
-                        lessOptions: {
-                            modifyVars: getThemeVariables({
-                                dark: false,
-                                compact: true
-                            }),
-                            javascriptEnabled: true
-                        },
-                    },
-                }]
-            },
-            {
-                test: /\.(png|woff|woff2|eot|ttf|svg)$/,
-                loader: 'url-loader?limit=100000'
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                loader: 'file-loader',
             }
         ]
     },
@@ -77,8 +47,8 @@ const config: Configuration = {
     plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
-            template: path.resolve(SRC_ROOT, 'index.html'),
-            favicon: path.resolve(SRC_ROOT, 'favicon.ico')
+            template: path.resolve(SRC_ROOT, 'public', 'index.html'),
+            favicon: path.resolve(SRC_ROOT, 'public', 'favicon.ico')
         }),
         new DefinePlugin({
             VERSION: JSON.stringify(process.env.npm_package_version)

@@ -78,20 +78,14 @@ export const buildQueryString = (params: { [key: string]: any | any[] }) =>
             `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`
         ).join('&')
 
-type Types = [string, string, string]
-type ApiCall<T> = () => Promise<JsonResponse<T>>
-type ResponseMapper<T, P> = (res: T) => P
-type ErrorResponseHandler<T> = (error: Error, res: JsonResponse<T>) => void
-
 interface IThunkOpts<T, P> {
-    types: Types
-    apiCall: ApiCall<T>
-    onError?: ErrorResponseHandler<T>
-    responseMapper?: ResponseMapper<T, P>
+    types: [string, string, string]
+    apiCall: () => Promise<JsonResponse<T>>
+    responseMapper?: (res: T) => P
 }
 
 export const apiThunk = <T = void, P = T>(opts: IThunkOpts<T, P>) => async (dispatch: AppDispatch) => {
-    const { types, apiCall, responseMapper, onError } = opts
+    const { types, apiCall, responseMapper } = opts
     const [requestType, resolvedType, rejectedType] = types
 
     dispatch({ type: requestType })
@@ -103,9 +97,9 @@ export const apiThunk = <T = void, P = T>(opts: IThunkOpts<T, P>) => async (disp
     } else {
         const error = new Error(res.json?.message || res.statusText)
         dispatch({ type: rejectedType, payload: error })
-        onError && onError(error, res)
         if (res.status === 401) {
             history.push('/login')
         }
+        throw error
     }
 }

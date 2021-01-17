@@ -6,21 +6,11 @@ import { applyMiddleware, createStore, Middleware } from 'redux'
 import { composeWithDevTools } from 'redux-devtools-extension'
 import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
-import { Spin, message } from 'antd'
-import { LoadingOutlined } from '@ant-design/icons'
+import { SnackbarProvider } from 'notistack'
 
 import history from '@/history'
 import reducers from '@/reducers'
 import App from '@/components/App'
-
-
-message.config({
-    duration: 3,
-    maxCount: 3,
-    top: 72,
-})
-
-Spin.setDefaultIndicator(<LoadingOutlined />)
 
 const middlewares: Middleware[] = [thunkMiddleware]
 
@@ -37,7 +27,15 @@ const store = createStore(
 ReactDOM.render(
     <Provider store={store}>
         <Router history={history}>
-            <App />
+            <SnackbarProvider
+                maxSnack={5}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }}
+            >
+                <App />
+            </SnackbarProvider>
         </Router>
     </Provider>,
     document.getElementById('root'),

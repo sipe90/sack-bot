@@ -1,16 +1,24 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { message, Alert, Table, Divider, Modal, Button, Form, Input, Select, Upload } from 'antd'
+import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import { DateTime } from 'luxon'
 import * as R from 'ramda'
-import { PlayCircleTwoTone, PlusOutlined, DownloadOutlined, EditTwoTone, DeleteTwoTone, WarningOutlined } from '@ant-design/icons'
+import filesize from 'filesize.js'
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@material-ui/core'
+import Autocomplete from '@material-ui/lab/Autocomplete'
+import PublishIcon from '@material-ui/icons/Publish'
+import GetAppIcon from '@material-ui/icons/GetApp'
+import PlayArrowIcon from '@material-ui/icons/PlayArrow'
+import EditIcon from '@material-ui/icons/Edit'
+import DeleteIcon from '@material-ui/icons/Delete'
+import MaterialTable, { Action, Column } from 'material-table'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, deleteSound, playSound, updateSound } from '@/actions/sounds'
-import { IAudioFile, IGuildMember, AppDispatch, IGuild } from '@/types'
-import { ColumnsType } from 'antd/lib/table'
+import { IAudioFile } from '@/types'
+
 import { fetchGuildMembers } from '@/actions/user'
-import { UploadFile } from 'antd/lib/upload/interface'
 import { selectedGuild, selectedGuildMembers } from '@/selectors/user'
+import { useSnackbar } from 'notistack'
+import { Redirect } from 'react-router-dom'
 
 const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
@@ -18,110 +26,34 @@ const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
     R.invoker(0, 'sort')
 )
 
-const buildColumns = (dispatch: AppDispatch, onEditAudioFile: (audioFile: IAudioFile) => void, guild: IGuild, guildMembers: IGuildMember[]): ColumnsType<IAudioFile> => {
+const downloadZip = (guildId: string) => downloadFile(`/api/${guildId}/sounds/export`)
+const downloadSound = (guildId: string, name: string) => downloadFile(`/api/${guildId}/sounds/${name}/download`)
 
-    const membersById = R.indexBy(R.prop('id'), guildMembers)
-    const getUsername = (userId: string | null) => userId ? R.pathOr('Unknown', [userId, 'name'], membersById) : ''
-
-    return [{
-        title: 'Name',
-        dataIndex: 'name',
-        filtered: true,
-        sorter: (a, b) => a.name.localeCompare(b.name)
-    }, {
-        title: 'Extension',
-        dataIndex: 'extension',
-        sorter: (a, b) => a.name.localeCompare(b.name)
-    }, {
-        title: 'Size',
-        dataIndex: 'size',
-        render: (size: number) => `${size / 1000} KB`,
-        sorter: (a, b) => a.size - b.size
-    }, {
-        title: 'Created',
-        dataIndex: 'created',
-        render: (instant: number) => DateTime.fromMillis(instant).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS),
-        sorter: (a, b) => a.created - b.created
-    }, {
-        title: 'Created by',
-        dataIndex: 'createdBy',
-        render: (userId: string) => userId ? getUsername(userId) : '',
-        sorter: (a, b) => getUsername(a.createdBy).localeCompare(getUsername(b.createdBy))
-    }, {
-        title: 'Modified',
-        dataIndex: 'modified',
-        render: (instant: number) => instant ? DateTime.fromMillis(instant).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS) : '',
-        sorter: (a, b) => (a.modified || 0) - (b.modified || 0)
-    }, {
-        title: 'Modified by',
-        dataIndex: 'modifiedBy',
-        render: (userId: string) => userId ? getUsername(userId) : '',
-        sorter: (a, b) => getUsername(a.modifiedBy).localeCompare(getUsername(b.modifiedBy))
-    }, {
-        title: () =>
-            <div style={{ float: 'right' }}>
-                <Upload
-                    action={`/api/${guild.id}/sounds`}
-                    accept={'.mp3,.wav,.ogg'}
-                    multiple
-                    showUploadList={false}
-                    onChange={({ file, fileList }) => {
-                        if (file.status == 'error') {
-                            message.error(`Failed to upload ${file.name}: ${file.response}`)
-                        }
-                        if (R.all<UploadFile>((file) => file.status !== 'uploading', fileList)) {
-                            message.success(`Finished uploading ${fileList.length} file(s)`)
-                            dispatch(fetchSounds(guild.id))
-                        }
-                    }}
-                >
-                    <Button
-                        size='small'
-                        title='Upload files'
-                        type='primary'
-                        shape='circle'
-                        icon={<PlusOutlined style={{ fontSize: 14 }} />}
-                    />
-                </Upload>
-                <Button
-                    size='small'
-                    style={{ marginLeft: 8 }}
-                    title='Download audio files as zip'
-                    shape='circle'
-                    icon={<DownloadOutlined style={{ fontSize: 14 }} />}
-                    href={`/api/${guild.id}/sounds/export`}
-                />
-            </div>,
-        key: 'actions',
-        render: (_text, audioFile) => <>
-            <PlayCircleTwoTone
-                title='Play audio'
-                onClick={() => dispatch(playSound(guild.id, audioFile.name))}
-            />
-            <Divider type='vertical' />
-            <a download href={`/api/${guild.id}/sounds/${audioFile.name}/download`}>
-                <DownloadOutlined
-                    title='Download'
-                />
-            </a>
-            <Divider type='vertical' />
-            <EditTwoTone
-                title='Edit'
-                onClick={() => onEditAudioFile(audioFile)}
-            />
-            <Divider type='vertical' />
-            <DeleteTwoTone
-                onClick={() => Modal.confirm({
-                    icon: <WarningOutlined />,
-                    title: `Delete ${audioFile.name}`,
-                    content: `Are you sure you want to delete audio file "${audioFile.name}"?`,
-                    onOk: () => dispatch(deleteSound(guild.id, audioFile.name))
-                })}
-                title='Delete'
-            />
-        </>
-    }]
+const downloadFile = (url: string) => {
+    const a = document.createElement('a')
+    a.href = url
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
 }
+
+const uploadFiles = (guildId: string, files: FileList | null) => {
+    if (!files) return
+
+    const formData = new FormData()
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        formData.append(file.name, file, file.name)
+    }
+
+    return fetch(`/api/${guildId}/sounds`, {
+        method: 'POST',
+        body: formData
+    })
+}
+
+type Actions<RowData extends object> = (Action<RowData> | ((rowData: RowData) => Action<RowData>))[]
 
 const Admin: React.FC = () => {
 
@@ -135,75 +67,244 @@ const Admin: React.FC = () => {
 
     const dispatch = useDispatch()
 
+    const { enqueueSnackbar } = useSnackbar()
+
     useEffect(() => {
         guild && dispatch(fetchSounds(guild.id))
+            .catch((err) => enqueueSnackbar('Failed to fetch sounds: ' + err.message))
         guild && dispatch(fetchGuildMembers(guild.id))
+            .catch((err) => enqueueSnackbar('Failed to fetch guild members: ' + err.message))
     }, [guild])
 
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false)
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [selectedAudioFile, setSelectedAudioFile] = useState<IAudioFile | null>(null)
-
-    const [form] = Form.useForm()
+    const [updateAudioFile, setUpdateAudioFile] = useState<Pick<IAudioFile, 'name' | 'tags'> | null>(null)
 
     const onEditAudioFile = (audioFile: IAudioFile) => {
         setSelectedAudioFile(audioFile)
-        form.setFieldsValue(audioFile)
+        setUpdateAudioFile({ name: audioFile.name, tags: audioFile.tags })
         setEditModalVisible(true)
+    }
+
+    const onDeleteAudioFile = (audioFile: IAudioFile) => {
+        setSelectedAudioFile({ ...audioFile })
+        setDeleteModalVisible(true)
+    }
+
+    const onNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        if (!updateAudioFile) return
+        setUpdateAudioFile({ ...updateAudioFile, name: event.target.value })
+    }
+
+    const onTagsChange = (_event: ChangeEvent<{}>, tags: string[]) => {
+        if (!updateAudioFile) return
+        setUpdateAudioFile({ ...updateAudioFile, tags })
     }
 
     if (!guild) return null
 
-    const columns = useMemo(() => buildColumns(dispatch, onEditAudioFile, guild, guildMembers || []), [guildMembers, guild])
+    const columns = useMemo(() => {
+
+        const membersById = R.indexBy(R.prop('id'), guildMembers || [])
+        const getUsername = (userId: string | null) => userId ? R.pathOr('Unknown', [userId, 'name'], membersById) : ''
+
+        const columns: Column<IAudioFile>[] = [
+            {
+                field: 'name',
+                title: 'Name'
+            },
+            {
+                field: 'extension',
+                title: 'Ext',
+                width: 80
+            },
+            {
+                title: 'Size',
+                render: ({ size }) => filesize(size)
+            },
+            {
+                field: 'created',
+                title: 'Created',
+                type: 'datetime',
+                width: 190,
+                render: ({ created }) => created ? DateTime.fromMillis(created).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS) : ''
+            },
+            {
+                title: 'Created by',
+                render: ({ createdBy }) => getUsername(createdBy)
+            },
+            {
+                field: 'modified',
+                title: 'Modified',
+                width: 190,
+                render: ({ modified }) => modified ? DateTime.fromMillis(modified).toLocaleString(DateTime.DATETIME_SHORT_WITH_SECONDS) : ''
+            },
+            {
+                title: 'Modified by',
+                render: ({ modifiedBy }) => getUsername(modifiedBy)
+            }
+        ]
+
+        return columns
+    }, [guildMembers])
+
+    const actions: Actions<IAudioFile> = useMemo(() => [
+        {
+            isFreeAction: true,
+            icon: () => <>
+                <input
+                    accept='.wav,.mp3,.ogg'
+                    style={{ display: 'none' }}
+                    id='icon-button-file'
+                    type='file'
+                    multiple
+                    onChange={(e) => {
+                        const files = e.target.files
+                        uploadFiles(guild.id, files)
+                            ?.then(() => enqueueSnackbar(`Successfully uploaded ${files?.length} sounds`, { variant: 'success' }))
+                            .then(() => dispatch(fetchSounds(guild.id)))
+                            .catch((err) => enqueueSnackbar('Failed to upload files: ' + err.message, { variant: 'error' }))
+                    }}
+                />
+                <label htmlFor='icon-button-file' style={{ display: 'flex' }}>
+                    <PublishIcon color='primary' />
+                </label>
+            </>,
+            onClick: () => { },
+            tooltip: 'Upload sounds'
+        },
+        {
+            isFreeAction: true,
+            icon: () => <GetAppIcon color='primary' />,
+            onClick: () => downloadZip(guild.id),
+            tooltip: 'Download all sounds'
+        },
+        {
+            icon: () => <PlayArrowIcon color='action' fontSize='small' />,
+            onClick: (_e, data) => {
+                const audioFile = data as IAudioFile
+                dispatch(playSound(audioFile.guildId, audioFile.name))
+                    .catch((err) => enqueueSnackbar('Failed to play audio: ' + err.message, { variant: 'error' }))
+            },
+            tooltip: 'Play audio'
+        },
+        {
+            icon: () => <GetAppIcon color='action' fontSize='small' />,
+            onClick: (_e, data) => {
+                const audioFile = data as IAudioFile
+                downloadSound(audioFile.guildId, audioFile.name)
+            },
+            tooltip: 'Download'
+        },
+        {
+            icon: () => <EditIcon color='action' fontSize='small' />,
+            tooltip: 'Edit',
+            onClick: (_e, data) => onEditAudioFile(data as IAudioFile)
+        },
+        {
+            icon: () => <DeleteIcon color='action' fontSize='small' />,
+            onClick: (_e, data) => onDeleteAudioFile(data as IAudioFile),
+            tooltip: 'Delete'
+        }
+    ], [dispatch, onEditAudioFile, guild])
+
     const tags = useMemo(() => getTags(sounds), [sounds])
 
-    if (!guild.isAdmin) return <Alert message="You have no power here!" type="error" showIcon />
+    if (!guild.isAdmin) return <Redirect to='/' />
 
     return (
         <>
-            <Modal
-                title={`Edit audio file "${selectedAudioFile?.name}"`}
-                visible={editModalVisible}
-                forceRender
-                destroyOnClose={false}
-                okText="Update"
-                onOk={() => {
-                    if (!selectedAudioFile) {
-                        return
-                    }
-                    form
-                        .validateFields()
-                        .then(({ name, tags }) => dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, { ...selectedAudioFile, name, tags })))
-                        .then(() => setEditModalVisible(false))
-                        .catch(() => undefined)
-                }}
-                onCancel={() => setEditModalVisible(false)}
-                afterClose={() => setSelectedAudioFile(null)}
+
+            <Dialog
+                open={deleteModalVisible}
             >
-                <Form
-                    form={form}
-                    labelCol={{ span: 6 }}
-                    wrapperCol={{ span: 18 }}
-                >
-                    <Form.Item
-                        label="Name"
-                        name="name"
-                        rules={[{ required: true, message: 'Name is required' }]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        label="Tags"
-                        name="tags"
-                    >
-                        <Select
-                            mode="tags"
-                        >
-                            {tags.map((tag) => <Select.Option key={tag} value={tag}>{tag}</Select.Option>)}
-                        </Select>
-                    </Form.Item>
-                </Form>
-            </Modal>
-            <Table<IAudioFile> columns={columns} dataSource={sounds} rowKey='name' size='small' pagination={{ defaultPageSize: 20 }} loading={guildsLoading || soundsLoading || guildMembersLoading} />
+                <DialogTitle>{`Delete ${selectedAudioFile?.name}`}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {`Are you sure you want to delete sound '${selectedAudioFile?.name}'?`}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteModalVisible(false)} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => {
+                        selectedAudioFile && dispatch(deleteSound(selectedAudioFile.guildId, selectedAudioFile.name))
+                            .then(() => setDeleteModalVisible(false))
+                            .catch((err) => enqueueSnackbar('Failed to delete audio: ' + err.message, { variant: 'error' }))
+                    }} color="primary" autoFocus>
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                fullWidth
+                maxWidth='sm'
+                open={editModalVisible}
+                onExited={() => {
+                    setSelectedAudioFile(null)
+                    setUpdateAudioFile(null)
+                }}
+            >
+                <DialogTitle>{`Edit sound '${selectedAudioFile?.name}'`}</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        size='small'
+                        label='Name'
+                        error={!updateAudioFile?.name.length}
+                        value={updateAudioFile?.name}
+                        onChange={onNameChange}
+                        variant='outlined'
+                        margin='normal'
+                    />
+                    <Autocomplete<string, true>
+                        multiple
+                        size='small'
+                        options={tags}
+                        value={updateAudioFile?.tags}
+                        onChange={onTagsChange}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label='Tags'
+                                variant='outlined'
+                            />
+                        )}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setEditModalVisible(false)
+                    }} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => {
+                        if (!updateAudioFile || !selectedAudioFile) {
+                            return
+                        }
+                        const updated = { ...selectedAudioFile, name: updateAudioFile.name, tags: updateAudioFile.tags }
+                        dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, updated))
+                            .then(() => setEditModalVisible(false))
+                            .catch((err) => enqueueSnackbar('Failed to update audio: ' + err.message, { variant: 'error' }))
+                    }} color="primary" autoFocus>
+                        Update
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <MaterialTable<IAudioFile>
+                title='Sounds'
+                columns={columns}
+                actions={actions}
+                data={sounds}
+                isLoading={guildsLoading || soundsLoading || guildMembersLoading}
+                options={{
+                    actionsColumnIndex: -1,
+                    padding: 'dense',
+                    pageSize: 10,
+                    pageSizeOptions: [10, 25, 50, 100]
+                }}
+            />
         </>
     )
 }
