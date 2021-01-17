@@ -1,6 +1,7 @@
 import { Action } from "redux"
 import { ThunkDispatch, ThunkAction } from "redux-thunk"
 import { IAppState } from "@/reducers"
+import { OptionsObject, SnackbarKey } from 'notistack'
 
 export interface IDictionary<A> {
     [index: string]: A
@@ -27,6 +28,13 @@ export interface ResolvedAction<T, P = undefined> {
 export interface RejectedAction<T> {
     type: T
     payload: Error
+}
+
+export interface Notification {
+    key: SnackbarKey
+    message: React.ReactNode
+    options?: OptionsObject
+    dismissed?: boolean
 }
 
 export interface IMembership {

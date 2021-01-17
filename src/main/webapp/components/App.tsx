@@ -19,7 +19,7 @@ import NotFound from '@/components/NotFound'
 import Login from '@/components/Login'
 import { Header } from '@/components/layout'
 import { CircularProgress } from '@material-ui/core'
-import { useSnackbar } from 'notistack'
+import Notifier from './Notifier'
 
 // From Webpack define plugin
 declare var VERSION: string | undefined
@@ -75,8 +75,6 @@ const App: React.FC = () => {
 
     const dispatch = useDispatch()
 
-    const { enqueueSnackbar } = useSnackbar()
-
     const loggedIn = useSelector((state) => state.user.loggedIn)
     const settings = useSelector((state) => state.settings.settings)
     const guild = useSelector(selectedGuild)
@@ -89,7 +87,7 @@ const App: React.FC = () => {
         if (location.pathname !== '/login') {
             dispatch(fetchUser())
             dispatch(fetchGuilds())
-            dispatch(fetchSettings()).catch((err) => enqueueSnackbar(`Failed to fetch settings: ${err.message}`, { variant: 'error' }))
+            dispatch(fetchSettings())
             setInterval(() => fetchGetJson('api/ping'), 5 * 60 * 1000)
         }
     }, [])
@@ -98,6 +96,7 @@ const App: React.FC = () => {
     return (
         <div className={classes.root}>
             <CssBaseline />
+            <Notifier />
             {loggedIn &&
                 <AppBar position="sticky" color="default" elevation={2}>
                     <Container maxWidth="lg" disableGutters>

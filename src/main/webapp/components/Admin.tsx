@@ -71,9 +71,7 @@ const Admin: React.FC = () => {
 
     useEffect(() => {
         guild && dispatch(fetchSounds(guild.id))
-            .catch((err) => enqueueSnackbar('Failed to fetch sounds: ' + err.message))
         guild && dispatch(fetchGuildMembers(guild.id))
-            .catch((err) => enqueueSnackbar('Failed to fetch guild members: ' + err.message))
     }, [guild])
 
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
@@ -185,7 +183,6 @@ const Admin: React.FC = () => {
             onClick: (_e, data) => {
                 const audioFile = data as IAudioFile
                 dispatch(playSound(audioFile.guildId, audioFile.name))
-                    .catch((err) => enqueueSnackbar('Failed to play audio: ' + err.message, { variant: 'error' }))
             },
             tooltip: 'Play audio'
         },
@@ -232,7 +229,6 @@ const Admin: React.FC = () => {
                     <Button onClick={() => {
                         selectedAudioFile && dispatch(deleteSound(selectedAudioFile.guildId, selectedAudioFile.name))
                             .then(() => setDeleteModalVisible(false))
-                            .catch((err) => enqueueSnackbar('Failed to delete audio: ' + err.message, { variant: 'error' }))
                     }} color="primary" autoFocus>
                         Delete
                     </Button>
@@ -286,7 +282,6 @@ const Admin: React.FC = () => {
                         const updated = { ...selectedAudioFile, name: updateAudioFile.name, tags: updateAudioFile.tags }
                         dispatch(updateSound(selectedAudioFile.guildId, selectedAudioFile.name, updated))
                             .then(() => setEditModalVisible(false))
-                            .catch((err) => enqueueSnackbar('Failed to update audio: ' + err.message, { variant: 'error' }))
                     }} color="primary" autoFocus>
                         Update
                     </Button>

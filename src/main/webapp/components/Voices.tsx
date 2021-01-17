@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useDispatch, useSelector } from '@/util'
 import { playVoiceLines } from '@/actions/voices'
 import { Box, Button, Chip, CircularProgress, createStyles, FormControl, InputLabel, makeStyles, MenuItem, Select } from '@material-ui/core'
-import { useSnackbar } from 'notistack'
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -43,8 +42,6 @@ const Voices: React.FC = () => {
     const { voices } = settings
 
     const dispatch = useDispatch()
-
-    const { enqueueSnackbar } = useSnackbar()
 
     const [voice, setVoice] = useState<string>('')
     const [lines, setLines] = useState<string[]>([])
@@ -94,11 +91,7 @@ const Voices: React.FC = () => {
                         variant='contained'
                         color='primary'
                         disabled={lines.length === 0 || !selectedGuildId}
-                        onClick={
-                            () => selectedGuildId && voice &&
-                                dispatch(playVoiceLines(selectedGuildId, voice, lines))
-                                    .catch((err) => enqueueSnackbar('Failed to play voice lines: ' + err.message, { variant: 'error' }))
-                        }
+                        onClick={() => selectedGuildId && voice && dispatch(playVoiceLines(selectedGuildId, voice, lines))}
                     >
                         Play
                     </Button>

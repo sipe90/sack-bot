@@ -1,5 +1,6 @@
 import { ActionGroup, IAudioFile, AsyncThunk } from "@/types"
 import { fetchGetJson, fetchPostJson, fetchDeleteJson, buildQueryString, apiThunk } from "@/util"
+import { enqueueErrorSnackbar } from '@/actions/snackbar'
 
 export const FETCH_SOUNDS_REQUEST = "FETCH_SOUNDS_REQUEST"
 export const FETCH_SOUNDS_RESOLVED = "FETCH_SOUNDS_RESOLVED"
@@ -36,28 +37,33 @@ export type SoundsActions = ActionGroup<typeof FETCH_SOUNDS_REQUEST, typeof FETC
 
 export const fetchSounds = (guildId: string) => apiThunk({
     types: [FETCH_SOUNDS_REQUEST, FETCH_SOUNDS_RESOLVED, FETCH_SOUNDS_REJECTED],
-    apiCall: () => fetchGetJson<IAudioFile[]>(`/api/${guildId}/sounds`)
+    apiCall: () => fetchGetJson<IAudioFile[]>(`/api/${guildId}/sounds`),
+    onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to load sounds: ${err.message}`))
 })
 
 export const playSound = (guildId: string, name: string, vol?: number) => apiThunk({
     types: [PLAY_SOUND_REQUEST, PLAY_SOUND_RESOLVED, PLAY_SOUND_REJECTED],
-    apiCall: () => fetchPostJson(`/api/${guildId}/sounds/${name}/play?${buildQueryString({ vol })}`)
+    apiCall: () => fetchPostJson(`/api/${guildId}/sounds/${name}/play?${buildQueryString({ vol })}`),
+    onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to load settings: ${err.message}`))
 })
 
 export const playRandomSound = (guildId: string, vol: number, tags: string[] = []) => apiThunk({
     types: [PLAY_RANDOM_SOUND_REQUEST, PLAY_RANDOM_SOUND_RESOLVED, PLAY_RANDOM_SOUND_REJECTED],
-    apiCall: () => fetchPostJson(`/api/${guildId}/sounds/rnd?${buildQueryString({ tags, vol })}`)
+    apiCall: () => fetchPostJson(`/api/${guildId}/sounds/rnd?${buildQueryString({ tags, vol })}`),
+    onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to play sound: ${err.message}`))
 })
 
 export const playUrl = (guildId: string, url: string, vol: number) => apiThunk({
     types: [PLAY_URL_REQUEST, PLAY_URL_RESOLVED, PLAY_URL_REJECTED],
-    apiCall: () => fetchPostJson(`/api/${guildId}/sounds/url?${buildQueryString({ url, vol })}`)
+    apiCall: () => fetchPostJson(`/api/${guildId}/sounds/url?${buildQueryString({ url, vol })}`),
+    onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to play from URL: ${err.message}`))
 })
 
 export const updateSound = (guildId: string, name: string, audioFile: IAudioFile): AsyncThunk => async (dispatch) => {
     await dispatch(apiThunk({
         types: [UPDATE_SOUND_REQUEST, UPDATE_SOUND_RESOLVED, UPDATE_SOUND_REJECTED],
-        apiCall: () => fetchPostJson(`/api/${guildId}/sounds/${name}`, audioFile)
+        apiCall: () => fetchPostJson(`/api/${guildId}/sounds/${name}`, audioFile),
+        onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to update sound: ${err.message}`))
     }))
     dispatch(fetchSounds(guildId))
 }
@@ -65,7 +71,8 @@ export const updateSound = (guildId: string, name: string, audioFile: IAudioFile
 export const deleteSound = (guildId: string, name: string): AsyncThunk => async (dispatch) => {
     await dispatch(apiThunk({
         types: [DELETE_SOUND_REQUEST, DELETE_SOUND_RESOLVED, DELETE_SOUND_REJECTED],
-        apiCall: () => fetchDeleteJson(`/api/${guildId}/sounds/${name}`)
+        apiCall: () => fetchDeleteJson(`/api/${guildId}/sounds/${name}`),
+        onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to delete sound: ${err.message}`))
     }))
     dispatch(fetchSounds(guildId))
 }
