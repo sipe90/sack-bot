@@ -98,9 +98,10 @@ export const apiThunk = <T = void, P = T>(opts: ThunkOpts<T, P>) => async (dispa
     } else {
         const error = new Error(res.json?.message || res.statusText)
         dispatch({ type: rejectedType, payload: error })
-        onError && onError(error, dispatch)
         if (res.status === 401) {
             history.push('/login')
+        } else {
+            onError && onError(error, dispatch)
         }
         throw error
     }
