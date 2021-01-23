@@ -3,10 +3,8 @@
 SackBot is a Discord bot with the main purpose of annoying other people at your Discord server's voice channels with tasteless meme sound clips you found from the darkest depths of the internet.
 
 The main features of the bot so far are:
- - Uploading and playing sounds (.wav, .mp3 and .ogg for uploaded tracks, see [LavaPlayer documentation](https://github.com/sedmelluq/lavaplayer#supported-formats) for information about supported formats for external sources)
- - Stringing together multiple sound clips and playing them back in order (like HGrunt or VOX)
- - Text to speech with MaryTTS
- - A mobile-friendly UI for doing all of the above
+ - Uploading and playing sounds with bot chat commands (.wav, .mp3 and .ogg for uploaded tracks, see [LavaPlayer documentation](https://github.com/sedmelluq/lavaplayer#supported-formats) for information about supported formats for external sources)
+ - A mobile-friendly UI
  
  This is not a public bot so if you want to add SackBot to your own server, you'll have to host the bot yourself.
  
