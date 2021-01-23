@@ -5,17 +5,14 @@ import {
     Button,
     CardActionArea,
     CircularProgress,
-    FormControl,
     FormControlLabel,
     FormLabel,
     Grid,
-    Input,
     makeStyles,
     Menu,
     MenuItem,
     Radio,
     RadioGroup,
-    Select,
     Slider,
     TextField,
     Typography
@@ -27,6 +24,7 @@ import { IAudioFile, IDictionary } from '@/types'
 import { selectedGuildMembership } from '@/selectors/user'
 import { updateEntrySound, updateExitSound } from '@/actions/user'
 import Divider from '@/components/Divider'
+import { Autocomplete } from '@material-ui/lab'
 
 type GroupBy = 'alphabetic' | 'tag'
 
@@ -116,8 +114,8 @@ const Soundboard: React.FC = () => {
 
     const tags = useMemo(() => getTags(sounds), [sounds])
 
-    const onTagFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setTagFilter(event.target.value as string[])
+    const onTagFilterChange = (_event: React.ChangeEvent<{}>, tags: string[]) => {
+        setTagFilter(tags)
     }
 
     const onUrlFieldChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -132,63 +130,57 @@ const Soundboard: React.FC = () => {
         <>
             <Grid container spacing={4}>
                 <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth component='fieldset'>
-                        <FormLabel component='legend'>Group sounds</FormLabel>
-                        <RadioGroup row value={groupBy} onChange={onGroupByChange}>
-                            <FormControlLabel
-                                value='alphabetic'
-                                control={<Radio color='primary' />}
-                                label='Alphabetically'
-                                labelPlacement='start'
-                            />
-                            <FormControlLabel
-                                value='tag'
-                                control={<Radio color='primary' />}
-                                label='By Tag'
-                                labelPlacement='start'
-                            />
-                        </RadioGroup>
-                    </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth>
-                        <FormLabel component='legend'>Filter by tags</FormLabel>
-                        <Select
-                            multiple
-                            value={tagFilter}
-                            onChange={onTagFilterChange}
-                            input={<Input />}
-                        >
-                            {tags.map((tag) => (
-                                <MenuItem key={tag} value={tag} selected={tagFilter.includes(tag)}>
-                                    {tag}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth>
-                        <FormLabel component='legend'>Volume</FormLabel>
-                        <Slider
-                            defaultValue={defVolume}
-                            min={1}
-                            max={100}
-                            valueLabelDisplay='auto'
-                            onChangeCommitted={(_event, vol) => setVolume(vol as number)}
+                    <FormLabel component='legend'>Group sounds</FormLabel>
+                    <RadioGroup row value={groupBy} onChange={onGroupByChange}>
+                        <FormControlLabel
+                            value='alphabetic'
+                            control={<Radio color='primary' />}
+                            label='Alphabetically'
+                            labelPlacement='start'
                         />
-                    </FormControl>
+                        <FormControlLabel
+                            value='tag'
+                            control={<Radio color='primary' />}
+                            label='By Tag'
+                            labelPlacement='start'
+                        />
+                    </RadioGroup>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <Autocomplete<string, true>
+                        multiple
+                        size='small'
+                        options={tags}
+                        value={tagFilter}
+                        onChange={onTagFilterChange}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label='Filter by tags'
+
+                            />
+                        )}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <FormLabel component='legend'>Volume</FormLabel>
+                    <Slider
+                        defaultValue={defVolume}
+                        min={1}
+                        max={100}
+                        valueLabelDisplay='auto'
+                        onChangeCommitted={(_event, vol) => setVolume(vol as number)}
+                    />
                 </Grid>
                 <Grid container item xs={12} sm={6} spacing={2} alignItems='flex-end'>
                     <Grid item xs={10}>
-                        <FormControl fullWidth>
-                            <FormLabel component='legend'>Play from URL</FormLabel>
-                            <TextField
-                                value={url}
-                                onChange={onUrlFieldChange}
-                                fullWidth
-                            />
-                        </FormControl>
+                        <TextField
+                            value={url}
+                            onChange={onUrlFieldChange}
+                            fullWidth
+                            label='Play from URL'
+                        />
+
                     </Grid>
                     <Grid item xs={2}>
                         <Button
