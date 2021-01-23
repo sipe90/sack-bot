@@ -68,8 +68,6 @@ const useStyles = makeStyles((theme) => ({
         marginBottom: theme.spacing(4)
     },
     card: {
-        width: 120,
-        height: 32,
         borderRadius: 0,
         textAlign: 'center',
         overflow: 'hidden',
@@ -300,19 +298,21 @@ const Board: React.FC<BoardProps> = React.memo((props) => {
             {keys.map((key) =>
                 <React.Fragment key={key}>
                     <Divider>{key}</Divider>
-                    <Box display='flex' flexWrap='wrap'>
+                    <Grid container>
                         {groupedSounds[key].map(({ name }) =>
-                            <Box key={name} boxShadow={2} mr={1} mt={1}>
-                                <CardActionArea
-                                    onContextMenu={handleContextClick(name)}
-                                    className={classes.card}
-                                    onClick={() => onPlaySound(name)}
-                                >
-                                    {name}
-                                </CardActionArea>
-                            </Box>
+                            <Grid item xs={4} sm={3} md={2} >
+                                <Box key={name} boxShadow={2} mr={1} mt={1}>
+                                    <CardActionArea
+                                        onContextMenu={handleContextClick(name)}
+                                        className={classes.card}
+                                        onClick={() => onPlaySound(name)}
+                                    >
+                                        {name}
+                                    </CardActionArea>
+                                </Box>
+                            </Grid>
                         )}
-                    </Box>
+                    </Grid>
                 </React.Fragment>
             )}
             <Menu

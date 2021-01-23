@@ -44,7 +44,7 @@ export const fetchSounds = (guildId: string) => apiThunk({
 export const playSound = (guildId: string, name: string, vol?: number) => apiThunk({
     types: [PLAY_SOUND_REQUEST, PLAY_SOUND_RESOLVED, PLAY_SOUND_REJECTED],
     apiCall: () => fetchPostJson(`/api/${guildId}/sounds/${name}/play?${buildQueryString({ vol })}`),
-    onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to load settings: ${err.message}`))
+    onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to play sound: ${err.message}`))
 })
 
 export const playRandomSound = (guildId: string, vol: number, tags: string[] = []) => apiThunk({
