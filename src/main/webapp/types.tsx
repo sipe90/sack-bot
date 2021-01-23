@@ -79,16 +79,6 @@ export interface IVoiceLines {
 }
 
 export interface ISettings {
-    tts: {
-        enabled: boolean
-        voices: string[]
-        maxLength: number
-        randomEnabled: boolean
-    }
-    voice: {
-        enabled: boolean
-        voices: IVoiceLines
-    }
     upload: {
         sizeLimit: number
         overrideExisting: boolean

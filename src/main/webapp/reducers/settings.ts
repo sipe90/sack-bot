@@ -13,16 +13,6 @@ export interface ISettingsState {
 const initialState: ISettingsState = {
     settingsLoading: false,
     settings: {
-        tts: {
-            enabled: false,
-            voices: [],
-            maxLength: 0,
-            randomEnabled: false
-        },
-        voice: {
-            enabled: false,
-            voices: {}
-        },
         upload: {
             sizeLimit: 0,
             overrideExisting: false

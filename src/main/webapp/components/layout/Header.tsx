@@ -53,7 +53,6 @@ const Header: React.FC = () => {
 
     const classes = useStyles()
 
-    const settings = useSelector((state) => state.settings.settings)
     const guild = useSelector(selectedGuild)
 
     return (<>
@@ -74,34 +73,6 @@ const Header: React.FC = () => {
                 >
                     Board
                 </Link>
-                {settings.voice.enabled &&
-                    <Link
-                        component={NavLink}
-                        color='inherit'
-                        noWrap
-                        variant='body2'
-                        className={classes.toolbarLink}
-                        to='/voices'
-                        exact
-                        activeClassName={classes.activeLink}
-                    >
-                        Voices
-                </Link>
-                }
-                {settings.tts.enabled &&
-                    <Link
-                        component={NavLink}
-                        color='inherit'
-                        noWrap
-                        variant='body2'
-                        className={classes.toolbarLink}
-                        to='/tts'
-                        exact
-                        activeClassName={classes.activeLink}
-                    >
-                        TTS
-                </Link>
-                }
                 {!!guild?.isAdmin &&
                     <Link
                         component={NavLink}

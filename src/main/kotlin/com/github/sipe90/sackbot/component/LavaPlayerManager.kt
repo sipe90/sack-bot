@@ -12,7 +12,6 @@ import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManag
 import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
@@ -34,7 +33,6 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
-    private final val localAudioSourceManager = LocalAudioSourceManager()
     private final val playerManager = DefaultAudioPlayerManager()
     private final val trackSchedulers = mutableMapOf<String, TrackScheduler>()
 
@@ -50,30 +48,13 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
     }
 
     fun playNitriteTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> =
-            playTrack(nitriteManager, identifier, voiceChannel, false, volume)
-
-    fun playLocalTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> =
-            playTrack(localAudioSourceManager, identifier, voiceChannel, false, volume)
-
-    fun queueLocalTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> =
-            playTrack(localAudioSourceManager, identifier, voiceChannel, true, volume)
-
-    fun playTrack(track: AudioTrack, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> = Mono.fromCallable {
-        val guild = voiceChannel.guild
-        val trackScheduler = getScheduler(guild)
-
-        connect(voiceChannel, trackScheduler.player)
-
-        trackScheduler.interrupt(track, volume)
-        track
-    }
+        playTrack(nitriteManager, identifier, voiceChannel, volume)
 
     private fun playTrack(
-            sourceManager: AudioSourceManager,
-            identifier: String,
-            voiceChannel: VoiceChannel,
-            queue: Boolean,
-            volume: Int?
+        sourceManager: AudioSourceManager,
+        identifier: String,
+        voiceChannel: VoiceChannel,
+        volume: Int?
     ): Mono<AudioTrack> = Mono.defer {
         val guild = voiceChannel.guild
         val trackScheduler = getScheduler(guild)
@@ -82,7 +63,7 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
 
         mono {
             sourceManager.loadItem(playerManager, AudioReference(identifier, null)) as AudioTrack?
-        }.doOnSuccess { if (queue) trackScheduler.queue(it, volume) else trackScheduler.interrupt(it, volume) }
+        }.doOnSuccess { trackScheduler.interrupt(it, volume) }
     }
 
     fun playExternalTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioItem> {
@@ -98,26 +79,28 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
     }
 
     private fun loadExternalTrack(identifier: String): Mono<AudioItem> =
-            Mono.create { sink ->
-                playerManager.loadItem(identifier, FunctionalResultHandler(
-                        {
-                            logger.debug("Found external track {}", it.info.title)
-                            sink.success(it)
-                        },
-                        {
-                            logger.debug("Found external playlist with tracks {}", it.tracks.map { track -> track.info.title })
-                            sink.success(it)
-                        },
-                        {
-                            logger.warn("Could not find external track with identifier {}", identifier)
-                            sink.error(NotFoundException("No external track found"))
-                        },
-                        { e ->
-                            logger.error("Exception while trying to external load track", e)
-                            sink.error(e)
-                        }
-                ))
-            }
+        Mono.create { sink ->
+            playerManager.loadItem(identifier, FunctionalResultHandler(
+                {
+                    logger.debug("Found external track {}", it.info.title)
+                    sink.success(it)
+                },
+                {
+                    logger.debug(
+                        "Found external playlist with tracks {}",
+                        it.tracks.map { track -> track.info.title })
+                    sink.success(it)
+                },
+                {
+                    logger.warn("Could not find external track with identifier {}", identifier)
+                    sink.error(NotFoundException("No external track found"))
+                },
+                { e ->
+                    logger.error("Exception while trying to external load track", e)
+                    sink.error(e)
+                }
+            ))
+        }
 
     private fun getScheduler(guild: Guild) = trackSchedulers.getOrPut(guild.id) {
         logger.debug("Creating new instance of TrackScheduler for Guild {} ({})", guild.name, guild.id)

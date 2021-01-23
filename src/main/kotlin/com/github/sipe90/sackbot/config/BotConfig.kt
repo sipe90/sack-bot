@@ -7,18 +7,16 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties("sackbot.bot")
 @ConstructorBinding
 data class BotConfig(
-        val token: String,
-        val adminRole: String?,
-        val activity: ActivityConfig,
-        val chat: ChatConfig,
-        val tts: TTSConfig,
-        val voice: VoiceConfig,
-        val upload: UploadConfig
+    val token: String,
+    val adminRole: String?,
+    val activity: ActivityConfig,
+    val chat: ChatConfig,
+    val upload: UploadConfig
 ) {
 
     data class ActivityConfig(
-            val type: String,
-            val text: String
+        val type: String,
+        val text: String
     ) {
         fun getDiscordType(): Activity.ActivityType {
             return when (type.toLowerCase()) {
@@ -33,28 +31,13 @@ data class BotConfig(
     }
 
     data class ChatConfig(
-            val enabled: Boolean,
-            val allowDm: Boolean,
-            val commandPrefix: String
-    )
-
-    data class TTSConfig(
-            val maxLength: Int,
-            val phrasesFile: String
-    )
-
-    data class VoiceConfig(
-            val enabled: Boolean,
-            val voices: Map<String, Voice>
-    )
-
-    data class Voice(
-            val path: String,
-            val substitutions: Map<String, String>?
+        val enabled: Boolean,
+        val allowDm: Boolean,
+        val commandPrefix: String
     )
 
     data class UploadConfig(
-            val sizeLimit: Int,
-            val overrideExisting: Boolean
+        val sizeLimit: Int,
+        val overrideExisting: Boolean
     )
 }

@@ -12,8 +12,6 @@ import { fetchUser, fetchGuilds } from '@/actions/user'
 import { fetchSettings } from '@/actions/settings'
 
 import Soundboard from '@/components/Soundboard'
-import Voices from '@/components/Voices'
-import TTS from '@/components/TTS'
 import Admin from '@/components/Admin'
 import NotFound from '@/components/NotFound'
 import Login from '@/components/Login'
@@ -76,7 +74,6 @@ const App: React.FC = () => {
     const dispatch = useDispatch()
 
     const loggedIn = useSelector((state) => state.user.loggedIn)
-    const settings = useSelector((state) => state.settings.settings)
     const guild = useSelector(selectedGuild)
 
     const isAdmin = !!guild?.isAdmin
@@ -125,16 +122,6 @@ const App: React.FC = () => {
                             <Route path='/board' exact>
                                 <Soundboard />
                             </Route>
-                            {settings.voice.enabled &&
-                                <Route path='/voices' exact>
-                                    <Voices />
-                                </Route>
-                            }
-                            {settings.tts.enabled &&
-                                <Route path='/tts' exact>
-                                    <TTS />
-                                </Route>
-                            }
                             {isAdmin &&
                                 <Route path='/admin' exact>
                                     <Admin />

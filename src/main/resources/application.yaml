@@ -10,25 +10,6 @@ sackbot:
       enabled: true
       allowDm: true
       commandPrefix: "!"
-    voice:
-      enabled: false
-    # voices:
-    #   hgrunt:
-    #     path: ${sackbot.home}/voices/hgrunt
-    #     substitutions[,]: _comma
-    #     substitutions[.]: _period
-    #   vox:
-    #     path: ${sackbot.home}/voices/vox
-    #     substitutions[,]: _comma
-    #     substitutions[.]: _period
-    #   custom:
-    #     enabled: false
-    #     path: ${sackbot.home}/voices/custom
-    #     substitutions:
-    #       test: 123
-    tts:
-      maxLength: 800
-      phrasesFile: ${sackbot.home}${file.separator}phrases.txt
     upload:
       sizeLimit: 1000000
       overrideExisting: true

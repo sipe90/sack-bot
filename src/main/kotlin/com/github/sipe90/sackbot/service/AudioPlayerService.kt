@@ -10,25 +10,9 @@ interface AudioPlayerService {
 
     fun playAudioInChannel(name: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Void>
 
-    fun playTtsForUser(guildId: String, userId: String, voice: String, text: String): Mono<Void>
-
-    fun playTtsInChannel(voice: String, text: String, voiceChannel: VoiceChannel): Mono<Void>
-
-    fun getAvailableVoices(): Set<String>
-
-    fun isRandomTtsEnabled(): Boolean
-
-    fun playRandomTtsForUser(guildId: String, userId: String, voice: String): Mono<Void>
-
-    fun playRandomTtsInChannel(voice: String, voiceChannel: VoiceChannel): Mono<Void>
-
     fun playUrlForUser(guildId: String, userId: String, url: String, volume: Int?): Mono<AudioItem>
 
     fun playUrlInChannel(url: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioItem>
-
-    fun playVoiceLinesForUser(guildId: String, userId: String, voice: String, lines: List<String>): Mono<Void>
-
-    fun playVoiceLinesInChannel(voice: String, lines: List<String>, voiceChannel: VoiceChannel): Mono<Void>
 
     fun setDefaultVolume(guildId: String, volume: Int)
 
