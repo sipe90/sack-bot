@@ -61,31 +61,33 @@ const Header: React.FC = () => {
                 <Avatar className={classes.avatar} src={sackbotAvatar} />
             </Container>
             <Container component='nav'>
-                <Link
-                    component={NavLink}
-                    color='inherit'
-                    noWrap
-                    variant='body2'
-                    className={classes.toolbarLink}
-                    to='/board'
-                    exact
-                    activeClassName={classes.activeLink}
-                >
-                    Board
-                </Link>
                 {!!guild?.isAdmin &&
-                    <Link
-                        component={NavLink}
-                        color='inherit'
-                        noWrap
-                        variant='body2'
-                        className={classes.toolbarLink}
-                        to='/admin'
-                        exact
-                        activeClassName={classes.activeLink}
-                    >
-                        Admin
-                </Link>
+                    <>
+                        <Link
+                            component={NavLink}
+                            color='inherit'
+                            noWrap
+                            variant='body2'
+                            className={classes.toolbarLink}
+                            to='/board'
+                            exact
+                            activeClassName={classes.activeLink}
+                        >
+                            Board
+                        </Link>
+                        <Link
+                            component={NavLink}
+                            color='inherit'
+                            noWrap
+                            variant='body2'
+                            className={classes.toolbarLink}
+                            to='/admin'
+                            exact
+                            activeClassName={classes.activeLink}
+                        >
+                            Admin
+                        </Link>
+                    </>
                 }
             </Container>
             <GuildSelector />
