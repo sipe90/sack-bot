@@ -13,10 +13,13 @@ import {
     Menu,
     MenuItem,
     Toolbar,
+    Tooltip,
     Typography
 } from '@material-ui/core'
 import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 import MoreVertIcon from '@material-ui/icons/MoreVert'
+import WbSunnyIcon from '@material-ui/icons/WbSunny'
+import NightsStayIcon from '@material-ui/icons/NightsStay'
 
 import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
@@ -49,7 +52,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }))
 
-const Header: React.FC = () => {
+interface HeaderProps {
+    darkMode: boolean
+    onDarkModeChange: (enabled: boolean) => void
+}
+
+const Header: React.FC<HeaderProps> = (props) => {
 
     const classes = useStyles()
 
@@ -90,6 +98,15 @@ const Header: React.FC = () => {
                     </>
                 }
             </Container>
+            <Container className={classes.toolbarTitle}>
+                <Tooltip title='Toggle dark mode'>
+                    <IconButton
+                        onClick={() => props.onDarkModeChange(!props.darkMode)}
+                    >
+                        {props.darkMode ? <NightsStayIcon /> : <WbSunnyIcon />}
+                    </IconButton>
+                </Tooltip>
+            </Container>
             <GuildSelector />
         </Toolbar>
     </>)
@@ -123,10 +140,12 @@ const GuildSelector: React.FC = () => {
     return (
         <>
             <Box display='flex' alignItems='center' className={classes.guildSelector}>
-                <Avatar
-                    alt={guild?.name || 'G'}
-                    src={guild?.iconUrl || undefined}
-                />
+                <Tooltip title={guild?.name || ''}>
+                    <Avatar
+                        alt={guild?.name || 'G'}
+                        src={guild?.iconUrl || undefined}
+                    />
+                </Tooltip>
                 <IconButton
                     onClick={handleClickAvatar}
                 >

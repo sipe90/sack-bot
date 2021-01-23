@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Switch, Route, Redirect, useLocation } from 'react-router-dom'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import AppBar from '@material-ui/core/AppBar'
 import Typography from '@material-ui/core/Typography'
 import Container from '@material-ui/core/Container'
-import { makeStyles } from '@material-ui/core/styles'
+import { createMuiTheme, makeStyles, ThemeProvider } from '@material-ui/core/styles'
 
 import { useDispatch, useSelector, fetchGetJson } from '@/util'
 import { selectedGuild } from '@/selectors/user'
@@ -80,6 +80,20 @@ const App: React.FC = () => {
 
     const location = useLocation()
 
+    const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true')
+
+    useEffect(() => localStorage.setItem('darkMode', darkMode ? 'true' : 'false'), [darkMode])
+
+    const theme = useMemo(
+        () =>
+            createMuiTheme({
+                palette: {
+                    type: darkMode ? 'dark' : 'light',
+                },
+            }),
+        [darkMode],
+    )
+
     useEffect(() => {
         if (location.pathname !== '/login') {
             dispatch(fetchUser())
@@ -91,53 +105,55 @@ const App: React.FC = () => {
 
 
     return (
-        <div className={classes.root}>
-            <CssBaseline />
-            <Notifier />
-            {loggedIn &&
-                <AppBar position="sticky" color="default" elevation={2}>
-                    <Container maxWidth="lg" disableGutters>
-                        <Header />
-                    </Container>
-                </AppBar>
-            }
-            <Switch>
-                <Route path='/login' exact>
-                    <Login />
-                </Route>
-                <>
-                    <main className={`${classes.layout} ${classes.main}`}>
-                        <Switch>
-                            {!loggedIn &&
-                                <Route>
-                                    <div className={classes.loadingContainer}>
-                                        <CircularProgress />
-                                        <Typography>
-                                            Loading SackBot..
+        <ThemeProvider theme={theme}>
+            <div className={classes.root}>
+                <CssBaseline />
+                <Notifier />
+                {loggedIn &&
+                    <AppBar position="sticky" color="default" elevation={2}>
+                        <Container maxWidth="lg" disableGutters>
+                            <Header darkMode={darkMode} onDarkModeChange={setDarkMode} />
+                        </Container>
+                    </AppBar>
+                }
+                <Switch>
+                    <Route path='/login' exact>
+                        <Login />
+                    </Route>
+                    <>
+                        <main className={`${classes.layout} ${classes.main}`}>
+                            <Switch>
+                                {!loggedIn &&
+                                    <Route>
+                                        <div className={classes.loadingContainer}>
+                                            <CircularProgress />
+                                            <Typography>
+                                                Loading SackBot..
                                         </Typography>
-                                    </div>
+                                        </div>
+                                    </Route>
+                                }
+                                <Redirect exact from='/' to='/board' />
+                                <Route path='/board' exact>
+                                    <Soundboard />
                                 </Route>
-                            }
-                            <Redirect exact from='/' to='/board' />
-                            <Route path='/board' exact>
-                                <Soundboard />
-                            </Route>
-                            {isAdmin &&
-                                <Route path='/admin' exact>
-                                    <Admin />
-                                </Route>
-                            }
-                            <NotFound />
-                        </Switch>
-                    </main>
-                    <footer className={classes.layout}>
-                        <Typography variant="body2" color="textSecondary" align="center" className={classes.footer}>
-                            Sackbot {VERSION ? `v${VERSION}` : ''}
-                        </Typography>
-                    </footer>
-                </>
-            </Switch>
-        </div>
+                                {isAdmin &&
+                                    <Route path='/admin' exact>
+                                        <Admin />
+                                    </Route>
+                                }
+                                <NotFound />
+                            </Switch>
+                        </main>
+                        <footer className={classes.layout}>
+                            <Typography variant="body2" color="textSecondary" align="center" className={classes.footer}>
+                                Sackbot {VERSION ? `v${VERSION}` : ''}
+                            </Typography>
+                        </footer>
+                    </>
+                </Switch>
+            </div>
+        </ThemeProvider>
     )
 }
 
