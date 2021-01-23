@@ -25,14 +25,9 @@ import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
 import { selectedGuild } from '@/selectors/user'
 
-import sackbotAvatar from '@/public/img/Sackbot_V3_cropped.jpg'
-
 const useStyles = makeStyles((theme) => ({
     toolbarTitle: {
         flexBasis: 0
-    },
-    avatar: {
-        margin: theme.spacing(1),
     },
     toolbarLink: {
         padding: theme.spacing(1),
@@ -45,11 +40,7 @@ const useStyles = makeStyles((theme) => ({
         '& > *': {
             marginRight: theme.spacing(1),
         }
-    },
-    menuAvatar: {
-        width: theme.spacing(4),
-        height: theme.spacing(4),
-    },
+    }
 }))
 
 interface HeaderProps {
@@ -61,12 +52,16 @@ const Header: React.FC<HeaderProps> = (props) => {
 
     const classes = useStyles()
 
+    const user = useSelector((state) => state.user.userInfo)
     const guild = useSelector(selectedGuild)
 
     return (<>
         <Toolbar disableGutters>
             <Container className={classes.toolbarTitle}>
-                <Avatar className={classes.avatar} src={sackbotAvatar} />
+                <Avatar
+                    alt={user?.name || 'U'}
+                    src={user?.avatarUrl || undefined}
+                />
             </Container>
             <Container component='nav'>
                 {!!guild?.isAdmin &&
@@ -169,7 +164,6 @@ const GuildSelector: React.FC = () => {
                             <Avatar
                                 alt={name}
                                 src={iconUrl || undefined}
-                                className={classes.menuAvatar}
                             />
                         </ListItemAvatar>
                         <Typography variant='inherit'>{name}</Typography>

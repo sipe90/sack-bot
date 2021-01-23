@@ -11,7 +11,7 @@ export const selectedGuild = createSelector<IAppState, string | null, IGuild[], 
 
 export const selectedGuildMembership = createSelector<IAppState, string | null, IMembership[], IMembership | null>(
     (state) => state.user.selectedGuildId,
-    (state) => state.user.memberships,
+    (state) => state.user.userInfo?.memberships || [],
     (guild, memberships) => guild === null ? null :
         memberships.find((m) => m.guildId == guild) || null
 )

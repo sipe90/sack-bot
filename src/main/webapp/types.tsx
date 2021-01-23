@@ -37,6 +37,12 @@ export interface Notification {
     dismissed?: boolean
 }
 
+export interface UserInfo {
+    name: string
+    avatarUrl?: string
+    memberships: IMembership[]
+}
+
 export interface IMembership {
     guildId: string
     userId: string

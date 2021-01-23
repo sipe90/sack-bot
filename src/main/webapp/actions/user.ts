@@ -1,4 +1,4 @@
-import { IMembership, IGuild, IGuildMember, AppDispatch, ActionGroup, AsyncThunk } from "@/types"
+import { IMembership, IGuild, IGuildMember, AppDispatch, ActionGroup, AsyncThunk, UserInfo } from "@/types"
 import { buildQueryString, fetchGetJson, fetchPutJson, apiThunk } from "@/util"
 import { enqueueErrorSnackbar } from './snackbar'
 
@@ -29,7 +29,7 @@ interface SelectGuildAction {
     payload: string
 }
 
-export type UserActions = ActionGroup<typeof FETCH_USER_REQUEST, typeof FETCH_USER_RESOLVED, typeof FETCH_USER_REJECTED, IMembership[]>
+export type UserActions = ActionGroup<typeof FETCH_USER_REQUEST, typeof FETCH_USER_RESOLVED, typeof FETCH_USER_REJECTED, UserInfo>
     | ActionGroup<typeof FETCH_GUILDS_REQUEST, typeof FETCH_GUILDS_RESOLVED, typeof FETCH_GUILDS_REJECTED, IGuild[]>
     | ActionGroup<typeof FETCH_GUILD_MEMBERS_REQUEST, typeof FETCH_GUILD_MEMBERS_RESOLVED, typeof FETCH_GUILD_MEMBERS_REJECTED, { guildId: string, members: IGuildMember[] }>
     | ActionGroup<typeof UPDATE_ENTRY_SOUND_REQUEST, typeof UPDATE_ENTRY_SOUND_RESOLVED, typeof UPDATE_ENTRY_SOUND_REJECTED>
@@ -39,7 +39,7 @@ export type UserActions = ActionGroup<typeof FETCH_USER_REQUEST, typeof FETCH_US
 export const fetchUser = (): AsyncThunk => async (dispatch) => {
     dispatch(apiThunk({
         types: [FETCH_USER_REQUEST, FETCH_USER_RESOLVED, FETCH_USER_REJECTED],
-        apiCall: () => fetchGetJson<IMembership[]>(`/api/me`),
+        apiCall: () => fetchGetJson<UserInfo>(`/api/me`),
         onError: (err, dispatch) => dispatch(enqueueErrorSnackbar(`Failed to load user info: ${err.message}`))
     }))
 }

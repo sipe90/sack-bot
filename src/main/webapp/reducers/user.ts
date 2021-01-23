@@ -1,4 +1,4 @@
-import { IGuild, IGuildMember, IMembership } from "@/types"
+import { IGuild, IGuildMember, UserInfo } from "@/types"
 import { Reducer } from "redux"
 import {
     FETCH_GUILD_MEMBERS_REJECTED,
@@ -22,8 +22,8 @@ import {
 
 export interface IUserState {
     loggedIn: boolean
-    memberships: IMembership[]
-    membershipsLoading: boolean
+    userInfo: UserInfo | null
+    userInfoLoading: boolean
     guilds: IGuild[]
     guildsLoading: boolean
     guildMembers: { [guildId: string]: IGuildMember[] }
@@ -33,8 +33,8 @@ export interface IUserState {
 
 const initialState: IUserState = {
     loggedIn: false,
-    memberships: [],
-    membershipsLoading: false,
+    userInfo: null,
+    userInfoLoading: false,
     guilds: [],
     guildsLoading: false,
     guildMembers: {},
@@ -45,16 +45,16 @@ const initialState: IUserState = {
 const userReducer: Reducer<IUserState, UserActions> = (state = initialState, action) => {
     switch (action.type) {
         case FETCH_USER_REQUEST:
-            return { ...state, membershipsLoading: true }
+            return { ...state, userInfoLoading: true }
         case FETCH_USER_RESOLVED:
             return {
                 ...state,
                 loggedIn: true,
-                membershipsLoading: false,
-                memberships: action.payload
+                userInfoLoading: false,
+                userInfo: action.payload
             }
         case FETCH_USER_REJECTED:
-            return { ...state, membershipsLoading: false }
+            return { ...state, userInfoLoading: false }
         case FETCH_GUILDS_REQUEST:
             return { ...state, guildsLoading: true }
         case FETCH_GUILDS_RESOLVED:

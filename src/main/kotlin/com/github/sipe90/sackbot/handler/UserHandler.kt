@@ -3,7 +3,7 @@ package com.github.sipe90.sackbot.handler
 import com.github.sipe90.sackbot.auth.DiscordUser
 import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.handler.dto.GuildMemberDTO
-import com.github.sipe90.sackbot.persistence.MemberRepository
+import com.github.sipe90.sackbot.persistence.dto.Member
 import com.github.sipe90.sackbot.service.JDAService
 import com.github.sipe90.sackbot.service.MemberService
 import net.dv8tion.jda.api.entities.Role
@@ -22,8 +22,11 @@ class UserHandler(
 ) {
 
     fun userInfo(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+        val user = jdaService.getUser(principal.getId()) ?: throw RuntimeException("Could not get user")
         return ok()
-            .body(memberService.getUserMemberships(principal.getId()))
+            .body(
+                memberService.getUserMemberships(principal.getId()).collectList()
+                    .map { UserInfo(user.name, user.avatarUrl, it) })
     }
 
     fun mutualGuilds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
@@ -66,8 +69,14 @@ class UserHandler(
         user: net.dv8tion.jda.api.entities.User
     ): Boolean =
         guild.ownerId == user.id ||
-            (config.adminRole != null &&
-                guild.getMember(user)?.roles?.any { it.name == config.adminRole } ?: false)
+                (config.adminRole != null &&
+                        guild.getMember(user)?.roles?.any { it.name == config.adminRole } ?: false)
+
+    data class UserInfo(
+        val name: String,
+        val avatarUrl: String?,
+        val memberships: List<Member>
+    )
 
     data class Guild(
         val id: String,
