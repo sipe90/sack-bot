@@ -10,7 +10,7 @@ plugins {
 group = 'com.github.sipe90'
 version = '0.8.0'
 
-java.sourceCompatibility = JavaVersion.VERSION_15
+java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
@@ -79,6 +79,6 @@ test {
 compileKotlin {
     kotlinOptions {
         freeCompilerArgs = ['-Xjsr305=strict']
-        jvmTarget = '15'
+        jvmTarget = '11'
     }
 }
