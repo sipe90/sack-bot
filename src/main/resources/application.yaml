@@ -39,3 +39,5 @@ spring:
 # Set to NATIVE if running behind a reverse proxy
 server:
   forward-headers-strategy: NONE
+  error:
+    include-message: always

@@ -37,8 +37,8 @@ class Routes(
                 filter(this@Routes::guildAccessFilter)
                 GET("/members", handleAdmin(userHandler::guildMembers))
                 "/sounds".nest {
-                    GET("/", handle(audioHandler::getSoundsList))
-                    (POST("/") and accept(MediaType.MULTIPART_FORM_DATA))
+                    GET("", handle(audioHandler::getSoundsList))
+                    (POST("") and accept(MediaType.MULTIPART_FORM_DATA))
                         .invoke(handleAdmin(audioHandler::uploadSounds))
                     PUT("/entry", handle(audioHandler::setEntrySound))
                     PUT("/exit", handle(audioHandler::setExitSound))
@@ -47,8 +47,8 @@ class Routes(
                     GET("/export", handleAdmin(audioHandler::exportSounds))
                     "/{name}".nest {
                         GET("/download", handleAdmin(audioHandler::downloadSound))
-                        POST("/", handle(audioHandler::updateSound))
-                        DELETE("/", handleAdmin(audioHandler::deleteSound))
+                        POST("", handle(audioHandler::updateSound))
+                        DELETE("", handleAdmin(audioHandler::deleteSound))
                         POST("/play", handle(audioHandler::playSound))
                     }
                 }
