@@ -22,6 +22,8 @@ jobs:
         run: chmod +x gradlew
       - name: Build Jar with Gradle
         run: ./gradlew bootJar
+      - name: Build Docker image and push to Docker Hub
+        run: ./gradlew bootBuildImage -PdockerhubUsername=${{ secrets.DOCKERHUB_USERNAME }} -PdockerhubPassword=${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@master
         with:

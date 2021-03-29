@@ -72,6 +72,16 @@ bootJar {
     }
 }
 
+bootBuildImage {
+
+    imageName = "sipe90/${project.name}:${project.version}"
+    
+    publish = true
+
+    docker.publishRegistry.username = "$dockerhubUsername"
+    docker.publishRegistry.password = "$dockerhubPassword"
+}
+
 test {
     useJUnitPlatform()
 }
