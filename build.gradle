@@ -15,6 +15,9 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 repositories {
     mavenCentral()
     jcenter()
+    maven {
+        url 'https://m2.dv8tion.net/releases'
+    }
 }
 
 dependencies {
@@ -34,7 +37,7 @@ dependencies {
     implementation 'org.dizitart:potassium-nitrite:3.4.2'
     implementation 'net.dv8tion:JDA:4.2.0_168'
     implementation 'club.minnced:jda-reactor:1.2.0'
-    implementation 'com.sedmelluq:lavaplayer:1.3.53'
+    implementation 'com.sedmelluq:lavaplayer:1.3.76'
     implementation 'com.sedmelluq:jda-nas:1.1.0'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
@@ -75,11 +78,11 @@ bootJar {
 bootBuildImage {
 
     imageName = "sipe90/${project.name}:${project.version}"
-    
+
     publish = true
 
-    docker.publishRegistry.username = "$dockerhubUsername"
-    docker.publishRegistry.password = "$dockerhubPassword"
+    docker.publishRegistry.username = project.hasProperty("dockerhubUsername") ? "$dockerhubUsername" : ""
+    docker.publishRegistry.password = project.hasProperty("dockerhubPassword") ? "$dockerhubPassword" : ""
 }
 
 test {

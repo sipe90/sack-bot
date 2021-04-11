@@ -5,7 +5,7 @@ import com.github.sipe90.sackbot.service.AudioFileService
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerDescriptor
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerDetection
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerHints
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.ProbingAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioReference
@@ -17,20 +17,20 @@ import java.io.DataOutput
 
 @Component
 class NitriteAudioSourceManager(private val audioFileService: AudioFileService) :
-        ProbingAudioSourceManager(ContainerRegistries.audio) {
+    ProbingAudioSourceManager(ContainerRegistries.audio) {
 
     override fun getSourceName() = "nitrite"
 
-    override fun loadItem(manager: DefaultAudioPlayerManager, reference: AudioReference): AudioItem? {
+    override fun loadItem(manager: AudioPlayerManager, reference: AudioReference): AudioItem? {
         val audioFile = getAudioFile(reference.identifier) ?: return null
         ByteArraySeekableInputStream(audioFile.data).use {
             return handleLoadResult(
-                    MediaContainerDetection(
-                            containerRegistry,
-                            reference,
-                            it,
-                            MediaContainerHints.from(null, audioFile.extension)
-                    ).detectContainer()
+                MediaContainerDetection(
+                    containerRegistry,
+                    reference,
+                    it,
+                    MediaContainerHints.from(null, audioFile.extension)
+                ).detectContainer()
             )
         }
     }
