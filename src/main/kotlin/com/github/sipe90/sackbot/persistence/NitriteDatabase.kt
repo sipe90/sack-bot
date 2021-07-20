@@ -5,7 +5,6 @@ import com.github.sipe90.sackbot.persistence.dto.AudioFile
 import com.github.sipe90.sackbot.persistence.dto.Member
 import com.github.sipe90.sackbot.util.createParentDirs
 import org.dizitart.kno2.getRepository
-import org.dizitart.kno2.nitrite
 import org.dizitart.no2.Nitrite
 
 class NitriteDatabase(private val config: NitriteConfig) {
@@ -14,11 +13,13 @@ class NitriteDatabase(private val config: NitriteConfig) {
 
     init {
         createParentDirs(config.dbFile)
-        db = nitrite {
-            path = config.dbFile
-            autoCommitBufferSize = 2048
-            compress = true
-        }
+
+        db = Nitrite.builder()
+            .compressed()
+            .filePath(config.dbFile)
+            .autoCommitBufferSize(2048)
+            .enableOffHeapStorage()
+            .openOrCreate()
     }
 
     fun getUserRepository() = db.getRepository<Member>()
