@@ -1,10 +1,10 @@
 plugins {
     id 'maven-publish'
-    id 'org.springframework.boot' version '2.4.2'
+    id 'org.springframework.boot' version '2.5.3'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id 'org.jetbrains.kotlin.jvm' version '1.4.21'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.4.21'
-    id 'com.github.node-gradle.node' version '2.2.3'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.21'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.5.21'
+    id 'com.github.node-gradle.node' version '3.0.1'
 }
 
 group = 'com.github.sipe90'
@@ -16,7 +16,11 @@ repositories {
     mavenCentral()
     jcenter()
     maven {
+        name 'm2-dv8tion'
         url 'https://m2.dv8tion.net/releases'
+    }
+    maven {
+        url "https://jitpack.io"
     }
 }
 
@@ -35,9 +39,9 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.2.3'
 
     implementation 'org.dizitart:potassium-nitrite:3.4.3'
-    implementation 'net.dv8tion:JDA:4.2.0_168'
-    implementation 'club.minnced:jda-reactor:1.2.0'
-    implementation 'com.sedmelluq:lavaplayer:1.3.76'
+    implementation 'net.dv8tion:JDA:4.3.0_277'
+    implementation 'com.github.MinnDevelopment:jda-reactor:1.3.0'
+    implementation 'com.sedmelluq:lavaplayer:1.3.78'
     implementation 'com.sedmelluq:jda-nas:1.1.0'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
