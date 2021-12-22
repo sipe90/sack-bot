@@ -9,7 +9,6 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager
@@ -39,7 +38,6 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
     init {
         playerManager.registerSourceManager(YoutubeAudioSourceManager())
         playerManager.registerSourceManager(TwitchStreamAudioSourceManager())
-        playerManager.registerSourceManager(BeamAudioSourceManager())
         playerManager.registerSourceManager(BandcampAudioSourceManager())
         playerManager.registerSourceManager(GetyarnAudioSourceManager())
         playerManager.registerSourceManager(HttpAudioSourceManager())

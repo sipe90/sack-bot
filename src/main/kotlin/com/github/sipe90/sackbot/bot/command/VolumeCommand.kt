@@ -1,44 +1,36 @@
 package com.github.sipe90.sackbot.bot.command
 
-import com.github.sipe90.sackbot.config.BotConfig
 import com.github.sipe90.sackbot.service.AudioPlayerService
 import com.github.sipe90.sackbot.util.getGuild
-import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
 
 @Component
-class VolumeCommand(private val config: BotConfig, private val playerService: AudioPlayerService) :
-    BotCommand() {
+class VolumeCommand(private val playerService: AudioPlayerService) : BotCommand() {
 
-    override val commandPrefix = "volume"
+    final override val commandName = "volume"
 
-    override fun process(initiator: Event, vararg command: String): Flux<String> = Flux.defer {
+    final override val commandData = CommandData(commandName, "Check or set bot volume")
+        .addOption(OptionType.INTEGER, "volume", "New volume (0-100)", false)
+
+    override fun process(initiator: SlashCommandEvent): Flux<String> = Flux.defer {
         val guild = getGuild(initiator)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
-        if (command.size == 1) {
+        val volumeOpt = initiator.getOption("volume")
+
+        if (volumeOpt == null) {
             val volume = playerService.getDefaultVolume(guild.id)
             return@defer "Current volume is set to `$volume%`".toMono()
         }
 
-        if (command.size != 2) return@defer helpText().toMono()
+        val volume = volumeOpt.asLong.coerceIn(1, 100)
 
-        val volumeStr = command[1]
-        try {
-            val volume = volumeStr.toInt()
-                .coerceAtLeast(1)
-                .coerceAtMost(100)
-
-            playerService.setDefaultVolume(guild.id, volume)
-            "Setting volume to `$volume%`".toMono()
-        } catch (e: NumberFormatException) {
-            "Failed to set volume. Could not parse amount".toMono()
-        }
+        playerService.setDefaultVolume(guild.id, volume.toInt())
+        "Setting volume to `$volume%`".toMono()
     }
-
-    private fun helpText() = "Invalid volume command. " +
-        "Say `${config.chat.commandPrefix}volume [volume]` to set the current volume. " +
-        "Accepted values are 1-100. You can get the current volume with `${config.chat.commandPrefix}volume"
 }

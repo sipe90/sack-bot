@@ -1,55 +1,40 @@
 package com.github.sipe90.sackbot.bot.command
 
-import com.github.sipe90.sackbot.config.BotConfig
+import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.service.AudioPlayerService
-import com.github.sipe90.sackbot.util.getGuild
 import com.github.sipe90.sackbot.util.getVoiceChannel
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
 
 @Component
-class UrlCommand(
-        private val config: BotConfig,
-        private val playerService: AudioPlayerService
-) : BotCommand() {
+class UrlCommand(private val playerService: AudioPlayerService) : BotCommand() {
 
-    override val commandPrefix = "url"
+    final override val commandName = "url"
 
-    override fun canProcess(vararg command: String) = true
+    final override val commandData =
+        CommandData("url", "Play a sound from an URL (Youtube, Twitch, BandCamp, GetYarn, Generic HTTP(S) source)")
+            .addOption(OptionType.STRING, "url", "URL to load the audio from", true)
 
-    override fun process(initiator: Event, vararg command: String): Flux<String> = Flux.defer {
-        val guild = getGuild(initiator)
+    override fun process(initiator: SlashCommandEvent): Flux<String> = Flux.defer {
         val voiceChannel = getVoiceChannel(initiator)
+            ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
-        if (guild == null || voiceChannel == null) return@defer "Could not find guild or voice channel to perform the action".toMono()
+        val soundOpt = initiator.getOption("url") ?: throw SackException("Url option missing from url command")
+        val url = soundOpt.asString
 
-        if (command.size > 3) {
-            return@defer "Invalid url command. Correct format is `${config.chat.commandPrefix}url <url> [volume]`".toMono()
-        }
-
-        val url = command[1]
-
-        val volume: Int? =
-                if (command.size == 3) {
-                    val volumeStr = command[2]
-                    try {
-                        Integer.parseInt(volumeStr).coerceIn(1, 100)
-                    } catch (e: NumberFormatException) {
-                        return@defer "Invalid volume given. Value must be a number".toMono()
-                    }
-                } else null
-
-        playerService.playUrlInChannel(url, voiceChannel, volume)
-                .map { "Playing ${getItemString(it) ?: url} in voice channel `#${voiceChannel.name}`" }
-                .onErrorReturn("Could not find a sound source with given url")
+        playerService.playUrlInChannel(url, voiceChannel, null)
+            .map { "Playing ${getItemString(it) ?: url} in voice channel `#${voiceChannel.name}`" }
+            .onErrorReturn("Could not play sound from url `$url`")
     }
 
-    fun getItemString(item: AudioItem): String? {
+    private fun getItemString(item: AudioItem): String? {
         return when (item) {
             is AudioTrack -> {
                 val author = item.info.author

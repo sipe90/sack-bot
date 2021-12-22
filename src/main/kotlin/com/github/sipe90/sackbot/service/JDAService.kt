@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ShutdownEvent
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
@@ -21,7 +22,7 @@ import javax.annotation.PreDestroy
 
 @Service
 class JDAService(
-        private val config: BotConfig
+    private val config: BotConfig
 ) {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
@@ -32,33 +33,39 @@ class JDAService(
 
     init {
         eventManager.on<ReadyEvent>()
-                .next()
-                .map { it.jda }
-                .doOnSuccess {
-                    it.presence.setStatus(OnlineStatus.ONLINE)
-                    it.presence.activity = Activity.of(config.activity.getDiscordType(), config.activity.text)
-                    logger.info("Sackbot is ready to meme")
-                }
-                .subscribe()
+            .next()
+            .map { it.jda }
+            .doOnSuccess {
+                it.presence.setStatus(OnlineStatus.ONLINE)
+                it.presence.activity = Activity.of(config.activity.getDiscordType(), config.activity.text)
+                logger.info("Sackbot is ready to meme")
+            }
+            .subscribe()
 
         eventManager.on<ShutdownEvent>()
-                .subscribe {
-                    it.jda.httpClient.connectionPool().evictAll()
-                }
+            .subscribe {
+                it.jda.httpClient.connectionPool().evictAll()
+            }
 
-        jda = JDABuilder.create(config.token,
-                GatewayIntent.DIRECT_MESSAGES,
-                GatewayIntent.GUILD_MESSAGES,
-                GatewayIntent.GUILD_MEMBERS,
-                GatewayIntent.GUILD_VOICE_STATES
+        jda = JDABuilder.create(
+            config.token,
+            GatewayIntent.DIRECT_MESSAGES,
+            GatewayIntent.GUILD_MESSAGES,
+            GatewayIntent.GUILD_MEMBERS,
+            GatewayIntent.GUILD_VOICE_STATES
         )
-                .setMemberCachePolicy(MemberCachePolicy.ALL)
-                .enableCache(CacheFlag.VOICE_STATE)
-                .disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOTE, CacheFlag.CLIENT_STATUS)
-                .setEventManager(eventManager)
-                .setAudioSendFactory(NativeAudioSendFactory())
-                .setStatus(OnlineStatus.DO_NOT_DISTURB)
-                .build()
+            .setMemberCachePolicy(MemberCachePolicy.ALL)
+            .enableCache(CacheFlag.VOICE_STATE)
+            .disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOTE, CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS)
+            .setEventManager(eventManager)
+            .setAudioSendFactory(NativeAudioSendFactory())
+            .setStatus(OnlineStatus.DO_NOT_DISTURB)
+            .build()
+    }
+
+    fun registerCommands(commandData: List<CommandData>) {
+        logger.info("Registering slash commands")
+        jda.awaitReady().updateCommands().addCommands(commandData).queue()
     }
 
     fun getUser(userId: String): User? = jda.getUserById(userId)
@@ -68,7 +75,7 @@ class JDAService(
     fun getMutualGuilds(userId: String): List<Guild> = jda.getMutualGuilds(jda.getUserById(userId))
 
     fun isMutualGuild(guildId: String, userId: String): Boolean =
-            getMutualGuilds(userId).any { it.id == guildId }
+        getMutualGuilds(userId).any { it.id == guildId }
 
     @PreDestroy
     fun cleanUp() {

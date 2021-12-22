@@ -4,12 +4,8 @@ sackbot:
     token: bot_token
     adminRole: sackbot-admin
     activity:
-      type: watching
-      text: the hottest memes
-    chat:
-      enabled: true
-      allowDm: true
-      commandPrefix: "!"
+      type: playing
+      text: the dankest memes
     upload:
       sizeLimit: 1000000
       overrideExisting: true

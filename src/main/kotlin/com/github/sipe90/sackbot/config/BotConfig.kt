@@ -10,7 +10,6 @@ data class BotConfig(
     val token: String,
     val adminRole: String?,
     val activity: ActivityConfig,
-    val chat: ChatConfig,
     val upload: UploadConfig
 ) {
 
@@ -29,12 +28,6 @@ data class BotConfig(
             }
         }
     }
-
-    data class ChatConfig(
-        val enabled: Boolean,
-        val allowDm: Boolean,
-        val commandPrefix: String
-    )
 
     data class UploadConfig(
         val sizeLimit: Int,
