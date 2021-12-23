@@ -37,7 +37,7 @@ class SetCommand(private val memberService: MemberService) : BotCommand() {
                 "entry" -> {
                     if (soundName != null) {
                         return@flatMap memberService.setMemberEntrySound(guild.id, initiator.user.id, soundName)
-                            .map { "Your entry sound has been changed to `${soundName}`" }
+                            .then("Your entry sound has been changed to `${soundName}`".toMono())
                     }
                     return@flatMap if (member.entrySound != null) "Your entry sound is `${member.entrySound}`".toMono() else
                         "Your entry sound has not yet been set".toMono()
@@ -45,7 +45,7 @@ class SetCommand(private val memberService: MemberService) : BotCommand() {
                 "exit" -> {
                     if (soundName != null) {
                         return@flatMap memberService.setMemberExitSound(guild.id, initiator.user.id, soundName)
-                            .map { "Your exit sound has been changed to `${soundName}`" }
+                            .then("Your exit sound has been changed to `${soundName}`".toMono())
                     }
                     return@flatMap if (member.exitSound != null) "Your exit sound is `${member.exitSound}`".toMono() else
                         "Your exit sound has not yet been set".toMono()
