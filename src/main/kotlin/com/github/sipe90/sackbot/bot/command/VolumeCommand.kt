@@ -5,6 +5,7 @@ import com.github.sipe90.sackbot.util.getGuild
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
@@ -15,11 +16,14 @@ class VolumeCommand(private val playerService: AudioPlayerService) : BotCommand(
     final override val commandName = "volume"
 
     final override val commandData = CommandData(commandName, "Check or set bot volume")
-        .addOption(OptionType.INTEGER, "volume", "New volume (0-100)", false)
+        .addOptions(
+            OptionData(OptionType.INTEGER, "volume", "New volume (0-100)", false)
+                .setMinValue(0).setMaxValue(100)
+        ).setDefaultEnabled(false)
 
     override fun process(initiator: SlashCommandEvent): Flux<String> = Flux.defer {
-        val guild = getGuild(initiator)
-            ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
+        val guild =
+            getGuild(initiator) ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
         val volumeOpt = initiator.getOption("volume")
 

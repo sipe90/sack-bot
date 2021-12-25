@@ -9,10 +9,12 @@ import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.ShutdownEvent
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
@@ -64,8 +66,29 @@ class JDAService(
     }
 
     fun registerCommands(commandData: List<CommandData>) {
-        logger.info("Registering slash commands")
-        jda.awaitReady().updateCommands().addCommands(commandData).queue()
+        logger.info("Registering global slash commands")
+        jda.awaitReady()
+            .updateCommands()
+            .addCommands(commandData).queue {
+                logger.info("Global slash commands registered, updating command privileges")
+                jda.retrieveCommands().queue { commands ->
+                    val restrictedCommands = commands.filter { cmd -> !cmd.isDefaultEnabled }
+                    logger.debug("Restricted commands: {}", restrictedCommands)
+                    jda.guilds.forEach { guild ->
+                        val ownerId = guild.ownerId
+                        val adminRole = getAdminRole(guild.id)
+
+                        val commandPrivileges = mutableListOf(CommandPrivilege.enableUser(ownerId))
+                        if (adminRole != null) {
+                            commandPrivileges.add(CommandPrivilege.enableRole(adminRole.id))
+                        }
+
+                        val commandPrivilegesMap = restrictedCommands.associate { cmd -> cmd.id to commandPrivileges }
+                        logger.info("Updating command privileges for guild {}", guild.id)
+                        guild.updateCommandPrivileges(commandPrivilegesMap).queue()
+                    }
+                }
+            }
     }
 
     fun getUser(userId: String): User? = jda.getUserById(userId)
@@ -76,6 +99,33 @@ class JDAService(
 
     fun isMutualGuild(guildId: String, userId: String): Boolean =
         getMutualGuilds(userId).any { it.id == guildId }
+
+    fun getAdminRole(guildId: String): Role? {
+        val guild = getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
+        return getAdminRole(guild)
+    }
+
+    fun getAdminRole(guild: Guild): Role? {
+        if (config.adminRole == null) return null
+        return guild.getRolesByName(config.adminRole, false).first()
+    }
+
+    fun hasAdminAccess(userId: String, guildId: String): Boolean {
+        val user = getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
+        val guild = getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
+        return hasAdminAccess(user, guild)
+    }
+
+    fun hasAdminAccess(user: User, guild: Guild): Boolean {
+        val adminRole = getAdminRole(guild)
+
+        if (guild.ownerId == user.id) return true
+        if (adminRole == null) return false
+
+        val member = guild.members.first { member -> member.user.id == user.id } ?: return false
+
+        return member.roles.any { role -> role.id == adminRole.id }
+    }
 
     @PreDestroy
     fun cleanUp() {
