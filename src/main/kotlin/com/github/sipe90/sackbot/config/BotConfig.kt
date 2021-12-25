@@ -18,7 +18,7 @@ data class BotConfig(
         val text: String
     ) {
         fun getDiscordType(): Activity.ActivityType {
-            return when (type.toLowerCase()) {
+            return when (type.lowercase()) {
                 "playing" -> Activity.ActivityType.DEFAULT
                 "streaming" -> Activity.ActivityType.STREAMING
                 "listening" -> Activity.ActivityType.LISTENING
