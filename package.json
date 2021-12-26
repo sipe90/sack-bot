@@ -6,7 +6,7 @@
     "start": "webpack-dev-server --mode development --devtool inline-source-map --hot",
     "build": "webpack --mode production",
     "test": "jest",
-    "postversion": "git add package.json package-lock.json && git commit -m \"[npm] Release $npm_package_version\""
+    "postversion": "git add package.json package-lock.json && cross-var git commit -m \"[npm] Release $npm_package_version\""
   },
   "dependencies": {
     "@material-ui/core": "^4.11.2",
@@ -42,6 +42,7 @@
     "@types/webpack": "^4.41.21",
     "@types/webpack-dev-server": "^3.11.0",
     "clean-webpack-plugin": "^3.0.0",
+    "cross-var": "^1.1.0",
     "eslint": "^7.6.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^4.5.0",
