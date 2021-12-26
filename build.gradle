@@ -56,25 +56,30 @@ node {
     download = true
 }
 
-task npmReleaseVersion(type: NpmTask) {
-    args = ["--no-git-tag-version", "version", project.version.toString()]
-}
-
-tasks.release.dependsOn tasks.npmReleaseVersion
-
 processResources.dependsOn 'npmBuild'
 
 task npmBuild(type: NpmTask) {
     dependsOn npmInstall
+
+    args = ['run', 'build']
+    description = 'Bundles production version of the webapp'
 
     inputs.file 'package.json'
     inputs.file 'package-lock.json'
     inputs.files fileTree('src/main/webapp')
 
     outputs.dir 'build/webapp'
+}
 
-    description = "Bundles production version of the webapp"
-    args = ["run", "build"]
+task npmBumpVersion(type: NpmTask) {
+    args = ['run', 'bump-version', "${project.version}"]
+    description = 'Updates front-end npm package version'
+}
+
+task npmReleaseVersion(type: NpmTask) {
+    dependsOn tasks.npmBumpVersion
+    args = ['run', 'commit-version']
+    description = 'Commits the updated front-end package version to version control'
 }
 
 bootJar {
@@ -84,7 +89,6 @@ bootJar {
 }
 
 bootBuildImage {
-
     imageName = "sipe90/${project.name}:${project.version}"
 
     publish = true
@@ -103,3 +107,10 @@ compileKotlin {
         jvmTarget = '11'
     }
 }
+
+tasks.devSnapshot.dependsOn tasks.npmBumpVersion
+tasks.snapshot.dependsOn tasks.npmBumpVersion
+tasks.candidateSetup.dependsOn tasks.npmReleaseVersion
+tasks.finalSetup.dependsOn tasks.npmReleaseVersion
+
+tasks.release.dependsOn tasks.bootBuildImage

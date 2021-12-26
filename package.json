@@ -6,7 +6,8 @@
     "start": "webpack-dev-server --mode development --devtool inline-source-map --hot",
     "build": "webpack --mode production",
     "test": "jest",
-    "postversion": "git add package.json package-lock.json && cross-var git commit -m \"[npm] Release $npm_package_version\""
+    "bump-version": "npm --no-git-tag-version version --",
+    "commit-version": "git add package.json package-lock.json && cross-var git commit -m \"[npm] Release $npm_package_version\" && git push"
   },
   "dependencies": {
     "@material-ui/core": "^4.11.2",
