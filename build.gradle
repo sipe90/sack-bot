@@ -9,7 +9,6 @@ plugins {
 }
 
 group = 'com.github.sipe90'
-version = '0.8.3'
 
 java.sourceCompatibility = JavaVersion.VERSION_11
 
@@ -56,6 +55,12 @@ node {
     version = '14.15.4'
     download = true
 }
+
+task npmReleaseVersion(type: NpmTask) {
+    args = ["--no-git-tag-version", "version", project.version.toString()]
+}
+
+tasks.release.dependsOn tasks.npmReleaseVersion
 
 processResources.dependsOn 'npmBuild'
 

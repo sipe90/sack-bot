@@ -5,7 +5,8 @@
   "scripts": {
     "start": "webpack-dev-server --mode development --devtool inline-source-map --hot",
     "build": "webpack --mode production",
-    "test": "jest"
+    "test": "jest",
+    "postversion": "git add package.json package-lock.json && git commit -m \"[npm] Release $npm_package_version\""
   },
   "dependencies": {
     "@material-ui/core": "^4.11.2",
