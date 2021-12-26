@@ -108,8 +108,8 @@ compileKotlin {
     }
 }
 
-tasks.devSnapshot.dependsOn tasks.npmBumpVersion
-tasks.snapshot.dependsOn tasks.npmBumpVersion
+tasks.devSnapshotSetup.dependsOn tasks.npmBumpVersion
+tasks.snapshotSetup.dependsOn tasks.npmBumpVersion
 tasks.candidateSetup.dependsOn tasks.npmReleaseVersion
 tasks.finalSetup.dependsOn tasks.npmReleaseVersion
 
