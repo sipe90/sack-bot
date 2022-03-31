@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import queryString from 'query-string'
-import { Avatar, Button, Grid, makeStyles, Paper, Typography } from '@material-ui/core'
+import { Avatar, Box, Button, Grid, makeStyles, Paper, Typography } from '@mui/material'
 import { useSnackbar } from 'notistack'
 
 import sackbotImg from '@/public/img/Sackbot_V3.jpg'
@@ -18,38 +18,7 @@ const errorMessages: { [key: string]: string } = {
 
 const backgroundImg = (Math.random() * 100) > 5 ? sackbotImg : sackbotImg_alt
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        height: '100vh'
-    },
-    image: {
-        backgroundImage: `url(${backgroundImg})`,
-        backgroundRepeat: 'no-repeat',
-        backgroundColor:
-            theme.palette.type === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
-        backgroundSize: 'cover',
-        backgroundPosition: 'top',
-    },
-    avatar: {
-        margin: theme.spacing(1),
-    },
-    paper: {
-        margin: theme.spacing(8, 4),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2),
-    },
-    discordIcon: {
-        fill: '#fff'
-    }
-}))
-
 const Login: React.FC = () => {
-
-    const classes = useStyles()
     const { enqueueSnackbar } = useSnackbar()
 
     const { search } = useLocation()
@@ -74,11 +43,24 @@ const Login: React.FC = () => {
     }, [])
 
     return (
-        <Grid component='main' container className={classes.root}>
-            <Grid item xs={false} sm={4} md={7} className={classes.image} />
+        <Grid component='main' container sx={{ height: '100vh' }}>
+            <Grid item xs={false} sm={4} md={7} sx={(theme) => ({
+                backgroundImage: `url(${backgroundImg})`,
+                backgroundRepeat: 'no-repeat',
+                backgroundColor:
+                    theme.palette.mode === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
+                backgroundSize: 'cover',
+                backgroundPosition: 'top',
+            })} />
             <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
-                <div className={classes.paper}>
-                    <Avatar className={classes.avatar} src={sackbotAvatar} />
+                <Box sx={{
+                    mx: 8,
+                    my: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}>
+                    <Avatar src={sackbotAvatar} sx={{ m: 1 }} />
                     <Typography component="h1" variant="h5">
                         Welcome to SackBot!
                     </Typography>
@@ -91,11 +73,11 @@ const Login: React.FC = () => {
                         color="primary"
                         href='/oauth2/authorization/discord'
                         startIcon={<DiscordSvg />}
-                        className={classes.submit}
+                        sx={{ mt: 3, mr: 0, mb: 2 }}
                     >
                         Sign In
                     </Button>
-                </div>
+                </Box>
             </Grid>
         </Grid>
     )

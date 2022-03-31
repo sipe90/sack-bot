@@ -1,4 +1,4 @@
-import { IMembership, IGuild, IGuildMember, AppDispatch, ActionGroup, AsyncThunk, UserInfo } from "@/types"
+import { IGuild, IGuildMember, AppDispatch, ActionGroup, AsyncThunk, UserInfo } from "@/types"
 import { buildQueryString, fetchGetJson, fetchPutJson, apiThunk } from "@/util"
 import { enqueueErrorSnackbar } from './snackbar'
 

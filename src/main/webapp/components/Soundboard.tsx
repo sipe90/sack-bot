@@ -8,7 +8,6 @@ import {
     FormControlLabel,
     FormLabel,
     Grid,
-    makeStyles,
     Menu,
     MenuItem,
     Radio,
@@ -16,7 +15,7 @@ import {
     Slider,
     TextField,
     Typography
-} from '@material-ui/core'
+} from '@mui/material'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchSounds, playSound, playRandomSound, playUrl } from '@/actions/sounds'
@@ -24,12 +23,12 @@ import { IAudioFile, IDictionary } from '@/types'
 import { selectedGuildMembership } from '@/selectors/user'
 import { updateEntrySound, updateExitSound } from '@/actions/user'
 import Divider from '@/components/Divider'
-import { Autocomplete } from '@material-ui/lab'
+import { Autocomplete } from '@mui/lab'
 
 type GroupBy = 'alphabetic' | 'tag'
 
 const isSubset = R.curry((xs: any[], ys: any[]) =>
-    R.all(R.contains(R.__, ys), xs))
+    R.all(R.includes(R.__, ys), xs))
 
 const filterSounds = (tagFilter: string[]) => (sounds: IAudioFile[]) => tagFilter.length ? sounds.filter((sound) => isSubset(tagFilter, sound.tags)) : sounds
 
@@ -47,7 +46,7 @@ const groupByTags = (sounds: IAudioFile[]) => sounds.reduce<IDictionary<IAudioFi
     return acc
 }, {})
 
-const filterAndGroup = (tagFilter: string[], groupBy: GroupBy, sounds: IAudioFile[]) => R.pipe<IAudioFile[], IAudioFile[], IDictionary<IAudioFile[]>>(
+const filterAndGroup = (tagFilter: string[], groupBy: GroupBy, sounds: IAudioFile[]) => R.pipe<[IAudioFile[]], IAudioFile[], IDictionary<IAudioFile[]>>(
     filterSounds(tagFilter),
     R.ifElse(
         R.always(R.equals('alphabetic', groupBy)),
@@ -56,36 +55,15 @@ const filterAndGroup = (tagFilter: string[], groupBy: GroupBy, sounds: IAudioFil
     )
 )(sounds)
 
-const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
+const getTags = R.pipe<[IAudioFile[]], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
     R.uniq,
     R.invoker(0, 'sort')
 )
 
-const useStyles = makeStyles((theme) => ({
-    divider: {
-        marginTop: theme.spacing(4),
-        marginBottom: theme.spacing(4)
-    },
-    card: {
-        borderRadius: 0,
-        textAlign: 'center',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        padding: 8
-    },
-    loadingIndicator: {
-        marginBottom: theme.spacing(2)
-    }
-}))
-
 const defVolume = 75
 
 const Soundboard: React.FC = () => {
-
-    const classes = useStyles()
-
     const selectedGuild = useSelector((state => state.user.selectedGuildId))
     const soundsLoading = useSelector((state => state.sounds.soundsLoading))
     const sounds = useSelector((state => state.sounds.sounds))
@@ -193,20 +171,20 @@ const Soundboard: React.FC = () => {
                     </Grid>
                 </Grid>
             </Grid>
-            <Divider className={classes.divider} />
-            <Grid container justify='center'>
+            <Divider sx={{ my: 4 }} />
+            <Grid container justifyContent='center'>
                 <Button
                     variant='contained'
                     color='primary'
                     onClick={onPlayRandomSound}
                 >
                     Random
-                    </Button>
+                </Button>
 
             </Grid>
             {soundsLoading ?
                 <Box display='flex' flexDirection='column' alignItems='center' m={8}>
-                    <CircularProgress className={classes.loadingIndicator} />
+                    <CircularProgress sx={{ mb: 2 }} />
                     <Typography>
                         Loading board...
                     </Typography>
@@ -257,8 +235,6 @@ const Board: React.FC<BoardProps> = React.memo((props) => {
         onClearExitSound
     } = props
 
-    const classes = useStyles()
-
     const groupedSounds = useMemo(() => filterAndGroup(tagFilter, groupBy, sounds), [sounds, groupBy, tagFilter])
     const keys = useMemo(() => R.keys(groupedSounds).sort(), [groupedSounds])
 
@@ -304,7 +280,14 @@ const Board: React.FC<BoardProps> = React.memo((props) => {
                                 <Box key={name} boxShadow={2} mr={1} mt={1}>
                                     <CardActionArea
                                         onContextMenu={handleContextClick(name)}
-                                        className={classes.card}
+                                        sx={{
+                                            borderRadius: 0,
+                                            textAlign: 'center',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            padding: 8
+                                        }}
                                         onClick={() => onPlaySound(name)}
                                     >
                                         {name}

@@ -2,13 +2,13 @@ import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import { DateTime } from 'luxon'
 import * as R from 'ramda'
 import filesize from 'filesize.js'
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@material-ui/core'
-import Autocomplete from '@material-ui/lab/Autocomplete'
-import PublishIcon from '@material-ui/icons/Publish'
-import GetAppIcon from '@material-ui/icons/GetApp'
-import PlayArrowIcon from '@material-ui/icons/PlayArrow'
-import EditIcon from '@material-ui/icons/Edit'
-import DeleteIcon from '@material-ui/icons/Delete'
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material'
+import Autocomplete from '@mui/lab/Autocomplete'
+import PublishIcon from '@mui/icons-material/Publish'
+import GetAppIcon from '@mui/icons-material/GetApp'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
 import MaterialTable, { Action, Column } from 'material-table'
 
 import { useDispatch, useSelector } from '@/util'
@@ -20,7 +20,7 @@ import { selectedGuild, selectedGuildMembers } from '@/selectors/user'
 import { useSnackbar } from 'notistack'
 import { Redirect } from 'react-router-dom'
 
-const getTags = R.pipe<IAudioFile[], string[], string[], string[]>(
+const getTags = R.pipe<[IAudioFile[]], string[], string[], string[]>(
     R.chain<IAudioFile, string>(R.prop('tags')),
     R.uniq,
     R.invoker(0, 'sort')
@@ -238,10 +238,13 @@ const Admin: React.FC = () => {
                 fullWidth
                 maxWidth='sm'
                 open={editModalVisible}
-                onExited={() => {
-                    setSelectedAudioFile(null)
-                    setUpdateAudioFile(null)
+                TransitionProps={{
+                    onExited: () => {
+                        setSelectedAudioFile(null)
+                        setUpdateAudioFile(null)
+                    }
                 }}
+
             >
                 <DialogTitle>{`Edit sound '${selectedAudioFile?.name}'`}</DialogTitle>
                 <DialogContent>
