@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react'
 import * as R from 'ramda'
 import {
+    Autocomplete,
     Box,
     Button,
     CardActionArea,
@@ -10,6 +11,7 @@ import {
     Grid,
     Menu,
     MenuItem,
+    Paper,
     Radio,
     RadioGroup,
     Slider,
@@ -23,7 +25,6 @@ import { IAudioFile, IDictionary } from '@/types'
 import { selectedGuildMembership } from '@/selectors/user'
 import { updateEntrySound, updateExitSound } from '@/actions/user'
 import Divider from '@/components/Divider'
-import { Autocomplete } from '@mui/lab'
 
 type GroupBy = 'alphabetic' | 'tag'
 
@@ -103,7 +104,7 @@ const Soundboard: React.FC = () => {
     }
 
     return (
-        <>
+        <Paper sx={{ p: 4 }}>
             <Grid container spacing={4}>
                 <Grid item xs={12} sm={6}>
                     <FormLabel component='legend'>Group sounds</FormLabel>
@@ -151,6 +152,7 @@ const Soundboard: React.FC = () => {
                 <Grid container item xs={12} sm={6} spacing={2} alignItems='flex-end'>
                     <Grid item xs={10}>
                         <TextField
+                            size='small'
                             value={url}
                             onChange={onUrlFieldChange}
                             fullWidth
@@ -203,7 +205,7 @@ const Soundboard: React.FC = () => {
                     onClearExitSound={onClearExitSound}
                 />
             }
-        </>
+        </Paper>
     )
 }
 
@@ -276,17 +278,20 @@ const Board: React.FC<BoardProps> = React.memo((props) => {
                     <Divider>{key}</Divider>
                     <Grid container>
                         {groupedSounds[key].map(({ name }) =>
-                            <Grid item xs={4} sm={3} md={2} >
-                                <Box key={name} boxShadow={2} mr={1} mt={1}>
+                            <Grid key={name} item xs={4} sm={3} md={2} >
+                                <Box mr={1} mt={1}>
                                     <CardActionArea
                                         onContextMenu={handleContextClick(name)}
                                         sx={{
-                                            borderRadius: 0,
+                                            boxShadow: 2,
+                                            color: 'white',
+                                            backgroundColor: 'primary.main',
+                                            borderRadius: 1,
                                             textAlign: 'center',
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
                                             whiteSpace: 'nowrap',
-                                            padding: 8
+                                            padding: '8px'
                                         }}
                                         onClick={() => onPlaySound(name)}
                                     >

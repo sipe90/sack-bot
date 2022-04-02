@@ -13,7 +13,7 @@ const config: Configuration = {
     },
     output: {
         path: DEST,
-        filename: '[name].[hash].bundle.js',
+        filename: '[name].[contenthash].bundle.js',
         publicPath: '/'
     },
     module: {

@@ -6,8 +6,9 @@ import Box, { BoxProps } from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Container from '@mui/material/Container'
 import CircularProgress from '@mui/material/CircularProgress'
-import { createTheme, ThemeProvider } from '@mui/material/styles'
+import { createTheme, ThemeOptions, ThemeProvider } from '@mui/material/styles'
 import { styled } from '@mui/system'
+import { deepmerge } from '@mui/utils'
 
 import { useDispatch, useSelector, fetchGetJson } from '@/util'
 import { selectedGuild } from '@/selectors/user'
@@ -20,6 +21,7 @@ import NotFound from '@/components/NotFound'
 import Login from '@/components/Login'
 import { Header } from '@/components/layout'
 import Notifier from '@/components/Notifier'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
 // From Webpack define plugin
 declare var VERSION: string | undefined
@@ -28,7 +30,6 @@ const Layout = styled(Box)<BoxProps>(({ theme }) => ({
     width: 'auto',
     marginLeft: theme.spacing(2),
     marginRight: theme.spacing(2),
-    paddingTop: theme.spacing(2),
     [theme.breakpoints.up(1200)]: {
         width: 1200,
         marginLeft: 'auto',
@@ -36,18 +37,71 @@ const Layout = styled(Box)<BoxProps>(({ theme }) => ({
     }
 }))
 
+const baseTheme: ThemeOptions = {
+    palette: {
+        secondary: {
+            200: '#80cbc4',
+            800: '#00695c',
+            light: '#e0f2f1',
+            main: '#009688',
+            dark: '#00897b'
+        },
+        success: {
+            200: '#6cc067',
+            light: '#edf7ed',
+            main: '#6cc067',
+            dark: '#64ba5f'
+        },
+        error: {
+            light: '#e48784',
+            main: '#d9534f',
+            dark: '#d54c48'
+        },
+        warning: {
+            light: '#fdf5ea',
+            main: '#f0ad4e',
+            dark: '#ec9c3d'
+        }
+    }
+}
+
+const lightTheme: ThemeOptions = {
+    palette: {
+        mode: 'light',
+        background: {
+            default: '#e1e1e1',
+            paper: '#f5f5f5'
+        }
+    }
+}
+
+const darkTheme: ThemeOptions = {
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#1f5099'
+        },
+        background: {
+            default: '#1b2635',
+            paper: '#233044'
+        },
+        text: {
+            primary: '#dddcd9'
+        }
+    }
+}
+
 const App: React.FC = () => {
-    const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true')
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
+    const lsSetting = localStorage.getItem('darkMode')
+
+    const [darkMode, setDarkMode] = useState(lsSetting === null ? prefersDarkMode : lsSetting === 'true')
 
     useEffect(() => localStorage.setItem('darkMode', darkMode ? 'true' : 'false'), [darkMode])
 
     const theme = useMemo(
         () =>
-            createTheme({
-                palette: {
-                    mode: darkMode ? 'dark' : 'light',
-                },
-            }),
+            createTheme(deepmerge(baseTheme, darkMode ? darkTheme : lightTheme)),
         [darkMode]
     )
 

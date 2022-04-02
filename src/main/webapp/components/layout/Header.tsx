@@ -48,12 +48,14 @@ const Header: React.FC<HeaderProps> = (props) => {
                             component={NavLink}
                             color='inherit'
                             noWrap
-                            variant='body2'
+                            variant='h6'
+                            underline='hover'
                             sx={{
                                 p: 1,
                                 flexShrink: 0,
-                                '&:active': {
-                                    color: 'primary.main'
+                                '&.active': {
+                                    color: 'secondary.main',
+                                    textDecoration: 'underline'
                                 }
                             }}
                             to='/board'
@@ -65,12 +67,14 @@ const Header: React.FC<HeaderProps> = (props) => {
                             component={NavLink}
                             color='inherit'
                             noWrap
-                            variant='body2'
+                            variant='h6'
+                            underline='hover'
                             sx={{
                                 p: 1,
                                 flexShrink: 0,
-                                '&:active': {
-                                    color: 'primary.main'
+                                '&.active': {
+                                    color: 'secondary.main',
+                                    textDecoration: 'underline'
                                 }
                             }}
                             to='/admin'
@@ -153,6 +157,7 @@ const GuildSelector: React.FC = () => {
                             <Avatar
                                 alt={name}
                                 src={iconUrl || undefined}
+                                sx={{ width: 32, height: 32 }}
                             />
                         </ListItemAvatar>
                         <Typography variant='inherit'>{name}</Typography>
