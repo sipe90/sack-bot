@@ -58,8 +58,7 @@ const Header: React.FC<HeaderProps> = (props) => {
                                     textDecoration: 'underline'
                                 }
                             }}
-                            to='/board'
-                            exact
+                            to='board'
                         >
                             Board
                         </Link>
@@ -77,8 +76,7 @@ const Header: React.FC<HeaderProps> = (props) => {
                                     textDecoration: 'underline'
                                 }
                             }}
-                            to='/admin'
-                            exact
+                            to='admin'
                         >
                             Admin
                         </Link>

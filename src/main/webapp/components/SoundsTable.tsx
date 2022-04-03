@@ -309,7 +309,7 @@ const SoundsTable: React.FC<ISoundsTableProps> = (props) => {
             </TableContainer>
             <TablePagination
                 rowsPerPageOptions={[10, 25, 50, 100]}
-                component="div"
+                component='div'
                 count={rows.length}
                 rowsPerPage={rowsPerPage}
                 page={page}

@@ -3,7 +3,7 @@ import * as R from 'ramda'
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField } from '@mui/material'
 import Autocomplete from '@mui/material/Autocomplete'
 import { useSnackbar } from 'notistack'
-import { Redirect } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 
 import { useDispatch, useSelector } from '@/util'
 import { fetchGuildMembers } from '@/actions/user'
@@ -173,7 +173,7 @@ const Admin: React.FC = () => {
     }
 
     if (!guild) return null
-    if (!guild.isAdmin) return <Redirect to='/' />
+    if (!guild.isAdmin) return <Navigate to='/' replace />
 
     const membersById = R.indexBy(R.prop('id'), guildMembers || [])
     const tags = useMemo(() => getTags(sounds), [sounds])

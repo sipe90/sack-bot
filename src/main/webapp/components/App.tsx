@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Switch, Route, Redirect, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom'
 import CssBaseline from '@mui/material/CssBaseline'
 import AppBar from '@mui/material/AppBar'
 import Box, { BoxProps } from '@mui/material/Box'
@@ -100,14 +100,14 @@ const App: React.FC = () => {
     useEffect(() => localStorage.setItem('darkMode', darkMode ? 'true' : 'false'), [darkMode])
 
     const theme = useMemo(
-        () =>
-            createTheme(deepmerge(baseTheme, darkMode ? darkTheme : lightTheme)),
+        () => createTheme(deepmerge(baseTheme, darkMode ? darkTheme : lightTheme)),
         [darkMode]
     )
 
     const dispatch = useDispatch()
 
     const loggedIn = useSelector((state) => state.user.loggedIn)
+    const loginPending = useSelector((state) => state.user.loginPending)
     const guild = useSelector(selectedGuild)
 
     const isAdmin = !!guild?.isAdmin
@@ -133,61 +133,51 @@ const App: React.FC = () => {
             >
                 <CssBaseline />
                 <Notifier />
-                {loggedIn &&
-                    <AppBar position='sticky' color='default' elevation={2}>
-                        <Container maxWidth='lg' disableGutters>
-                            <Header darkMode={darkMode} onDarkModeChange={setDarkMode} />
-                        </Container>
-                    </AppBar>
-                }
-                <Switch>
-                    <Route path='/login' exact>
-                        <Login />
+                <Routes>
+                    <Route path='login' element={<Login />} />
+                    <Route element={
+                        <>
+                            <AppBar position='sticky' color='default' elevation={2}>
+                                <Container maxWidth='lg' disableGutters>
+                                    <Header darkMode={darkMode} onDarkModeChange={setDarkMode} />
+                                </Container>
+                            </AppBar>
+                            <Layout component='main' flex={1}>
+                                {loginPending ?
+                                    <Box sx={{
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        mt: 4,
+                                        '& > *': {
+                                            m: 1,
+                                        }
+                                    }}>
+                                        <CircularProgress />
+                                        <Typography>
+                                            Loading SackBot..
+                                        </Typography>
+                                    </Box> : loggedIn ?
+                                        <Outlet /> : <Navigate to='login' />
+                                }
+                            </Layout>
+                            <Layout component='footer'>
+                                <Typography variant='body2' color='textSecondary' align='center' sx={(theme) => ({
+                                    borderTop: `1px solid ${theme.palette.divider}`,
+                                    mt: 8,
+                                    py: 3
+                                })}>
+                                    Sackbot {VERSION ? `v${VERSION}` : ''}
+                                </Typography>
+                            </Layout>
+                        </>
+                    }>
+                        <Route index element={<Navigate replace to='board' />} />
+                        <Route path='board' element={<Soundboard />} />
+                        <Route path='admin' element={isAdmin ? <Admin /> : <NotFound />} />
+                        <Route path='*' element={<NotFound />} />
                     </Route>
-                    <>
-                        <Layout component='main' flex={1}>
-                            <Switch>
-                                {!loggedIn &&
-                                    <Route>
-                                        <Box sx={{
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            mt: 4,
-                                            '& > *': {
-                                                m: 1,
-                                            }
-                                        }}>
-                                            <CircularProgress />
-                                            <Typography>
-                                                Loading SackBot..
-                                            </Typography>
-                                        </Box>
-                                    </Route>
-                                }
-                                <Redirect exact from='/' to='/board' />
-                                <Route path='/board' exact>
-                                    <Soundboard />
-                                </Route>
-                                {isAdmin &&
-                                    <Route path='/admin' exact>
-                                        <Admin />
-                                    </Route>
-                                }
-                                <NotFound />
-                            </Switch>
-                        </Layout>
-                        <Layout component='footer'>
-                            <Typography variant='body2' color='textSecondary' align='center' sx={(theme) => ({
-                                borderTop: `1px solid ${theme.palette.divider}`,
-                                mt: 8,
-                                py: 3
-                            })}>
-                                Sackbot {VERSION ? `v${VERSION}` : ''}
-                            </Typography>
-                        </Layout>
-                    </>
-                </Switch>
+                </Routes>
             </Box>
         </ThemeProvider>
     )
