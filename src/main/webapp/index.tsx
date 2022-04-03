@@ -2,8 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
-import { applyMiddleware, createStore, Middleware } from 'redux'
-import { composeWithDevTools } from 'redux-devtools-extension'
+import { applyMiddleware, compose, createStore, Middleware } from 'redux'
 import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
 import { SnackbarProvider } from 'notistack'
@@ -17,9 +16,11 @@ if (process.env.NODE_ENV === `development`) {
     middlewares.push(createLogger())
 }
 
+const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
+
 const store = createStore(
     reducers,
-    composeWithDevTools(
+    composeEnhancers(
         applyMiddleware(...middlewares))
 )
 
