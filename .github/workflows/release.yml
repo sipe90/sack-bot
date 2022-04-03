@@ -34,10 +34,13 @@ jobs:
         env:
           GRGIT_USER: GitHub Actions Bot
           GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew bootJar ${{ github.event.inputs.type }}
-          -Prelease.scope=${{ github.event.inputs.scope }}
-          -Pdocker.publishRegistry.username=${{ secrets.DOCKERHUB_USERNAME }}
-          -Pdocker.publishRegistry.password=${{ secrets.DOCKERHUB_PASSWORD }}
+        run: |
+          git config user.name "$GRGIT_USER"
+          git config user.email "<>"
+          ./gradlew bootJar ${{ github.event.inputs.type }} \
+            -Prelease.scope=${{ github.event.inputs.scope }} \
+            -Pdocker.publishRegistry.username=${{ secrets.DOCKERHUB_USERNAME }} \
+            -Pdocker.publishRegistry.password=${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@master
         with:
