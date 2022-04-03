@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
-import queryString from 'query-string'
+import { useSearchParams } from 'react-router-dom'
 import { Avatar, Box, Button, Grid, Paper, Typography } from '@mui/material'
 import { useSnackbar } from 'notistack'
 
@@ -21,19 +20,16 @@ const backgroundImg = (Math.random() * 100) > 5 ? sackbotImg : sackbotImg_alt
 const Login: React.FC = () => {
     const { enqueueSnackbar } = useSnackbar()
 
-    const { search } = useLocation()
+    const [searchParams] = useSearchParams()
 
     useEffect(() => {
-        const queryParams = queryString.parse(search)
-
-        const logoutParam = queryParams['logout']
-        const errorParam = queryParams['error']
-
-        if (logoutParam !== undefined) {
+        if (searchParams.has('logout')) {
             enqueueSnackbar('Logout successful.', { variant: 'success' })
         }
 
-        if (typeof errorParam === 'string') {
+        const errorParam = searchParams.get('error')
+
+        if (errorParam !== null) {
             if (errorParam in errorMessages) {
                 enqueueSnackbar(errorMessages[errorParam], { variant: 'error' })
             } else {
