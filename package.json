@@ -13,6 +13,8 @@
     "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.8.1",
     "@mui/material": "^5.5.3",
+    "@mui/utils": "^5.5.3",
+    "@mui/system": "^5.5.3",
     "@mui/icons-material": "^5.5.1",
     "filesize.js": "^2.0.0",
     "luxon": "^2.3.1",
