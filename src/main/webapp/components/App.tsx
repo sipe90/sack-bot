@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Switch, Route, Redirect, useLocation } from 'react-router-dom'
-import CssBaseline from '@material-ui/core/CssBaseline'
-import AppBar from '@material-ui/core/AppBar'
-import Typography from '@material-ui/core/Typography'
-import Container from '@material-ui/core/Container'
-import { createMuiTheme, makeStyles, ThemeProvider } from '@material-ui/core/styles'
+import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom'
+import CssBaseline from '@mui/material/CssBaseline'
+import AppBar from '@mui/material/AppBar'
+import Box, { BoxProps } from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Container from '@mui/material/Container'
+import CircularProgress from '@mui/material/CircularProgress'
+import { createTheme, ThemeOptions, ThemeProvider } from '@mui/material/styles'
+import { styled } from '@mui/system'
+import { deepmerge } from '@mui/utils'
 
 import { useDispatch, useSelector, fetchGetJson } from '@/util'
 import { selectedGuild } from '@/selectors/user'
@@ -16,83 +20,99 @@ import Admin from '@/components/Admin'
 import NotFound from '@/components/NotFound'
 import Login from '@/components/Login'
 import { Header } from '@/components/layout'
-import { CircularProgress } from '@material-ui/core'
-import Notifier from './Notifier'
+import Notifier from '@/components/Notifier'
+import useMediaQuery from '@mui/material/useMediaQuery'
 
 // From Webpack define plugin
 declare var VERSION: string | undefined
 
-const useStyles = makeStyles((theme) => ({
-    '@global': {
-        ul: {
-            margin: 0,
-            padding: 0,
-            listStyle: 'none',
-        },
-    },
-    root: {
-        display: 'flex',
-        flexDirection: 'column',
-        margin: 0,
-        minHeight: '100vh'
-    },
-    loadingContainer: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: theme.spacing(4),
-        '& > *': {
-            margin: theme.spacing(1),
-        }
-    },
-    layout: {
-        width: 'auto',
-        marginLeft: theme.spacing(2),
-        marginRight: theme.spacing(2),
-        paddingTop: theme.spacing(2),
-        [theme.breakpoints.up(1200 + theme.spacing(2) * 2)]: {
-            width: 1200,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-        },
-    },
-    main: {
-        flex: 1,
-    },
-    footer: {
-        borderTop: `1px solid ${theme.palette.divider}`,
-        marginTop: theme.spacing(8),
-        paddingTop: theme.spacing(3),
-        paddingBottom: theme.spacing(3),
-    },
+const Layout = styled(Box)<BoxProps>(({ theme }) => ({
+    width: 'auto',
+    marginLeft: theme.spacing(2),
+    marginRight: theme.spacing(2),
+    [theme.breakpoints.up(1200)]: {
+        width: 1200,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+    }
 }))
 
-const App: React.FC = () => {
+const baseTheme: ThemeOptions = {
+    palette: {
+        secondary: {
+            200: '#80cbc4',
+            800: '#00695c',
+            light: '#e0f2f1',
+            main: '#009688',
+            dark: '#00897b'
+        },
+        success: {
+            200: '#6cc067',
+            light: '#edf7ed',
+            main: '#6cc067',
+            dark: '#64ba5f'
+        },
+        error: {
+            light: '#e48784',
+            main: '#d9534f',
+            dark: '#d54c48'
+        },
+        warning: {
+            light: '#fdf5ea',
+            main: '#f0ad4e',
+            dark: '#ec9c3d'
+        }
+    }
+}
 
-    const classes = useStyles()
+const lightTheme: ThemeOptions = {
+    palette: {
+        mode: 'light',
+        background: {
+            default: '#e1e1e1',
+            paper: '#f5f5f5'
+        }
+    }
+}
+
+const darkTheme: ThemeOptions = {
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#1f5099'
+        },
+        background: {
+            default: '#1b2635',
+            paper: '#233044'
+        },
+        text: {
+            primary: '#dddcd9'
+        }
+    }
+}
+
+const App: React.FC = () => {
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
+    const lsSetting = localStorage.getItem('darkMode')
+
+    const [darkMode, setDarkMode] = useState(lsSetting === null ? prefersDarkMode : lsSetting === 'true')
+
+    useEffect(() => localStorage.setItem('darkMode', darkMode ? 'true' : 'false'), [darkMode])
+
+    const theme = useMemo(
+        () => createTheme(deepmerge(baseTheme, darkMode ? darkTheme : lightTheme)),
+        [darkMode]
+    )
 
     const dispatch = useDispatch()
 
     const loggedIn = useSelector((state) => state.user.loggedIn)
+    const loginPending = useSelector((state) => state.user.loginPending)
     const guild = useSelector(selectedGuild)
 
     const isAdmin = !!guild?.isAdmin
 
     const location = useLocation()
-
-    const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true')
-
-    useEffect(() => localStorage.setItem('darkMode', darkMode ? 'true' : 'false'), [darkMode])
-
-    const theme = useMemo(
-        () =>
-            createMuiTheme({
-                palette: {
-                    type: darkMode ? 'dark' : 'light',
-                },
-            }),
-        [darkMode],
-    )
 
     useEffect(() => {
         if (location.pathname !== '/login') {
@@ -103,56 +123,62 @@ const App: React.FC = () => {
         }
     }, [])
 
-
     return (
         <ThemeProvider theme={theme}>
-            <div className={classes.root}>
+            <Box
+                display='flex'
+                flexDirection='column'
+                margin={0}
+                minHeight='100vh'
+            >
                 <CssBaseline />
                 <Notifier />
-                {loggedIn &&
-                    <AppBar position="sticky" color="default" elevation={2}>
-                        <Container maxWidth="lg" disableGutters>
-                            <Header darkMode={darkMode} onDarkModeChange={setDarkMode} />
-                        </Container>
-                    </AppBar>
-                }
-                <Switch>
-                    <Route path='/login' exact>
-                        <Login />
-                    </Route>
-                    <>
-                        <main className={`${classes.layout} ${classes.main}`}>
-                            <Switch>
-                                {!loggedIn &&
-                                    <Route>
-                                        <div className={classes.loadingContainer}>
-                                            <CircularProgress />
-                                            <Typography>
-                                                Loading SackBot..
+                <Routes>
+                    <Route path='login' element={<Login />} />
+                    <Route element={
+                        <>
+                            <AppBar position='sticky' color='default' elevation={2}>
+                                <Container maxWidth='lg' disableGutters>
+                                    <Header darkMode={darkMode} onDarkModeChange={setDarkMode} />
+                                </Container>
+                            </AppBar>
+                            <Layout component='main' flex={1}>
+                                {loginPending ?
+                                    <Box sx={{
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        mt: 4,
+                                        '& > *': {
+                                            m: 1,
+                                        }
+                                    }}>
+                                        <CircularProgress />
+                                        <Typography>
+                                            Loading SackBot..
                                         </Typography>
-                                        </div>
-                                    </Route>
+                                    </Box> : loggedIn ?
+                                        <Outlet /> : <Navigate to='login' />
                                 }
-                                <Redirect exact from='/' to='/board' />
-                                <Route path='/board' exact>
-                                    <Soundboard />
-                                </Route>
-                                {isAdmin &&
-                                    <Route path='/admin' exact>
-                                        <Admin />
-                                    </Route>
-                                }
-                                <NotFound />
-                            </Switch>
-                        </main>
-                        <footer className={classes.layout}>
-                            <Typography variant="body2" color="textSecondary" align="center" className={classes.footer}>
-                                Sackbot {VERSION ? `v${VERSION}` : ''}
-                            </Typography>
-                        </footer>
-                    </>
-                </Switch>
-            </div>
+                            </Layout>
+                            <Layout component='footer'>
+                                <Typography variant='body2' color='textSecondary' align='center' sx={(theme) => ({
+                                    borderTop: `1px solid ${theme.palette.divider}`,
+                                    mt: 8,
+                                    py: 3
+                                })}>
+                                    Sackbot {VERSION ? `v${VERSION}` : ''}
+                                </Typography>
+                            </Layout>
+                        </>
+                    }>
+                        <Route index element={<Navigate replace to='board' />} />
+                        <Route path='board' element={<Soundboard />} />
+                        <Route path='admin' element={isAdmin ? <Admin /> : <NotFound />} />
+                        <Route path='*' element={<NotFound />} />
+                    </Route>
+                </Routes>
+            </Box>
         </ThemeProvider>
     )
 }

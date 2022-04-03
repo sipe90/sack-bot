@@ -24,6 +24,7 @@ export interface IUserState {
     loggedIn: boolean
     userInfo: UserInfo | null
     userInfoLoading: boolean
+    loginPending: boolean
     guilds: IGuild[]
     guildsLoading: boolean
     guildMembers: { [guildId: string]: IGuildMember[] }
@@ -35,6 +36,7 @@ const initialState: IUserState = {
     loggedIn: false,
     userInfo: null,
     userInfoLoading: false,
+    loginPending: true,
     guilds: [],
     guildsLoading: false,
     guildMembers: {},
@@ -51,10 +53,11 @@ const userReducer: Reducer<IUserState, UserActions> = (state = initialState, act
                 ...state,
                 loggedIn: true,
                 userInfoLoading: false,
+                loginPending: false,
                 userInfo: action.payload
             }
         case FETCH_USER_REJECTED:
-            return { ...state, userInfoLoading: false }
+            return { ...state, userInfoLoading: false, loginPending: false }
         case FETCH_GUILDS_REQUEST:
             return { ...state, guildsLoading: true }
         case FETCH_GUILDS_RESOLVED:

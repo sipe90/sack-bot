@@ -2,7 +2,6 @@ import * as RR from 'react-redux'
 
 import { AppDispatch } from '@/types'
 import { IAppState } from '@/reducers'
-import history from '@/history'
 
 
 export const useSelector: RR.TypedUseSelectorHook<IAppState> = RR.useSelector
@@ -43,12 +42,12 @@ const fetchJson = async <E>(url: string, init?: RequestInit): Promise<JsonRespon
         status,
         statusText,
     } : {
-            headers,
-            json: resJson as IErrorResponse,
-            ok,
-            status,
-            statusText,
-        }
+        headers,
+        json: resJson as IErrorResponse,
+        ok,
+        status,
+        statusText,
+    }
 }
 
 export const fetchGetJson = <E = void>(url: string) => fetchJson<E>(url)
@@ -98,9 +97,7 @@ export const apiThunk = <T = void, P = T>(opts: ThunkOpts<T, P>) => async (dispa
     } else {
         const error = new Error(res.json?.message || res.statusText)
         dispatch({ type: rejectedType, payload: error })
-        if (res.status === 401) {
-            history.push('/login')
-        } else {
+        if (res.status !== 401) {
             onError && onError(error, dispatch)
         }
         throw error

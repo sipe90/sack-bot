@@ -1,3 +1,4 @@
+/// <reference path="node_modules/webpack-dev-server/types/lib/Server.d.ts"/>
 import { CleanWebpackPlugin } from 'clean-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import path from 'path'
@@ -12,7 +13,7 @@ const config: Configuration = {
     },
     output: {
         path: DEST,
-        filename: '[name].[hash].bundle.js',
+        filename: '[name].[contenthash].bundle.js',
         publicPath: '/'
     },
     module: {
@@ -35,9 +36,9 @@ const config: Configuration = {
         ]
     },
     devServer: {
+        host: 'localhost',
         port: 3000,
         open: true,
-        useLocalIp: false,
         historyApiFallback: true,
         proxy: [{
             context: ['/oauth2', '/login/oauth2', '/logout', '/api'],

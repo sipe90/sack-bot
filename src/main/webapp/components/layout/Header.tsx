@@ -9,39 +9,20 @@ import {
     Link,
     ListItemAvatar,
     ListItemIcon,
-    makeStyles,
     Menu,
     MenuItem,
     Toolbar,
     Tooltip,
     Typography
-} from '@material-ui/core'
-import ExitToAppIcon from '@material-ui/icons/ExitToApp'
-import MoreVertIcon from '@material-ui/icons/MoreVert'
-import WbSunnyIcon from '@material-ui/icons/WbSunny'
-import NightsStayIcon from '@material-ui/icons/NightsStay'
+} from '@mui/material'
+import ExitToAppIcon from '@mui/icons-material/ExitToApp'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import WbSunnyIcon from '@mui/icons-material/WbSunny'
+import NightsStayIcon from '@mui/icons-material/NightsStay'
 
 import { useSelector, useDispatch } from '@/util'
 import { selectGuild } from '@/actions/user'
 import { selectedGuild } from '@/selectors/user'
-
-const useStyles = makeStyles((theme) => ({
-    toolbarTitle: {
-        flexBasis: 0
-    },
-    toolbarLink: {
-        padding: theme.spacing(1),
-        flexShrink: 0,
-    },
-    activeLink: {
-        color: theme.palette.primary.main
-    },
-    guildSelector: {
-        '& > *': {
-            marginRight: theme.spacing(1),
-        }
-    }
-}))
 
 interface HeaderProps {
     darkMode: boolean
@@ -49,15 +30,12 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = (props) => {
-
-    const classes = useStyles()
-
     const user = useSelector((state) => state.user.userInfo)
     const guild = useSelector(selectedGuild)
 
     return (<>
         <Toolbar disableGutters>
-            <Container className={classes.toolbarTitle}>
+            <Container sx={{ flexBasis: 0 }}>
                 <Avatar
                     alt={user?.name || 'U'}
                     src={user?.avatarUrl || undefined}
@@ -70,11 +48,17 @@ const Header: React.FC<HeaderProps> = (props) => {
                             component={NavLink}
                             color='inherit'
                             noWrap
-                            variant='body2'
-                            className={classes.toolbarLink}
-                            to='/board'
-                            exact
-                            activeClassName={classes.activeLink}
+                            variant='h6'
+                            underline='hover'
+                            sx={{
+                                p: 1,
+                                flexShrink: 0,
+                                '&.active': {
+                                    color: 'secondary.main',
+                                    textDecoration: 'underline'
+                                }
+                            }}
+                            to='board'
                         >
                             Board
                         </Link>
@@ -82,18 +66,24 @@ const Header: React.FC<HeaderProps> = (props) => {
                             component={NavLink}
                             color='inherit'
                             noWrap
-                            variant='body2'
-                            className={classes.toolbarLink}
-                            to='/admin'
-                            exact
-                            activeClassName={classes.activeLink}
+                            variant='h6'
+                            underline='hover'
+                            sx={{
+                                p: 1,
+                                flexShrink: 0,
+                                '&.active': {
+                                    color: 'secondary.main',
+                                    textDecoration: 'underline'
+                                }
+                            }}
+                            to='admin'
                         >
                             Admin
                         </Link>
                     </>
                 }
             </Container>
-            <Container className={classes.toolbarTitle}>
+            <Container sx={{ flexBasis: 0 }}>
                 <Tooltip title='Toggle dark mode'>
                     <IconButton
                         onClick={() => props.onDarkModeChange(!props.darkMode)}
@@ -109,9 +99,6 @@ const Header: React.FC<HeaderProps> = (props) => {
 
 
 const GuildSelector: React.FC = () => {
-
-    const classes = useStyles()
-
     const guild = useSelector(selectedGuild)
     const guilds = useSelector((state) => state.user.guilds)
 
@@ -134,7 +121,11 @@ const GuildSelector: React.FC = () => {
 
     return (
         <>
-            <Box display='flex' alignItems='center' className={classes.guildSelector}>
+            <Box display='flex' alignItems='center' sx={{
+                '& > *': {
+                    mr: 1,
+                }
+            }}>
                 <Tooltip title={guild?.name || ''}>
                     <Avatar
                         alt={guild?.name || 'G'}
@@ -164,6 +155,7 @@ const GuildSelector: React.FC = () => {
                             <Avatar
                                 alt={name}
                                 src={iconUrl || undefined}
+                                sx={{ width: 32, height: 32 }}
                             />
                         </ListItemAvatar>
                         <Typography variant='inherit'>{name}</Typography>
