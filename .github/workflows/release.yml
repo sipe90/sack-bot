@@ -3,23 +3,14 @@ name: Gradle Release
 on:
   workflow_dispatch:
     inputs:
-      type:
-        default: final
-        type: choice
-        description: Release type (final or release candidate).
-        required: false
-        options:
-          - final
-          - candidate
-      scope:
-        default: minor
-        type: choice
-        description: Release scope (major, minor or patch)
-        required: false
-        options:
-          - major
-          - minor
-          - patch
+      release-version:
+        type: string
+        description: Release version
+        required: true
+      new-version:
+        type: string
+        description: New snapshot version
+        required: true
 
 jobs:
   build:
@@ -30,17 +21,13 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Build Boot Jar and Docker image and push image to Docker Hub
-        env:
-          GRGIT_USER: GitHub Actions Bot
-          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "$GRGIT_USER"
-          git config user.email "<>"
-          ./gradlew ${{ github.event.inputs.type }} \
-            -Prelease.scope=${{ github.event.inputs.scope }} \
-            -PbootBuildImage.docker.publishRegistry.username=${{ secrets.DOCKERHUB_USERNAME }} \
-            -PbootBuildImage.docker.publishRegistry.password=${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Build image with JIB and push it to Docker Hub
+        run: ./gradlew release
+          -Prelease.useAutomaticVersion=true
+          -Prelease.releaseVersion=${{ github.event.inputs.release-version }}
+          -Prelease.newVersion=${{ github.event.inputs.new-version }}
+          -Pjib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }}
+          -Pjib.to.auth.password=${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@master
         with:

@@ -4,6 +4,8 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'org.jetbrains.kotlin.jvm' version '1.6.10'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.6.10'
+    id 'com.google.cloud.tools.jib' version '3.2.1'
+    id 'net.researchgate.release' version '2.8.1'
 }
 
 group = 'com.github.sipe90'
@@ -49,9 +51,14 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
-bootBuildImage {
-    imageName = "sipe90/${project.name}:${project.version}"
-    publish = true
+jib {
+    to {
+        image = "sipe90/${project.name}:${project.version}"
+    }
+}
+
+release {
+    tagTemplate = 'v${version}'
 }
 
 test {
@@ -64,3 +71,6 @@ compileKotlin {
         jvmTarget = '11'
     }
 }
+
+afterReleaseBuild.dependsOn tasks.jib
+tasks.jib.dependsOn tasks.bootJar
