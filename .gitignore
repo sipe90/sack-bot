@@ -2,7 +2,6 @@
 /build/
 /bin/
 /log/
-node_modules
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -20,6 +19,5 @@ gradle-app.setting
 .settings
 .classpath
 .project
-.vscode
 
 application-dev.yaml

@@ -4,8 +4,6 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'org.jetbrains.kotlin.jvm' version '1.6.10'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.6.10'
-    id 'com.github.node-gradle.node' version '3.1.1'
-    id 'nebula.release' version '16.0.0'
 }
 
 group = 'com.github.sipe90'
@@ -51,43 +49,6 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
-node {
-    version = '16.14.2'
-    download = true
-}
-
-processResources.dependsOn 'npmBuild'
-
-task npmBuild(type: NpmTask) {
-    dependsOn npmInstall
-
-    args = ['run', 'build']
-    description = 'Bundles production version of the webapp'
-
-    inputs.file 'package.json'
-    inputs.file 'package-lock.json'
-    inputs.files fileTree('src/main/webapp')
-
-    outputs.dir 'build/webapp'
-}
-
-task npmBumpVersion(type: NpmTask) {
-    args = ['run', 'bump-version', "${project.version}"]
-    description = 'Updates front-end npm package version'
-}
-
-task npmReleaseVersion(type: NpmTask) {
-    dependsOn tasks.npmBumpVersion
-    args = ['run', 'commit-version']
-    description = 'Commits the updated front-end package version to version control'
-}
-
-bootJar {
-    from('build/webapp') {
-        into 'static'
-    }
-}
-
 bootBuildImage {
     imageName = "sipe90/${project.name}:${project.version}"
     publish = true
@@ -103,10 +64,3 @@ compileKotlin {
         jvmTarget = '11'
     }
 }
-
-tasks.devSnapshotSetup.dependsOn tasks.npmBumpVersion
-tasks.snapshotSetup.dependsOn tasks.npmBumpVersion
-tasks.candidateSetup.dependsOn tasks.npmReleaseVersion
-tasks.finalSetup.dependsOn tasks.npmReleaseVersion
-
-tasks.release.dependsOn tasks.bootBuildImage

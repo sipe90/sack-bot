@@ -1,14 +1,14 @@
 package com.github.sipe90.sackbot.config
 
 import com.github.sipe90.sackbot.auth.DiscordUser
-import com.github.sipe90.sackbot.handler.*
+import com.github.sipe90.sackbot.handler.AudioHandler
+import com.github.sipe90.sackbot.handler.SettingsHandler
+import com.github.sipe90.sackbot.handler.UserHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
-import org.springframework.web.reactive.function.server.RouterFunctions
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.status
@@ -53,15 +53,6 @@ class Routes(
                     }
                 }
             }
-        }
-    }
-
-    @Bean
-    fun resourceRouter() = router {
-        resources {
-            RouterFunctions.resourceLookupFunction("/**", ClassPathResource("static/")).andThen { res ->
-                res.switchIfEmpty(Mono.just(ClassPathResource("static/index.html")))
-            }.apply(it)
         }
     }
 
