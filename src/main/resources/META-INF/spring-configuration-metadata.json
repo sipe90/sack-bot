@@ -1,0 +1,44 @@
+{
+  "properties": [
+    {
+      "name": "sackbot.home",
+      "type": "java.lang.String",
+      "description": "Description for sackbot.home."
+    },
+    {
+      "name": "sackbot.bot.token",
+      "type": "java.lang.String",
+      "description": "Discord bot token."
+    },
+    {
+      "name": "sackbot.bot.adminRole",
+      "type": "java.lang.String",
+      "description": "Name of the Guild role to give SackBot admin access to."
+    },
+    {
+      "name": "sackbot.bot.activity.type",
+      "type": "java.lang.String",
+      "description": "Activity type to show up as the bot status."
+    },
+    {
+      "name": "sackbot.bot.activity.text",
+      "type": "java.lang.String",
+      "description": "Activity text to be used with the activity type."
+    },
+    {
+      "name": "sackbot.bot.upload.sizeLimit",
+      "type": "java.lang.Integer",
+      "description": "Size limit of uploaded audio files."
+    },
+    {
+      "name": "sackbot.bot.upload.overrideExisting",
+      "type": "java.lang.Boolean",
+      "description": "If existing audio files should be overridden if a new one is uploaded with the same name."
+    },
+    {
+      "name": "sackbot.nitrite.dbFile",
+      "type": "java.lang.String",
+      "description": "Path to database file. The database will be created if the file does not exist."
+    }
+  ]
+}
