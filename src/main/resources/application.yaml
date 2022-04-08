@@ -31,6 +31,8 @@ spring:
             userInfoUri: https://discordapp.com/api/users/@me
             userInfoAuthenticationMethod: header
             userNameAttribute: username
+  session:
+    timeout: 4h
 
 # Set to NATIVE if running behind a reverse proxy
 server:
