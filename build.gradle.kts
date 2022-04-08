@@ -38,7 +38,7 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.2.11")
 
-    implementation("org.dizitart:potassium-nitrite:3.4.4")
+    implementation("org.dizitart:potassium-nitrite:3.4.3")
     implementation("net.dv8tion:JDA:5.0.0-alpha.9")
     implementation("com.github.minndevelopment:jda-reactor:1.5.0")
     implementation("com.github.walkyst:lavaplayer-fork:1.3.97")
