@@ -37,7 +37,7 @@ class VoiceChannelEventHandler(
         if (event.member.user.isBot) return Mono.empty()
 
         val userId = event.member.user.id
-        val voiceChannel = event.channelJoined
+        val audioChannel = event.channelJoined
         val guildId = event.guild.id
 
         return memberService.getMember(guildId, userId).filter { member -> member.exitSound != null }
@@ -47,8 +47,8 @@ class VoiceChannelEventHandler(
                 )
             }.flatMap exists@{ (entrySound, exists) ->
                 if (exists) {
-                    logger.debug("Playing user {} entry sound in channel #{}", entrySound, voiceChannel.name)
-                    return@exists playerService.playAudioInChannel(entrySound, voiceChannel, null)
+                    logger.debug("Playing user {} entry sound in channel #{}", entrySound, audioChannel.name)
+                    return@exists playerService.playAudioInChannel(entrySound, audioChannel, null)
                 }
                 logger.warn("User {} has an unknown entry sound {}, clearing it", event.member.user, entrySound)
                 memberService.setMemberEntrySound(guildId, userId, null).then()
@@ -59,7 +59,7 @@ class VoiceChannelEventHandler(
         if (event.member.user.isBot) return Mono.empty()
 
         val userId = event.member.user.id
-        val voiceChannel = event.channelLeft
+        val audioChannel = event.channelLeft
         val guildId = event.guild.id
 
         return memberService.getMember(guildId, userId).filter { member -> member.exitSound != null }
@@ -69,7 +69,7 @@ class VoiceChannelEventHandler(
                 )
             }.flatMap exists@{ (exitSound, exists) ->
                 if (exists) {
-                    return@exists playerService.playAudioInChannel(exitSound, voiceChannel, null)
+                    return@exists playerService.playAudioInChannel(exitSound, audioChannel, null)
                 }
                 logger.warn("User {} has an unknown exit sound {}, clearing it", event.member.user, exitSound)
                 memberService.setMemberExitSound(guildId, userId, null).then()

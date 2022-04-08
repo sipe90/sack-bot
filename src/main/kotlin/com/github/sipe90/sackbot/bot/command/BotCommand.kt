@@ -2,7 +2,7 @@ package com.github.sipe90.sackbot.bot.command
 
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.exception.WebException
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
@@ -18,7 +18,7 @@ abstract class BotCommand {
 
     abstract val commandData: CommandData
 
-    fun processCommand(initiator: SlashCommandEvent): Mono<Void> {
+    fun processCommand(initiator: SlashCommandInteractionEvent): Mono<Void> {
         logger.debug("Processing \"{}\" command", commandName)
         initiator.deferReply().queue()
         return process(initiator)
@@ -29,6 +29,6 @@ abstract class BotCommand {
             .then()
     }
 
-    protected abstract fun process(initiator: SlashCommandEvent): Flux<String>
+    protected abstract fun process(initiator: SlashCommandInteractionEvent): Flux<String>
 
 }

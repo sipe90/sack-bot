@@ -6,9 +6,9 @@ import com.github.sipe90.sackbot.util.getVoiceChannel
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
@@ -19,11 +19,11 @@ class UrlCommand(private val playerService: AudioPlayerService) : BotCommand() {
     final override val commandName = "url"
 
     final override val commandData =
-        CommandData("url", "Play a sound from an URL (Youtube, Twitch, BandCamp, GetYarn, Generic HTTP(S) source)")
+        Commands.slash("url", "Play a sound from an URL (Youtube, Twitch, BandCamp, GetYarn, Generic HTTP(S) source)")
             .addOption(OptionType.STRING, "url", "URL to load the audio from", true)
 
-    override fun process(initiator: SlashCommandEvent): Flux<String> = Flux.defer {
-        val voiceChannel = getVoiceChannel(initiator)
+    override fun process(initiator: SlashCommandInteractionEvent): Flux<String> = Flux.defer {
+        val voiceChannel = getVoiceChannel(initiator.user)
             ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
 
         val soundOpt = initiator.getOption("url") ?: throw SackException("Url option missing from url command")

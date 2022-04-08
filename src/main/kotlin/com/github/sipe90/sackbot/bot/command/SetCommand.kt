@@ -3,9 +3,9 @@ package com.github.sipe90.sackbot.bot.command
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.service.MemberService
 import com.github.sipe90.sackbot.util.getGuild
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
@@ -17,7 +17,7 @@ class SetCommand(private val memberService: MemberService) : BotCommand() {
 
     final override val commandName = "set"
 
-    final override val commandData = CommandData("set", "Set your personal sounds")
+    final override val commandData = Commands.slash("set", "Set your personal sounds")
         .addSubcommands(
             SubcommandData("entry", "Entry sound to be played when entering a voice channel")
                 .addOption(OptionType.STRING, "sound", "Sound name", false),
@@ -25,8 +25,8 @@ class SetCommand(private val memberService: MemberService) : BotCommand() {
                 .addOption(OptionType.STRING, "sound", "Sound name", false)
         )
 
-    override fun process(initiator: SlashCommandEvent): Flux<String> = Flux.defer {
-        val guild = getGuild(initiator)
+    override fun process(initiator: SlashCommandInteractionEvent): Flux<String> = Flux.defer {
+        val guild = getGuild(initiator.user)
             ?: return@defer "Could not find voice channel to perform the action".toMono()
 
         val soundOpt = initiator.getOption("sound")

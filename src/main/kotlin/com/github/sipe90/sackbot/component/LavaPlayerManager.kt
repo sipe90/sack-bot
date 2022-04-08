@@ -20,8 +20,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
 import kotlinx.coroutines.reactor.mono
 import net.dv8tion.jda.api.audio.AudioSendHandler
+import net.dv8tion.jda.api.entities.AudioChannel
 import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.VoiceChannel
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -45,30 +45,30 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    fun playNitriteTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioTrack> =
-        playTrack(nitriteManager, identifier, voiceChannel, volume)
+    fun playNitriteTrack(identifier: String, audioChannel: AudioChannel, volume: Int?): Mono<AudioTrack> =
+        playTrack(nitriteManager, identifier, audioChannel, volume)
 
     private fun playTrack(
         sourceManager: AudioSourceManager,
         identifier: String,
-        voiceChannel: VoiceChannel,
+        audioChannel: AudioChannel,
         volume: Int?
     ): Mono<AudioTrack> = Mono.defer {
-        val guild = voiceChannel.guild
+        val guild = audioChannel.guild
         val trackScheduler = getScheduler(guild)
 
-        connect(voiceChannel, trackScheduler.player)
+        connect(audioChannel, trackScheduler.player)
 
         mono {
             sourceManager.loadItem(playerManager, AudioReference(identifier, null)) as AudioTrack?
         }.doOnSuccess { trackScheduler.interrupt(it, volume) }
     }
 
-    fun playExternalTrack(identifier: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioItem> {
-        val guild = voiceChannel.guild
+    fun playExternalTrack(identifier: String, audioChannel: AudioChannel, volume: Int?): Mono<AudioItem> {
+        val guild = audioChannel.guild
         val trackScheduler = getScheduler(guild)
 
-        connect(voiceChannel, trackScheduler.player)
+        connect(audioChannel, trackScheduler.player)
 
         return loadExternalTrack(identifier).doOnSuccess {
             if (it is AudioTrack) trackScheduler.interrupt(it, volume)
@@ -108,9 +108,9 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
         scheduler
     }
 
-    private fun connect(voiceChannel: VoiceChannel, audioPlayer: AudioPlayer) {
-        val audioManager = voiceChannel.guild.audioManager
-        audioManager.openAudioConnection(voiceChannel)
+    private fun connect(audioChannel: AudioChannel, audioPlayer: AudioPlayer) {
+        val audioManager = audioChannel.guild.audioManager
+        audioManager.openAudioConnection(audioChannel)
         audioManager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
     }
 

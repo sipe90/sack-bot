@@ -4,7 +4,7 @@ import com.github.sipe90.sackbot.component.LavaPlayerManager
 import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.util.getVoiceChannel
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
-import net.dv8tion.jda.api.entities.VoiceChannel
+import net.dv8tion.jda.api.entities.AudioChannel
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -26,9 +26,9 @@ class AudioPlayerServiceImpl(
         return playAudioInChannel(name, voiceChannel, volume)
     }
 
-    override fun playAudioInChannel(name: String, voiceChannel: VoiceChannel, volume: Int?): Mono<Void> {
-        val identifier = "${voiceChannel.guild.id}:${name}"
-        return playerManager.playNitriteTrack(identifier, voiceChannel, volume).then()
+    override fun playAudioInChannel(name: String, audioChannel: AudioChannel, volume: Int?): Mono<Void> {
+        val identifier = "${audioChannel.guild.id}:${name}"
+        return playerManager.playNitriteTrack(identifier, audioChannel, volume).then()
     }
 
     override fun playUrlForUser(guildId: String, userId: String, url: String, volume: Int?): Mono<AudioItem> {
@@ -37,8 +37,8 @@ class AudioPlayerServiceImpl(
         return playUrlInChannel(url, voiceChannel, volume)
     }
 
-    override fun playUrlInChannel(url: String, voiceChannel: VoiceChannel, volume: Int?): Mono<AudioItem> {
-        return playerManager.playExternalTrack(url, voiceChannel, volume)
+    override fun playUrlInChannel(url: String, audioChannel: AudioChannel, volume: Int?): Mono<AudioItem> {
+        return playerManager.playExternalTrack(url, audioChannel, volume)
     }
 
     override fun setDefaultVolume(guildId: String, volume: Int) = playerManager.setDefaultVolume(guildId, volume)

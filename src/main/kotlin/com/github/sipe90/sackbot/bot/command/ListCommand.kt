@@ -2,9 +2,9 @@ package com.github.sipe90.sackbot.bot.command
 
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.util.getGuild
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toMono
@@ -14,11 +14,11 @@ class ListCommand(private val fileService: AudioFileService) : BotCommand() {
 
     final override val commandName = "list"
 
-    final override val commandData = CommandData("list", "List all sounds")
+    final override val commandData = Commands.slash("list", "List all sounds")
         .addOption(OptionType.STRING, "tag", "Filter by tag", false)
 
-    override fun process(initiator: SlashCommandEvent): Flux<String> = Flux.defer {
-        val guild = getGuild(initiator)
+    override fun process(initiator: SlashCommandInteractionEvent): Flux<String> = Flux.defer {
+        val guild = getGuild(initiator.user)
             ?: return@defer "Could not find voice channel to perform the action".toMono()
 
         // FIXME: Pagination

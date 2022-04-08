@@ -9,7 +9,7 @@ import com.github.sipe90.sackbot.service.JDAService
 import com.github.sipe90.sackbot.util.getGuild
 import com.github.sipe90.sackbot.util.stripExtension
 import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
@@ -22,11 +22,11 @@ import reactor.kotlin.core.util.function.component2
 @Component
 final class MessageEventHandler(
     val config: BotConfig, private val jdaService: JDAService, private val fileService: AudioFileService
-) : EventHandler<PrivateMessageReceivedEvent> {
+) : EventHandler<MessageReceivedEvent> {
 
     private final val logger = LoggerFactory.getLogger(javaClass)
 
-    override fun handleEvent(event: PrivateMessageReceivedEvent) = processPrivateMessageEvent(event)
+    override fun handleEvent(event: MessageReceivedEvent) = processPrivateMessageEvent(event)
         .onErrorResume {
             logger.error("Error while processing private message event", it)
             "Encountered an error when processing command. Please try again later.".toMono()
@@ -36,10 +36,10 @@ final class MessageEventHandler(
             channel.sendMessage(message).asMono()
         }.then()
 
-    private fun processPrivateMessageEvent(event: PrivateMessageReceivedEvent): Flux<String> {
+    private fun processPrivateMessageEvent(event: MessageReceivedEvent): Flux<String> {
         if (event.author.isBot) return Flux.empty()
 
-        val guild = getGuild(event)
+        val guild = getGuild(event.author)
             ?: return Flux.just("Could not find guild or voice channel to perform the action.")
 
         val hasAdminAccess = jdaService.hasAdminAccess(event.author, guild)
@@ -52,7 +52,7 @@ final class MessageEventHandler(
         else Flux.empty()
     }
 
-    private fun handleUploads(event: PrivateMessageReceivedEvent, guild: Guild): Flux<String> =
+    private fun handleUploads(event: MessageReceivedEvent, guild: Guild): Flux<String> =
         event.message.attachments.toFlux().flatMap flatMap@{ attachment ->
             val fileName = attachment.fileName
             val fileExtension = attachment.fileExtension

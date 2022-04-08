@@ -19,12 +19,13 @@ data class BotConfig(
     ) {
         fun getDiscordType(): Activity.ActivityType {
             return when (type.lowercase()) {
-                "playing" -> Activity.ActivityType.DEFAULT
+                "playing" -> Activity.ActivityType.PLAYING
                 "streaming" -> Activity.ActivityType.STREAMING
                 "listening" -> Activity.ActivityType.LISTENING
                 "watching" -> Activity.ActivityType.WATCHING
-                // "custom" -> Activity.ActivityType.CUSTOM_STATUS
-                else -> Activity.ActivityType.DEFAULT
+                "custom" -> Activity.ActivityType.CUSTOM_STATUS
+                "competing" -> Activity.ActivityType.COMPETING
+                else -> Activity.ActivityType.PLAYING
             }
         }
     }
