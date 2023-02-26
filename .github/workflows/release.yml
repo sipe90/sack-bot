@@ -26,7 +26,6 @@ jobs:
           git config user.email github-actions@github.com
       - name: Build image with JIB and push it to Docker Hub
         run: ./gradlew release
-          -Prelease.tagTemplate=v$version
           -Prelease.useAutomaticVersion=true
           -Prelease.releaseVersion=${{ github.event.inputs.release-version }}
           -Prelease.newVersion=${{ github.event.inputs.new-version }}

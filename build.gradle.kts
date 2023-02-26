@@ -63,6 +63,11 @@ spotless {
     }
 }
 
+release {
+    git.requireBranch.set("master")
+    tagTemplate.set("v\$version")
+}
+
 tasks.test {
     useJUnitPlatform()
 }
