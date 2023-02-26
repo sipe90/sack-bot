@@ -4,7 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("org.jetbrains.kotlin.plugin.spring") version "1.8.10"
     id("com.google.cloud.tools.jib") version "3.2.1"
-    id("net.researchgate.release") version "2.8.1"
+    id("net.researchgate.release") version "3.0.2"
     id("com.diffplug.spotless") version "6.15.0"
     kotlin("jvm") version "1.8.10"
 }
@@ -61,10 +61,6 @@ spotless {
     kotlin {
         ktlint()
     }
-}
-
-release {
-    tagTemplate = "v${version}"
 }
 
 tasks.test {
