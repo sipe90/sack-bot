@@ -8,7 +8,7 @@ object ContainerRegistries {
         listOf(
             MediaContainer.MP3.probe,
             MediaContainer.OGG.probe,
-            MediaContainer.WAV.probe
-        )
+            MediaContainer.WAV.probe,
+        ),
     )
 }

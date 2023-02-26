@@ -1,4 +1,5 @@
 sackbot:
+  environment: production
   home: ${user.home}${file.separator}sackbot
   bot:
     token: bot_token

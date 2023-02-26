@@ -13,5 +13,4 @@ interface MemberService {
     fun setMemberEntrySound(guildId: String, userId: String, name: String?): Mono<Unit>
 
     fun setMemberExitSound(guildId: String, userId: String, name: String?): Mono<Unit>
-
 }

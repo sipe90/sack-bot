@@ -8,7 +8,7 @@ import org.springframework.security.core.GrantedAuthority
 class DiscordAuthority(
     val guildId: String,
     val roles: Set<String>,
-    val isOwner: Boolean
+    val isOwner: Boolean,
 ) : GrantedAuthority {
     override fun getAuthority() = null
 }

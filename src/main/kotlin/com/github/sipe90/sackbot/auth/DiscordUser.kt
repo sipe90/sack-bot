@@ -7,7 +7,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User
  */
 class DiscordUser(
     private val authorities: Collection<DiscordAuthority>,
-    private val attributes: Map<String, Any>
+    private val attributes: Map<String, Any>,
 ) : OAuth2User {
 
     object Attributes {
@@ -36,7 +36,7 @@ class DiscordUser(
                     MFA_ENABLED,
                     LOCALE,
                     FLAGS,
-                    PREMIUM_TYPE
+                    PREMIUM_TYPE,
                 )
                 "email" -> listOf(VERIFIED, EMAIL)
                 else -> listOf()

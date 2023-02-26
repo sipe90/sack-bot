@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
 @Service
 class MemberServiceImpl(
     private val memberRepository: MemberRepository,
-    private val audioFileService: AudioFileService
+    private val audioFileService: AudioFileService,
 ) : MemberService {
 
     override fun getMember(guildId: String, userId: String): Mono<Member> =
@@ -19,29 +19,37 @@ class MemberServiceImpl(
     override fun getUserMemberships(userId: String): Flux<Member> =
         memberRepository.getUserMemberships(userId)
 
-    override fun setMemberEntrySound(guildId: String, userId: String, name: String?): Mono<Unit> =
-        setTransitionSound(guildId, userId, name) { member ->
+    override fun setMemberEntrySound(guildId: String, userId: String, name: String?): Mono<Unit> {
+        return updateMember(guildId, userId, name) { member ->
             member.entrySound = name
-            return@setTransitionSound member
+            member
         }
+    }
 
-    override fun setMemberExitSound(guildId: String, userId: String, name: String?): Mono<Unit> =
-        setTransitionSound(guildId, userId, name) { member ->
+    override fun setMemberExitSound(guildId: String, userId: String, name: String?): Mono<Unit> {
+        return updateMember(guildId, userId, name) { member ->
             member.exitSound = name
-            return@setTransitionSound member
+            member
         }
+    }
 
-    private fun setTransitionSound(
+    private fun updateMember(
         guildId: String,
         userId: String,
         name: String?,
-        mutator: (member: Member) -> Member
+        mutator: (member: Member) -> Member,
     ): Mono<Unit> {
         return memberRepository.findOrCreate(guildId, userId).flatMap { member ->
-            if (name === null) memberRepository.updateMember(mutator.invoke(member), userId)
-            else audioFileService.audioFileExists(guildId, name).flatMap { exists ->
-                if (exists) memberRepository.updateMember(mutator.invoke(member), userId)
-                else Mono.error(NotFoundException("No sound found with name \"$name\""))
+            if (name === null) {
+                memberRepository.updateMember(mutator.invoke(member), userId)
+            } else {
+                audioFileService.audioFileExists(guildId, name).flatMap { exists ->
+                    if (exists) {
+                        memberRepository.updateMember(mutator.invoke(member), userId)
+                    } else {
+                        Mono.error(NotFoundException("No sound found with name \"$name\""))
+                    }
+                }
             }
         }.then(Mono.empty())
     }

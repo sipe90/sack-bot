@@ -14,8 +14,8 @@ class SettingsHandler(config: BotConfig) {
     private val settings = SettingsDTO(
         SettingsDTO.UploadSettings(
             config.upload.sizeLimit,
-            config.upload.overrideExisting
-        )
+            config.upload.overrideExisting,
+        ),
     )
 
     fun getSettings(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {

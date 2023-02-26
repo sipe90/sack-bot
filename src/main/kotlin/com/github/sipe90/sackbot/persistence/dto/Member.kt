@@ -10,5 +10,5 @@ data class Member(
     val createdBy: String,
     val created: Instant,
     var modifiedBy: String?,
-    var modified: Instant?
+    var modified: Instant?,
 )

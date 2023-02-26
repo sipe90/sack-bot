@@ -1,21 +1,24 @@
 package com.github.sipe90.sackbot.service
 
+import com.github.sipe90.sackbot.audio.TrackSchedulerEvent
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
-import net.dv8tion.jda.api.entities.AudioChannel
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface AudioPlayerService {
 
-    fun playAudioForUser(guildId: String, userId: String, name: String, volume: Int?): Mono<Void>
+    fun playAudioForUser(guildId: String, userId: String, name: String): Mono<Unit>
 
-    fun playAudioInChannel(name: String, audioChannel: AudioChannel, volume: Int?): Mono<Void>
+    fun playAudioInChannel(name: String, audioChannel: AudioChannel): Mono<Unit>
 
-    fun playUrlForUser(guildId: String, userId: String, url: String, volume: Int?): Mono<AudioItem>
+    fun playUrlForUser(guildId: String, userId: String, url: String): Mono<AudioItem>
 
-    fun playUrlInChannel(url: String, audioChannel: AudioChannel, volume: Int?): Mono<AudioItem>
+    fun playUrlInChannel(url: String, audioChannel: AudioChannel): Mono<AudioItem>
 
-    fun setDefaultVolume(guildId: String, volume: Int)
+    fun setVolume(guildId: String, volume: Int)
 
-    fun getDefaultVolume(guildId: String): Int?
+    fun getVolume(guildId: String): Int
 
+    fun onTrackEvent(guildId: String): Flux<TrackSchedulerEvent>
 }

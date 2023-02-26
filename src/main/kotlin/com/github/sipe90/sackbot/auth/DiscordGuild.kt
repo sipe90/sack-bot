@@ -6,5 +6,5 @@ data class DiscordGuild(
     val icon: String?,
     val owner: Boolean?,
     val permissions: Int?,
-    val features: List<String>?
+    val features: List<String>?,
 )

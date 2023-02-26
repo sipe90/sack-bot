@@ -1,78 +1,107 @@
 package com.github.sipe90.sackbot.bot.event
 
+import club.minnced.jda.reactor.then
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
 import com.github.sipe90.sackbot.service.MemberService
-import net.dv8tion.jda.api.events.guild.voice.GenericGuildVoiceEvent
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
+import java.time.Duration
 
 @Component
 class VoiceChannelEventHandler(
     val fileService: AudioFileService,
     val playerService: AudioPlayerService,
-    val memberService: MemberService
-) : EventHandler<GenericGuildVoiceEvent> {
+    val memberService: MemberService,
+) : EventHandler<GuildVoiceUpdateEvent> {
 
-    private final val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = KotlinLogging.logger {}
 
-    override fun handleEvent(event: GenericGuildVoiceEvent): Mono<Void> {
-        if (event is GuildVoiceJoinEvent) {
+    override fun handleEvent(event: GuildVoiceUpdateEvent): Mono<Unit> {
+        if (event.channelJoined != null) {
             return processGuildVoiceJoinEvent(event)
         }
-        if (event is GuildVoiceLeaveEvent) {
-            return processGuildVoiceLeaveEvent(event)
+        if (event.channelLeft != null) {
+            return processGuildVoiceLeaveEvent(event).and(leaveEmptyVoiceChannel(event)).then(Mono.empty())
         }
         return Mono.error(SackException("Invalid event: ${event.javaClass.name}"))
     }
 
-    private fun processGuildVoiceJoinEvent(event: GuildVoiceJoinEvent): Mono<Void> {
+    private fun processGuildVoiceJoinEvent(event: GuildVoiceUpdateEvent): Mono<Unit> {
         if (event.member.user.isBot) return Mono.empty()
 
         val userId = event.member.user.id
-        val audioChannel = event.channelJoined
+        val audioChannel = event.channelJoined!!
         val guildId = event.guild.id
+
+        return memberService.getMember(guildId, userId)
+            .filter { member -> member.entrySound != null }
+            .flatMap { member ->
+                Mono.zip(
+                    member.entrySound.toMono(),
+                    fileService.audioFileExists(guildId, member.entrySound!!),
+                )
+            }.flatMap { (entrySound, exists) ->
+                if (exists) {
+                    logger.debug { "Playing user $entrySound entry sound in channel #${audioChannel.name}" }
+                    playerService.playAudioInChannel(entrySound, audioChannel)
+                } else {
+                    logger.warn { "User ${event.member.user} has an unknown entry sound $entrySound, clearing it" }
+                    memberService.setMemberEntrySound(guildId, userId, null)
+                }
+            }
+    }
+
+    private fun processGuildVoiceLeaveEvent(event: GuildVoiceUpdateEvent): Mono<Unit> {
+        if (event.member.user.isBot) return Mono.empty()
+
+        val userId = event.member.user.id
+        val audioChannel = event.channelLeft!!
+        val guildId = event.guild.id
+
+        if (event.guild.selfMember.voiceState?.channel != audioChannel) {
+            return Mono.empty()
+        }
 
         return memberService.getMember(guildId, userId).filter { member -> member.exitSound != null }
             .flatMap { member ->
                 Mono.zip(
-                    member.entrySound!!.toMono(), fileService.audioFileExists(guildId, member.entrySound!!)
+                    member.exitSound!!.toMono(),
+                    fileService.audioFileExists(guildId, member.exitSound!!),
                 )
-            }.flatMap exists@{ (entrySound, exists) ->
+            }.flatMap { (exitSound, exists) ->
                 if (exists) {
-                    logger.debug("Playing user {} entry sound in channel #{}", entrySound, audioChannel.name)
-                    return@exists playerService.playAudioInChannel(entrySound, audioChannel, null)
+                    playerService.playAudioInChannel(exitSound, audioChannel)
+                } else {
+                    logger.warn { "User ${event.member.user} has an unknown exit sound $exitSound, clearing it" }
+                    memberService.setMemberExitSound(guildId, userId, null)
                 }
-                logger.warn("User {} has an unknown entry sound {}, clearing it", event.member.user, entrySound)
-                memberService.setMemberEntrySound(guildId, userId, null).then()
             }
     }
 
-    private fun processGuildVoiceLeaveEvent(event: GuildVoiceLeaveEvent): Mono<Void> {
-        if (event.member.user.isBot) return Mono.empty()
+    private fun leaveEmptyVoiceChannel(event: GuildVoiceUpdateEvent): Mono<Unit> {
+        val channel = event.channelLeft!!
+        val selfMember = event.guild.selfMember
+        if (channelHasMembers(channel)) {
+            return Mono.empty()
+        }
 
-        val userId = event.member.user.id
-        val audioChannel = event.channelLeft
-        val guildId = event.guild.id
-
-        return memberService.getMember(guildId, userId).filter { member -> member.exitSound != null }
-            .flatMap { member ->
-                Mono.zip(
-                    member.exitSound!!.toMono(), fileService.audioFileExists(guildId, member.exitSound!!)
-                )
-            }.flatMap exists@{ (exitSound, exists) ->
-                if (exists) {
-                    return@exists playerService.playAudioInChannel(exitSound, audioChannel, null)
-                }
-                logger.warn("User {} has an unknown exit sound {}, clearing it", event.member.user, exitSound)
-                memberService.setMemberExitSound(guildId, userId, null).then()
+        return Mono.delay(Duration.ofSeconds(5)).then {
+            if (channelHasMembers(channel) || !channel.members.contains(selfMember)) {
+                Mono.empty()
+            } else {
+                event.guild.audioManager.closeAudioConnection().toMono()
             }
+        }
     }
+
+    private fun channelHasMembers(channel: AudioChannelUnion): Boolean =
+        channel.members.any { !it.user.isBot }
 }

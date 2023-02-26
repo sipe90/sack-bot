@@ -5,56 +5,70 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
-import reactor.util.function.Tuple2
-import reactor.util.function.Tuples
-import reactor.kotlin.core.util.function.component1
-import reactor.kotlin.core.util.function.component2
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Sinks
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
-class TrackScheduler(val player: AudioPlayer, var defaultVolume: Int = 75) : AudioEventAdapter() {
+class TrackScheduler(val player: AudioPlayer) : AudioEventAdapter() {
 
-    private val queue: BlockingQueue<Tuple2<AudioTrack, Int>> = LinkedBlockingQueue()
+    private val queue: BlockingQueue<AudioTrack> = LinkedBlockingQueue()
+
+    private val trackSchedulerEventSink = Sinks.unsafe().many().multicast().directBestEffort<TrackSchedulerEvent>()
+
+    fun onTrackSchedulerEvent(): Flux<TrackSchedulerEvent> = trackSchedulerEventSink.asFlux()
+
+    init {
+        player.volume = 75
+    }
+
+    fun setVolume(volume: Int) {
+        player.volume = volume
+        trackSchedulerEventSink.tryEmitNext(VolumeChangeEvent(volume))
+    }
+
+    fun getVolume(): Int {
+        return player.volume
+    }
 
     /**
      * Add the next track to queue or play right away if nothing is in the queue.
      *
      * @param track The track to play or add to queue.
      */
-    fun queue(track: AudioTrack, volume: Int?) = synchronized(queue) {
+    fun queue(track: AudioTrack) = synchronized(queue) {
         if (!player.startTrack(track, true)) {
-            queue.offer(Tuples.of(track, volume ?: defaultVolume))
+            queue.offer(track)
         }
     }
 
-    fun queue(playlist: AudioPlaylist, volume: Int?) = synchronized(queue) {
+    fun queue(playlist: AudioPlaylist) = synchronized(queue) {
         for (track in playlist.tracks) {
             if (playlist.selectedTrack != null && track != playlist.selectedTrack) continue
-            queue(track, volume)
+            queue(track)
         }
     }
 
-    fun interrupt(track: AudioTrack, volume: Int?) = interrupt(track, false, volume)
+    fun interrupt(track: AudioTrack) = interrupt(track, false)
 
-    fun interrupt(track: AudioTrack, preserveQueue: Boolean, volume: Int?) = synchronized(queue) {
-        player.volume = volume ?: defaultVolume
+    fun interrupt(track: AudioTrack, preserveQueue: Boolean) = synchronized(queue) {
         player.playTrack(track)
         if (!preserveQueue) {
             queue.clear()
         }
     }
 
-    fun interrupt(playlist: AudioPlaylist, volume: Int?) = synchronized(queue) {
-        player.volume = volume ?: defaultVolume
-
+    fun interrupt(playlist: AudioPlaylist) = synchronized(queue) {
         var first = true
         for (track in playlist.tracks) {
             if (playlist.selectedTrack != null && track != playlist.selectedTrack) continue
             if (first) {
-                interrupt(track, volume)
+                interrupt(track)
                 queue.clear()
                 first = false
-            } else queue(track, volume)
+            } else {
+                queue(track)
+            }
         }
     }
 
@@ -64,17 +78,16 @@ class TrackScheduler(val player: AudioPlayer, var defaultVolume: Int = 75) : Aud
     fun nextTrack() {
         val next = queue.poll()
         if (next != null) {
-            val (track, volume) = next
-            player.volume = volume
-            player.startTrack(track, false)
+            player.startTrack(next, false)
         }
     }
 
-    override fun onTrackEnd(
-        player: AudioPlayer,
-        track: AudioTrack,
-        endReason: AudioTrackEndReason
-    ) {
+    override fun onTrackStart(player: AudioPlayer?, track: AudioTrack?) {
+        trackSchedulerEventSink.tryEmitNext(TrackStartEvent(track!!))
+    }
+
+    override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+        trackSchedulerEventSink.tryEmitNext(TrackEndEvent(track))
         if (endReason.mayStartNext) {
             nextTrack()
         }

@@ -14,10 +14,10 @@ class WebFluxConfig(private val objectMapper: ObjectMapper) : WebFluxConfigurer 
 
     override fun configureHttpMessageCodecs(configurer: ServerCodecConfigurer) {
         configurer.defaultCodecs().jackson2JsonEncoder(
-            Jackson2JsonEncoder(objectMapper)
+            Jackson2JsonEncoder(objectMapper),
         )
         configurer.defaultCodecs().jackson2JsonDecoder(
-            Jackson2JsonDecoder(objectMapper)
+            Jackson2JsonDecoder(objectMapper),
         )
     }
 }

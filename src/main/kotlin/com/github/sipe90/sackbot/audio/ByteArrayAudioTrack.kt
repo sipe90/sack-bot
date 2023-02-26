@@ -9,19 +9,20 @@ import com.sedmelluq.discord.lavaplayer.track.InternalAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.playback.LocalAudioTrackExecutor
 
 class ByteArrayAudioTrack(
-        private val audio: ByteArray,
-        trackInfo: AudioTrackInfo,
-        val containerTrackFactory: MediaContainerDescriptor,
-        private val sourceManager: AudioSourceManager?
+    private val audio: ByteArray,
+    trackInfo: AudioTrackInfo,
+    val containerTrackFactory: MediaContainerDescriptor,
+    private val sourceManager: AudioSourceManager?,
 ) : DelegatedAudioTrack(trackInfo) {
 
     override fun process(localExecutor: LocalAudioTrackExecutor?) {
         ByteArraySeekableInputStream(audio).use { inputStream ->
             processDelegate(
-                    containerTrackFactory.createTrack(
-                            trackInfo,
-                            inputStream
-                    ) as InternalAudioTrack, localExecutor
+                containerTrackFactory.createTrack(
+                    trackInfo,
+                    inputStream,
+                ) as InternalAudioTrack,
+                localExecutor,
             )
         }
     }

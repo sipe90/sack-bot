@@ -36,35 +36,35 @@ class SecurityConfig {
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http
-                .authorizeExchange()
-                .pathMatchers("/api/**").authenticated()
-                .anyExchange().permitAll()
-                .and().exceptionHandling().authenticationEntryPoint(HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
-                .and().httpBasic().disable()
-                .csrf().disable()
-                .oauth2Client()
-                .and()
-                .oauth2Login()
-                .authenticationFailureHandler(AuthenticationFailureHandler())
-                .and()
-                .logout()
-                .and()
-                .build()
+            .authorizeExchange()
+            .pathMatchers("/api/**", "/ws/**").authenticated()
+            .anyExchange().permitAll()
+            .and().exceptionHandling().authenticationEntryPoint(HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
+            .and().httpBasic().disable()
+            .csrf().disable()
+            .oauth2Client()
+            .and()
+            .oauth2Login()
+            .authenticationFailureHandler(AuthenticationFailureHandler())
+            .and()
+            .logout()
+            .and()
+            .build()
     }
 
     @Bean
     fun rest(
-            clientRegistrations: ReactiveClientRegistrationRepository,
-            authorizedClients: ServerOAuth2AuthorizedClientRepository
+        clientRegistrations: ReactiveClientRegistrationRepository,
+        authorizedClients: ServerOAuth2AuthorizedClientRepository,
     ): WebClient {
         return WebClient.builder()
-                .filter(ServerOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)).build()
+            .filter(ServerOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)).build()
     }
 
     @Bean
     fun oauth2UserService(
-            rest: WebClient,
-            jdaService: JDAService
+        rest: WebClient,
+        jdaService: JDAService,
     ): ReactiveOAuth2UserService<OAuth2UserRequest, OAuth2User> {
         val delegate = DefaultOAuth2UserService()
         return ReactiveOAuth2UserService { request ->
@@ -80,8 +80,8 @@ class SecurityConfig {
                 }
 
                 DiscordUser(
-                        buildAuthorities(userId, mutualGuilds),
-                        user.attributes.filterKeys(attributes::contains)
+                    buildAuthorities(userId, mutualGuilds),
+                    user.attributes.filterKeys(attributes::contains),
                 )
             }
         }
@@ -101,8 +101,9 @@ class SecurityConfig {
         private var fallbackLocation = URI.create("/login?error")
 
         override fun onAuthenticationFailure(
-                webFilterExchange: WebFilterExchange, exception: AuthenticationException): Mono<Void> {
-
+            webFilterExchange: WebFilterExchange,
+            exception: AuthenticationException,
+        ): Mono<Void> {
             var location = fallbackLocation
 
             if (exception is OAuth2AuthenticationException) {

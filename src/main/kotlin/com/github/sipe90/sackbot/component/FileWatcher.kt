@@ -1,6 +1,6 @@
 package com.github.sipe90.sackbot.component
 
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import java.io.IOException
@@ -16,7 +16,7 @@ import java.nio.file.WatchService
 @Component
 class FileWatcher {
 
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = KotlinLogging.logger {}
 
     private lateinit var watchService: WatchService
 
@@ -38,7 +38,7 @@ class FileWatcher {
                         val filePath = path.resolve(fileName)
 
                         if (Files.isDirectory(filePath)) {
-                            logger.debug("Path {} points to a folder, ignoring watch event")
+                            logger.debug { "Path $filePath points to a folder, ignoring watch event" }
                             return
                         }
 
@@ -50,17 +50,17 @@ class FileWatcher {
                     }
 
                     if (!key.reset()) {
-                        logger.info("Watch key is no longer valid. Stopping file watcher")
+                        logger.info { "Watch key is no longer valid. Stopping file watcher" }
                         break
                     }
                 }
             }
         } catch (e: IOException) {
-            logger.error("Could not start file watcher", e)
+            logger.error(e) { "Could not start file watcher" }
         } catch (e: ClosedWatchServiceException) {
-            logger.info("File watcher service has closed. Stopping file watcher")
+            logger.info { "File watcher service has closed. Stopping file watcher" }
         } catch (e: InterruptedException) {
-            logger.info("Thread interrupted. Stopping file watcher")
+            logger.info { "Thread interrupted. Stopping file watcher" }
         }
     }
 
@@ -69,14 +69,14 @@ class FileWatcher {
     }
 
     private fun onFileCreate(filePath: Path) {
-        logger.debug("File {} created", filePath)
+        logger.debug { "File $filePath created" }
     }
 
     private fun onFileDelete(filePath: Path) {
-        logger.debug("File {} deleted", filePath)
+        logger.debug { "File $filePath deleted" }
     }
 
     private fun onFileModify(filePath: Path) {
-        logger.debug("File {} modified", filePath)
+        logger.debug { "File $filePath modified" }
     }
 }

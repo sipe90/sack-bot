@@ -19,5 +19,5 @@ fun stripExtension(fileName: String): String {
 
 fun withExtension(fileName: String, extension: String?): String {
     if (extension == null) return fileName
-    return "${fileName}.${extension}"
+    return "$fileName.$extension"
 }

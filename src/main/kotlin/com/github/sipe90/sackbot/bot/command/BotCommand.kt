@@ -1,16 +1,17 @@
 package com.github.sipe90.sackbot.bot.command
 
-import club.minnced.jda.reactor.toMono
+import club.minnced.jda.reactor.asMono
 import com.github.sipe90.sackbot.exception.WebException
+import mu.KotlinLogging
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import org.slf4j.LoggerFactory
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 abstract class BotCommand {
 
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = KotlinLogging.logger {}
 
     private val defErrorMsg = "Error happened while processing command"
 
@@ -18,17 +19,20 @@ abstract class BotCommand {
 
     abstract val commandData: CommandData
 
-    fun processCommand(initiator: SlashCommandInteractionEvent): Mono<Void> {
-        logger.debug("Processing \"{}\" command", commandName)
+    fun processCommand(initiator: SlashCommandInteractionEvent, guild: Guild?, voiceChannel: VoiceChannel?): Mono<Unit> {
+        logger.debug { "Processing \"$commandName\" command" }
         initiator.deferReply().queue()
-        return process(initiator)
+        return process(initiator, guild, voiceChannel)
             .onErrorResume { throwable ->
-                logger.error(defErrorMsg, throwable)
-                (if (throwable is WebException) throwable.message ?: defErrorMsg else defErrorMsg).toMono()
-            }.map { initiator.hook.sendMessage(it).queue() }
-            .then()
+                val msg = if (throwable is WebException) throwable.message ?: defErrorMsg else defErrorMsg
+                logger.error(throwable) { msg }
+                Mono.empty()
+            }
     }
 
-    protected abstract fun process(initiator: SlashCommandInteractionEvent): Flux<String>
+    protected abstract fun process(initiator: SlashCommandInteractionEvent, guild: Guild?, voiceChannel: VoiceChannel?): Mono<Unit>
 
+    protected fun sendMessage(initiator: SlashCommandInteractionEvent, msg: String): Mono<Unit> {
+        return initiator.hook.sendMessage(msg).asMono().then(Mono.empty())
+    }
 }

@@ -2,9 +2,8 @@ package com.github.sipe90.sackbot.bot.event
 
 import club.minnced.jda.reactor.on
 import com.github.sipe90.sackbot.service.JDAService
-import net.dv8tion.jda.api.entities.ChannelType
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
+import net.dv8tion.jda.api.entities.channel.ChannelType
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import org.springframework.stereotype.Component
@@ -15,7 +14,7 @@ class EventRegistry(
     jdaService: JDAService,
     messageEventHandler: MessageEventHandler,
     voiceChannelEventHandler: VoiceChannelEventHandler,
-    slashCommandEventHandler: SlashCommandEventHandler
+    slashCommandEventHandler: SlashCommandEventHandler,
 ) {
 
     private final val streamLogCategoryPrefix = "com.github.sipe90.sackbot"
@@ -27,13 +26,8 @@ class EventRegistry(
             .flatMap(messageEventHandler::handleEvent)
             .subscribe()
 
-        jdaService.eventManager.on<GuildVoiceJoinEvent>()
-            .log("$streamLogCategoryPrefix.GuildVoiceJoinEvent.", Level.FINE)
-            .flatMap(voiceChannelEventHandler::handleEvent)
-            .subscribe()
-
-        jdaService.eventManager.on<GuildVoiceLeaveEvent>()
-            .log("$streamLogCategoryPrefix.GuildVoiceLeaveEvent.", Level.FINE)
+        jdaService.eventManager.on<GuildVoiceUpdateEvent>()
+            .log("$streamLogCategoryPrefix.GuildVoiceUpdateEvent.", Level.FINE)
             .flatMap(voiceChannelEventHandler::handleEvent)
             .subscribe()
 

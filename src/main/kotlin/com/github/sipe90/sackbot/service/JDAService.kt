@@ -2,8 +2,12 @@ package com.github.sipe90.sackbot.service
 
 import club.minnced.jda.reactor.createManager
 import club.minnced.jda.reactor.on
+import club.minnced.jda.reactor.toFlux
 import com.github.sipe90.sackbot.config.BotConfig
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
+import mu.KotlinLogging
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.OnlineStatus
@@ -11,42 +15,48 @@ import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.User
-import net.dv8tion.jda.api.events.ReadyEvent
-import net.dv8tion.jda.api.events.ShutdownEvent
+import net.dv8tion.jda.api.events.session.ReadyEvent
+import net.dv8tion.jda.api.events.session.ShutdownEvent
+import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
-import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.annotation.PreDestroy
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toFlux
+import java.time.Duration
 
 @Service
 class JDAService(
-    private val config: BotConfig
+    @Value("\${sackbot.environment}")
+    private val environment: String,
+    private val config: BotConfig,
 ) {
 
-    private final val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = KotlinLogging.logger {}
 
     final val eventManager = createManager()
 
     private lateinit var jda: JDA
 
-    init {
+    @PostConstruct
+    private fun init() {
         eventManager.on<ReadyEvent>()
             .next()
             .map { it.jda }
             .doOnSuccess {
                 it.presence.setStatus(OnlineStatus.ONLINE)
                 it.presence.activity = Activity.of(config.activity.getDiscordType(), config.activity.text)
-                logger.info("Sackbot is ready to meme")
+                logger.info { "Sackbot is ready to meme" }
             }
             .subscribe()
 
         eventManager.on<ShutdownEvent>()
             .subscribe {
-                it.jda.httpClient.connectionPool().evictAll()
+                it.jda.httpClient.connectionPool.evictAll()
             }
 
         jda = JDABuilder.create(
@@ -54,11 +64,18 @@ class JDAService(
             GatewayIntent.DIRECT_MESSAGES,
             GatewayIntent.GUILD_MESSAGES,
             GatewayIntent.GUILD_MEMBERS,
-            GatewayIntent.GUILD_VOICE_STATES
+            GatewayIntent.GUILD_VOICE_STATES,
         )
             .setMemberCachePolicy(MemberCachePolicy.ALL)
             .enableCache(CacheFlag.VOICE_STATE)
-            .disableCache(CacheFlag.ACTIVITY, CacheFlag.EMOTE, CacheFlag.CLIENT_STATUS, CacheFlag.ONLINE_STATUS)
+            .disableCache(
+                CacheFlag.ACTIVITY,
+                CacheFlag.EMOJI,
+                CacheFlag.STICKER,
+                CacheFlag.CLIENT_STATUS,
+                CacheFlag.ONLINE_STATUS,
+                CacheFlag.SCHEDULED_EVENTS,
+            )
             .setEventManager(eventManager)
             .setAudioSendFactory(NativeAudioSendFactory())
             .setStatus(OnlineStatus.DO_NOT_DISTURB)
@@ -66,29 +83,33 @@ class JDAService(
     }
 
     fun registerCommands(commandData: List<CommandData>) {
-        logger.info("Registering global slash commands")
-        jda.awaitReady()
+        if (environment == "development") {
+            registerGuildCommands(commandData).subscribe()
+        } else {
+            registerGlobalCommands(commandData).subscribe()
+        }
+    }
+
+    private fun registerGlobalCommands(commandData: List<CommandData>): Flux<Command> {
+        logger.info { "Updating global slash commands" }
+        return jda.awaitReady()
             .updateCommands()
-            .addCommands(commandData).queue {
-                logger.info("Global slash commands registered, updating command privileges")
-                jda.retrieveCommands().queue { commands ->
-                    val restrictedCommands = commands.filter { cmd -> !cmd.isDefaultEnabled }
-                    logger.debug("Restricted commands: {}", restrictedCommands)
-                    jda.guilds.forEach { guild ->
-                        val ownerId = guild.ownerId
-                        val adminRole = getAdminRole(guild.id)
-
-                        val commandPrivileges = mutableListOf(CommandPrivilege.enableUser(ownerId))
-                        if (adminRole != null) {
-                            commandPrivileges.add(CommandPrivilege.enableRole(adminRole.id))
-                        }
-
-                        val commandPrivilegesMap = restrictedCommands.associate { cmd -> cmd.id to commandPrivileges }
-                        logger.info("Updating command privileges for guild {}", guild.id)
-                        guild.updateCommandPrivileges(commandPrivilegesMap).queue()
-                    }
-                }
+            .addCommands(commandData).toFlux().doOnComplete {
+                logger.info { "Global slash commands updated" }
             }
+    }
+
+    private fun registerGuildCommands(commandData: List<CommandData>): Flux<Command> {
+        logger.info("Updating guild slash commands")
+        return jda.awaitReady().guilds.toFlux().flatMap { guild ->
+            logger.info { "Updating guild slash commands for guild ${guild.name} (${guild.id})" }
+            guild.updateCommands().addCommands(commandData).toFlux()
+                .onErrorResume {
+                    logger.error(it) { "Failed to update command for guild ${guild.name} (${guild.id})" }
+                    Mono.empty()
+                }
+                .doOnComplete { logger.info { "Updated commands for guild ${guild.name} (${guild.id})" } }
+        }
     }
 
     fun getUser(userId: String): User? = jda.getUserById(userId)
@@ -129,8 +150,11 @@ class JDAService(
 
     @PreDestroy
     fun cleanUp() {
-        logger.info("Shutting down JDA")
+        logger.info { "Shutting down JDA" }
         jda.shutdown()
+        if (!jda.awaitShutdown(Duration.ofSeconds(10))) {
+            logger.warn { "JDA shutdown taking too long, forcing shutdown." }
+            jda.shutdownNow()
+        }
     }
 }
-

@@ -16,55 +16,58 @@ import org.springframework.http.MediaType
 import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyExtractors
-import org.springframework.web.reactive.function.server.*
-import org.springframework.web.reactive.function.server.ServerResponse.*
+import org.springframework.web.reactive.function.server.ServerRequest
+import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.ServerResponse.noContent
+import org.springframework.web.reactive.function.server.ServerResponse.notFound
+import org.springframework.web.reactive.function.server.ServerResponse.ok
+import org.springframework.web.reactive.function.server.body
+import org.springframework.web.reactive.function.server.bodyToMono
+import org.springframework.web.reactive.function.server.queryParamOrNull
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
 
 @Component
 class AudioHandler(
-        private val audioPlayerService: AudioPlayerService,
-        private val audioFileService: AudioFileService,
-        private val memberService: MemberService
+    private val audioPlayerService: AudioPlayerService,
+    private val audioFileService: AudioFileService,
+    private val memberService: MemberService,
 ) {
 
     fun playSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
-        val volume = getVolume(request)
         val userId = principal.getId()
 
-        return audioPlayerService.playAudioForUser(guildId, userId, name, volume)
-                .flatMap { noContent().build() }
+        return audioPlayerService.playAudioForUser(guildId, userId, name)
+            .flatMap { noContent().build() }
     }
 
     fun playRandomSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
-        val volume = getVolume(request)
         val tags = request.queryParams()["tags"]
 
         return audioFileService.randomAudioFile(guildId, userId, tags.orEmpty().toHashSet())
-                .flatMap { audioPlayerService.playAudioForUser(guildId, userId, it.name, volume) }
-                .flatMap { noContent().build() }
+            .flatMap { audioPlayerService.playAudioForUser(guildId, userId, it.name) }
+            .flatMap { noContent().build() }
     }
 
     fun playUrl(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
-        val volume = getVolume(request)
         val url = request.queryParam("url").orElseThrow { BadRequestException("Query parameter url is required") }
 
-        return audioPlayerService.playUrlForUser(guildId, userId, url, volume)
-                .flatMap { noContent().build() }
+        return audioPlayerService.playUrlForUser(guildId, userId, url)
+            .flatMap { noContent().build() }
     }
 
     fun getSoundsList(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
-        
+
         return ok()
-                .body(audioFileService.getAudioFiles(guildId))
+            .body(audioFileService.getAudioFiles(guildId))
     }
 
     fun updateSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
@@ -73,16 +76,16 @@ class AudioHandler(
         val userId = principal.getId()
 
         return request.bodyToMono<AudioFileUpdateDTO>()
-                .zipWith(
-                        audioFileService.findAudioFile(guildId, name)
-                                .switchIfEmpty(Mono.error(NotFoundException("Audio file not found")))
-                )
-                .flatMap { (dto, audioFile) ->
-                    audioFile.name = dto.name
-                    audioFile.tags = dto.tags
-                    audioFileService.updateAudioFile(guildId, name, audioFile, userId)
-                }
-                .flatMap { noContent().build() }
+            .zipWith(
+                audioFileService.findAudioFile(guildId, name)
+                    .switchIfEmpty(Mono.error(NotFoundException("Audio file not found"))),
+            )
+            .flatMap { (dto, audioFile) ->
+                audioFile.name = dto.name
+                audioFile.tags = dto.tags
+                audioFileService.updateAudioFile(guildId, name, audioFile, userId)
+            }
+            .flatMap { noContent().build() }
     }
 
     fun uploadSounds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
@@ -90,44 +93,44 @@ class AudioHandler(
         val userId = principal.getId()
 
         return request.body(BodyExtractors.toParts())
-                .filter { it is FilePart }
-                .flatMap { part ->
-                    val filePart = part as FilePart
-                    val fileName = filePart.filename()
-                    val audioName = stripExtension(fileName)
-                    val fileExtension = getExtension(fileName)
+            .filter { it is FilePart }
+            .flatMap { part ->
+                val filePart = part as FilePart
+                val fileName = filePart.filename()
+                val audioName = stripExtension(fileName)
+                val fileExtension = getExtension(fileName)
 
-                    DataBufferUtils.join(filePart.content()).map { dataBuffer ->
-                        val bytes = ByteArray(dataBuffer.readableByteCount())
-                        dataBuffer.read(bytes)
-                        DataBufferUtils.release(dataBuffer)
-                        bytes
-                    }.flatMap { data ->
-                        audioFileService.findAudioFile(guildId, audioName)
-                                .flatMap exists@{ audioFile ->
+                DataBufferUtils.join(filePart.content()).map { dataBuffer ->
+                    val bytes = ByteArray(dataBuffer.readableByteCount())
+                    dataBuffer.read(bytes)
+                    DataBufferUtils.release(dataBuffer)
+                    bytes
+                }.flatMap { data ->
+                    audioFileService.findAudioFile(guildId, audioName)
+                        .flatMap { audioFile ->
 
-                                    audioFile.extension = fileExtension
-                                    audioFile.data = data
+                            audioFile.extension = fileExtension
+                            audioFile.data = data
 
-                                    return@exists audioFileService.updateAudioFile(
-                                            guildId,
-                                            audioName,
-                                            audioFile,
-                                            userId
-                                    )
-                                }
-                                .switchIfEmpty(
-                                        audioFileService.saveAudioFile(
-                                                guildId,
-                                                audioName,
-                                                fileExtension,
-                                                HashSet(),
-                                                data,
-                                                userId
-                                        ).then(Mono.just(true))
-                                )
-                    }
-                }.then(noContent().build())
+                            audioFileService.updateAudioFile(
+                                guildId,
+                                audioName,
+                                audioFile,
+                                userId,
+                            )
+                        }
+                        .switchIfEmpty(
+                            audioFileService.saveAudioFile(
+                                guildId,
+                                audioName,
+                                fileExtension,
+                                HashSet(),
+                                data,
+                                userId,
+                            ).then(Mono.just(true)),
+                        )
+                }
+            }.then(noContent().build())
     }
 
     fun setEntrySound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
@@ -151,8 +154,8 @@ class AudioHandler(
         val name = request.pathVariable("name")
 
         return audioFileService.deleteAudioFile(guildId, name)
-                .flatMap { noContent().build() }
-                .switchIfEmpty(notFound().build())
+            .flatMap { noContent().build() }
+            .switchIfEmpty(notFound().build())
     }
 
     fun downloadSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
@@ -161,12 +164,12 @@ class AudioHandler(
 
         return audioFileService.findAudioFile(guildId, name).flatMap {
             ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(
-                            HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"${withExtension(it.name, it.extension)}\""
-                    )
-                    .bodyValue(it.data)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"${withExtension(it.name, it.extension)}\"",
+                )
+                .bodyValue(it.data)
         }.switchIfEmpty(notFound().build())
     }
 
@@ -175,9 +178,9 @@ class AudioHandler(
         val userId = principal.getId()
 
         return ok()
-                .contentType(MediaType.valueOf("application/zip"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"export.zip\"")
-                .body(audioFileService.zipFiles(guildId, userId))
+            .contentType(MediaType.valueOf("application/zip"))
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"export.zip\"")
+            .body(audioFileService.zipFiles(guildId, userId))
     }
 
     private fun getVolume(request: ServerRequest): Int? {

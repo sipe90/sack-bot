@@ -2,16 +2,16 @@ package com.github.sipe90.sackbot.bot.command
 
 import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.service.AudioPlayerService
-import com.github.sipe90.sackbot.util.getVoiceChannel
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Flux
-import reactor.kotlin.core.publisher.toMono
+import reactor.core.publisher.Mono
 
 @Component
 class UrlCommand(private val playerService: AudioPlayerService) : BotCommand() {
@@ -22,16 +22,21 @@ class UrlCommand(private val playerService: AudioPlayerService) : BotCommand() {
         Commands.slash("url", "Play a sound from an URL (Youtube, Twitch, BandCamp, GetYarn, Generic HTTP(S) source)")
             .addOption(OptionType.STRING, "url", "URL to load the audio from", true)
 
-    override fun process(initiator: SlashCommandInteractionEvent): Flux<String> = Flux.defer {
-        val voiceChannel = getVoiceChannel(initiator.user)
-            ?: return@defer "Could not find guild or voice channel to perform the action".toMono()
+    override fun process(
+        initiator: SlashCommandInteractionEvent,
+        guild: Guild?,
+        voiceChannel: VoiceChannel?,
+    ): Mono<Unit> {
+        if (voiceChannel == null) {
+            return sendMessage(initiator, "Could not find voice channel to perform the action")
+        }
 
         val soundOpt = initiator.getOption("url") ?: throw SackException("Url option missing from url command")
         val url = soundOpt.asString
 
-        playerService.playUrlInChannel(url, voiceChannel, null)
-            .map { "Playing ${getItemString(it) ?: url} in voice channel `#${voiceChannel.name}`" }
-            .onErrorReturn("Could not play sound from url `$url`")
+        return playerService.playUrlInChannel(url, voiceChannel)
+            .flatMap { sendMessage(initiator, "Playing ${getItemString(it) ?: url} in voice channel `#${voiceChannel.name}`") }
+            .onErrorResume { sendMessage(initiator, "Could not play sound from url `$url`") }
     }
 
     private fun getItemString(item: AudioItem): String? {

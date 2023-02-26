@@ -29,8 +29,8 @@ class NitriteAudioSourceManager(private val audioFileService: AudioFileService) 
                     containerRegistry,
                     reference,
                     it,
-                    MediaContainerHints.from(null, audioFile.extension)
-                ).detectContainer()
+                    MediaContainerHints.from(null, audioFile.extension),
+                ).detectContainer(),
             )
         }
     }
@@ -53,7 +53,9 @@ class NitriteAudioSourceManager(private val audioFileService: AudioFileService) 
         return if (containerTrackFactory != null) {
             val audioFile = getAudioFile(trackInfo.identifier) ?: return null
             ByteArrayAudioTrack(audioFile.data, trackInfo, containerTrackFactory, this)
-        } else null
+        } else {
+            null
+        }
     }
 
     private fun getAudioFile(identifier: String): AudioFile? {

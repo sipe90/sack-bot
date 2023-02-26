@@ -7,7 +7,7 @@ import com.github.sipe90.sackbot.util.createParentDirs
 import org.dizitart.kno2.getRepository
 import org.dizitart.no2.Nitrite
 
-class NitriteDatabase(private val config: NitriteConfig) {
+class NitriteDatabase(config: NitriteConfig) {
 
     private val db: Nitrite
 

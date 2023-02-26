@@ -18,10 +18,10 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
 
     fun findOne(guildId: String, name: String): Mono<AudioFile> = Mono.defer {
         repository.find((AudioFile::guildId eq guildId) and (AudioFile::name eq name)).toMono()
-                .flatMap {
-                    val file = it.firstOrDefault()
-                    return@flatMap if (file == null) Mono.empty() else Mono.just(file)
-                }
+            .flatMap {
+                val file = it.firstOrDefault()
+                return@flatMap if (file == null) Mono.empty() else Mono.just(file)
+            }
     }
 
     fun getAllAudioFiles(guildId: String): Flux<AudioFile> = Flux.defer {
@@ -30,8 +30,8 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
 
     fun getAllAudioFilesWithoutData(guildId: String): Flux<LightAudioFile> = Flux.defer {
         getAudioFiles(guildId)
-                .project(LightAudioFile::class.java)
-                .toFlux()
+            .project(LightAudioFile::class.java)
+            .toFlux()
     }
 
     fun saveAudioFile(audioFile: AudioFile): Mono<AudioFile> = Mono.fromCallable {
@@ -41,9 +41,9 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
 
     fun updateAudioFile(guildId: String, name: String, audioFile: AudioFile): Mono<Boolean> = Mono.fromCallable {
         repository.update(
-                findAudioFileFilter(guildId, name),
-                audioFile,
-                false
+            findAudioFileFilter(guildId, name),
+            audioFile,
+            false,
         ).affectedCount > 0
     }
 
@@ -52,8 +52,8 @@ class AudioFileRepository(val repository: ObjectRepository<AudioFile>) {
     }
 
     private fun getAudioFiles(guildId: String) =
-            repository.find(AudioFile::guildId eq guildId, FindOptions.sort("name", SortOrder.Ascending))
+        repository.find(AudioFile::guildId eq guildId, FindOptions.sort("name", SortOrder.Ascending))
 
     private fun findAudioFileFilter(guildId: String, name: String) =
-            (AudioFile::guildId eq guildId) and (AudioFile::name eq name)
+        (AudioFile::guildId eq guildId) and (AudioFile::name eq name)
 }

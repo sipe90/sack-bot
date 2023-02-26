@@ -1,6 +1,11 @@
 {
   "properties": [
     {
+      "name": "sackbot.environment",
+      "type": "java.lang.String",
+      "description": "Environment"
+    },
+    {
       "name": "sackbot.home",
       "type": "java.lang.String",
       "description": "Description for sackbot.home."

@@ -12,19 +12,19 @@ interface AudioFileService {
     fun getAudioFiles(guildId: String): Flux<LightAudioFile>
 
     fun saveAudioFile(
-            guildId: String,
-            name: String,
-            extension: String?,
-            tags: Set<String>,
-            data: ByteArray,
-            userId: String
+        guildId: String,
+        name: String,
+        extension: String?,
+        tags: Set<String>,
+        data: ByteArray,
+        userId: String,
     ): Mono<AudioFile>
 
     fun updateAudioFile(
-            guildId: String,
-            name: String,
-            audioFile: AudioFile,
-            userId: String
+        guildId: String,
+        name: String,
+        audioFile: AudioFile,
+        userId: String,
     ): Mono<Boolean>
 
     fun findAudioFile(guildId: String, name: String): Mono<AudioFile>

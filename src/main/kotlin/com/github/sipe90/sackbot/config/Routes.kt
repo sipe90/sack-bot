@@ -24,7 +24,7 @@ class Routes(
     private val config: BotConfig,
     private val userHandler: UserHandler,
     private val audioHandler: AudioHandler,
-    private val settingsHandler: SettingsHandler
+    private val settingsHandler: SettingsHandler,
 ) {
     @Bean
     fun apiRouter() = router {
@@ -58,7 +58,7 @@ class Routes(
 
     private fun guildAccessFilter(
         req: ServerRequest,
-        next: (ServerRequest) -> Mono<ServerResponse>
+        next: (ServerRequest) -> Mono<ServerResponse>,
     ): Mono<ServerResponse> {
         val guildId = req.pathVariable("guildId")
         return requestWithPrincipal(req)
@@ -66,7 +66,7 @@ class Routes(
     }
 
     private fun handleAdmin(
-        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
+        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>,
     ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
         requestWithPrincipal(req).flatMap { (req, user) ->
             val guildId = req.pathVariable("guildId")
@@ -75,7 +75,7 @@ class Routes(
     }
 
     private fun handle(
-        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>
+        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>,
     ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
         requestWithPrincipal(req).flatMap { (req, user) -> handler(req, user) }
     }
