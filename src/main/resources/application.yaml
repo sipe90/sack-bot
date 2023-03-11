@@ -34,6 +34,10 @@ spring:
             userNameAttribute: username
   session:
     timeout: 4h
+  data:
+    mongodb:
+      database: sackbot
+      auto-index-creation: true
 
 # Set to NATIVE if running behind a reverse proxy
 server:

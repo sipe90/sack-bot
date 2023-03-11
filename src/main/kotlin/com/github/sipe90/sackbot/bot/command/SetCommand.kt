@@ -1,6 +1,7 @@
 package com.github.sipe90.sackbot.bot.command
 
 import com.github.sipe90.sackbot.SackException
+import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.MemberService
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
-class SetCommand(private val memberService: MemberService) : BotCommand() {
+class SetCommand(private val memberService: MemberService, private val audioFileService: AudioFileService) : BotCommand() {
 
     final override val commandName = "set"
 
@@ -39,8 +40,14 @@ class SetCommand(private val memberService: MemberService) : BotCommand() {
             when (initiator.subcommandName) {
                 "entry" -> {
                     if (soundName != null) {
-                        memberService.setMemberEntrySound(guild.id, initiator.user.id, soundName)
-                            .map { "Your entry sound has been changed to `$soundName`" }
+                        audioFileService.audioFileExists(guild.id, soundName).flatMap { exists ->
+                            if (exists) {
+                                memberService.setMemberEntrySound(guild.id, initiator.user.id, soundName)
+                                    .thenReturn("Your entry sound has been changed to `$soundName`")
+                            } else {
+                                Mono.just("Could not find sound with given name")
+                            }
+                        }
                     } else {
                         if (member.entrySound != null) {
                             Mono.just("Your entry sound is `${member.entrySound}`")
@@ -51,8 +58,14 @@ class SetCommand(private val memberService: MemberService) : BotCommand() {
                 }
                 "exit" -> {
                     if (soundName != null) {
-                        memberService.setMemberExitSound(guild.id, initiator.user.id, soundName)
-                            .map { "Your exit sound has been changed to `$soundName`" }
+                        audioFileService.audioFileExists(guild.id, soundName).flatMap { exists ->
+                            if (exists) {
+                                memberService.setMemberExitSound(guild.id, initiator.user.id, soundName)
+                                    .thenReturn("Your exit sound has been changed to `$soundName`")
+                            } else {
+                                Mono.just("Could not find sound with given name")
+                            }
+                        }
                     } else {
                         if (member.exitSound != null) {
                             Mono.just("Your exit sound is `${member.exitSound}`")

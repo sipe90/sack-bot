@@ -26,7 +26,7 @@ abstract class BotCommand {
             .onErrorResume { throwable ->
                 val msg = if (throwable is WebException) throwable.message ?: defErrorMsg else defErrorMsg
                 logger.error(throwable) { msg }
-                Mono.empty()
+                sendMessage(initiator, "Something broke and it's your fault")
             }
     }
 

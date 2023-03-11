@@ -1,7 +1,7 @@
 package com.github.sipe90.sackbot.service
 
 import com.github.sipe90.sackbot.persistence.dto.AudioFile
-import com.github.sipe90.sackbot.persistence.dto.projection.LightAudioFile
+import com.github.sipe90.sackbot.persistence.dto.LightAudioFile
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
@@ -15,7 +15,6 @@ interface AudioFileService {
         guildId: String,
         name: String,
         extension: String?,
-        tags: Set<String>,
         data: ByteArray,
         userId: String,
     ): Mono<AudioFile>
@@ -25,7 +24,7 @@ interface AudioFileService {
         name: String,
         audioFile: AudioFile,
         userId: String,
-    ): Mono<Boolean>
+    ): Mono<AudioFile>
 
     fun findAudioFile(guildId: String, name: String): Mono<AudioFile>
 

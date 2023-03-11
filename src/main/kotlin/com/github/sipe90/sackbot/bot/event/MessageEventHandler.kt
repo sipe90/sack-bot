@@ -89,7 +89,6 @@ final class MessageEventHandler(
                                 guild.id,
                                 audioName,
                                 fileExtension,
-                                HashSet(),
                                 data,
                                 event.author.id,
                             ).then(Mono.just("Saved audio file `$audioName`.")),

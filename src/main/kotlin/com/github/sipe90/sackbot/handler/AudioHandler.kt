@@ -124,10 +124,9 @@ class AudioHandler(
                                 guildId,
                                 audioName,
                                 fileExtension,
-                                HashSet(),
                                 data,
                                 userId,
-                            ).then(Mono.just(true)),
+                            ),
                         )
                 }
             }.then(noContent().build())

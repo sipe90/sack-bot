@@ -6,6 +6,7 @@ import com.github.sipe90.sackbot.persistence.dto.Member
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.Instant
 
 @Service
 class MemberServiceImpl(
@@ -14,7 +15,8 @@ class MemberServiceImpl(
 ) : MemberService {
 
     override fun getMember(guildId: String, userId: String): Mono<Member> =
-        memberRepository.findOrCreate(guildId, userId)
+        memberRepository.findMember(guildId, userId)
+            .switchIfEmpty(memberRepository.save(Member(userId = userId, guildId = guildId)))
 
     override fun getUserMemberships(userId: String): Flux<Member> =
         memberRepository.getUserMemberships(userId)
@@ -22,6 +24,8 @@ class MemberServiceImpl(
     override fun setMemberEntrySound(guildId: String, userId: String, name: String?): Mono<Unit> {
         return updateMember(guildId, userId, name) { member ->
             member.entrySound = name
+            member.modified = Instant.now()
+            member.modifiedBy = userId
             member
         }
     }
@@ -29,6 +33,8 @@ class MemberServiceImpl(
     override fun setMemberExitSound(guildId: String, userId: String, name: String?): Mono<Unit> {
         return updateMember(guildId, userId, name) { member ->
             member.exitSound = name
+            member.modified = Instant.now()
+            member.modifiedBy = userId
             member
         }
     }
@@ -39,13 +45,13 @@ class MemberServiceImpl(
         name: String?,
         mutator: (member: Member) -> Member,
     ): Mono<Unit> {
-        return memberRepository.findOrCreate(guildId, userId).flatMap { member ->
+        return getMember(guildId, userId).flatMap { member ->
             if (name === null) {
-                memberRepository.updateMember(mutator.invoke(member), userId)
+                memberRepository.save(mutator.invoke(member))
             } else {
                 audioFileService.audioFileExists(guildId, name).flatMap { exists ->
                     if (exists) {
-                        memberRepository.updateMember(mutator.invoke(member), userId)
+                        memberRepository.save(mutator.invoke(member))
                     } else {
                         Mono.error(NotFoundException("No sound found with name \"$name\""))
                     }

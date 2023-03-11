@@ -37,7 +37,7 @@ class PlayCommand(private val fileService: AudioFileService, private val playerS
                 playerService.playAudioInChannel(it.name, voiceChannel)
                     .then(Mono.just("Playing sound file `$audioFileName` in voice channel `#${voiceChannel.name}`"))
             }
-            .defaultIfEmpty("Could not find any sounds with given name")
+            .defaultIfEmpty("Could not find sound with given name")
             .flatMap { sendMessage(initiator, it) }
     }
 }

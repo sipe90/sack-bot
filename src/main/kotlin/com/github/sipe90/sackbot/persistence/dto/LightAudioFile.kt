@@ -1,4 +1,4 @@
-package com.github.sipe90.sackbot.persistence.dto.projection
+package com.github.sipe90.sackbot.persistence.dto
 
 import java.time.Instant
 
