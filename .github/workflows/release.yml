@@ -32,9 +32,3 @@ jobs:
           -Djib.console=plain
           -Djib.to.auth.username=${{ secrets.DOCKERHUB_USERNAME }}
           -Djib.to.auth.password=${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Upload the artifacts
-        uses: skx/github-action-publish-binaries@master
-        with:
-          args: build/libs/sack-bot-*.jar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
