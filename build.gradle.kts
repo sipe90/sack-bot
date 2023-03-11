@@ -35,7 +35,7 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("ch.qos.logback:logback-classic:1.4.5")
 
-    implementation("net.dv8tion:JDA:5.0.0-beta.4")
+    implementation("net.dv8tion:JDA:5.0.0-beta.5")
     implementation("com.github.minndevelopment:jda-reactor:1.6.0")
     implementation("com.github.walkyst:lavaplayer-fork:1.3.99.2")
     implementation("com.sedmelluq:jda-nas:1.1.0")
