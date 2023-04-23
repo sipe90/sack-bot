@@ -1,14 +1,15 @@
 package com.github.sipe90.sackbot.auth
 
 import org.springframework.security.oauth2.core.user.OAuth2User
+import java.io.Serializable
 
 /**
  * https://discordapp.com/developers/docs/resources/user#user-object
  */
-class DiscordUser(
+data class DiscordUser(
     private val authorities: Collection<DiscordAuthority>,
     private val attributes: Map<String, Any>,
-) : OAuth2User {
+) : OAuth2User, Serializable {
 
     object Attributes {
         const val ID = "id"

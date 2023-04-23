@@ -1,5 +1,7 @@
 package com.github.sipe90.sackbot.auth
 
+import java.io.Serializable
+
 data class DiscordGuild(
     val id: String,
     val name: String,
@@ -7,4 +9,4 @@ data class DiscordGuild(
     val owner: Boolean?,
     val permissions: Int?,
     val features: List<String>?,
-)
+): Serializable
