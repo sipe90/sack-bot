@@ -1,5 +1,7 @@
 # SackBot Discord Soundboard Bot
 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=sipe90_sack-bot)](https://sonarcloud.io/summary/new_code?id=sipe90_sack-bot)
+
 SackBot is a Discord bot with the main purpose of annoying other people at your Discord server's voice channels with tasteless meme sound clips you found from the darkest depths of the internet.
 
 The main features of the bot so far are:
