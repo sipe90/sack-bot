@@ -1,7 +1,7 @@
 package com.github.sipe90.sackbot.component
 
 import club.minnced.jda.reactor.then
-import com.github.sipe90.sackbot.audio.NitriteAudioSourceManager
+import com.github.sipe90.sackbot.audio.DatabaseAudioSourceManager
 import com.github.sipe90.sackbot.audio.TrackScheduler
 import com.github.sipe90.sackbot.audio.TrackSchedulerEvent
 import com.github.sipe90.sackbot.exception.NotFoundException
@@ -32,7 +32,7 @@ import java.nio.ByteBuffer
 import java.time.Duration
 
 @Component
-class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
+class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager) {
 
     private val logger = KotlinLogging.logger {}
 
@@ -49,8 +49,8 @@ class LavaPlayerManager(private val nitriteManager: NitriteAudioSourceManager) {
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    fun playNitriteTrack(identifier: String, audioChannel: AudioChannel): Mono<AudioTrack> {
-        return playTrack(nitriteManager, identifier, audioChannel)
+    fun playDatabaseTrack(identifier: String, audioChannel: AudioChannel): Mono<AudioTrack> {
+        return playTrack(dbSourceManager, identifier, audioChannel)
     }
 
     private fun playTrack(

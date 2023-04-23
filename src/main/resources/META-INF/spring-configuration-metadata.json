@@ -39,11 +39,6 @@
       "name": "sackbot.bot.upload.overrideExisting",
       "type": "java.lang.Boolean",
       "description": "If existing audio files should be overridden if a new one is uploaded with the same name."
-    },
-    {
-      "name": "sackbot.nitrite.dbFile",
-      "type": "java.lang.String",
-      "description": "Path to database file. The database will be created if the file does not exist."
     }
   ]
 }

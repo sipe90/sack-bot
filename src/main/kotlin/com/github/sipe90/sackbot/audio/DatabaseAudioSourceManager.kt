@@ -16,10 +16,10 @@ import java.io.DataInput
 import java.io.DataOutput
 
 @Component
-class NitriteAudioSourceManager(private val audioFileService: AudioFileService) :
+class DatabaseAudioSourceManager(private val audioFileService: AudioFileService) :
     ProbingAudioSourceManager(ContainerRegistries.audio) {
 
-    override fun getSourceName() = "nitrite"
+    override fun getSourceName() = "db"
 
     override fun loadItem(manager: AudioPlayerManager, reference: AudioReference): AudioItem? {
         val audioFile = getAudioFile(reference.identifier) ?: return null

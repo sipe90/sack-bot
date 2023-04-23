@@ -31,7 +31,7 @@ class AudioPlayerServiceImpl(
     override fun playAudioInChannel(name: String, audioChannel: AudioChannel): Mono<Unit> {
         val identifier = "${audioChannel.guild.id}:$name"
 
-        return playerManager.playNitriteTrack(identifier, audioChannel).then(Mono.empty())
+        return playerManager.playDatabaseTrack(identifier, audioChannel).then(Mono.empty())
     }
 
     override fun playUrlForUser(guildId: String, userId: String, url: String): Mono<AudioItem> {
