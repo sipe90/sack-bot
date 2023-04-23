@@ -90,13 +90,18 @@ class VoiceChannelEventHandler(
         val channel = event.channelLeft!!
         val selfMember = event.guild.selfMember
         if (channelHasMembers(channel)) {
+            logger.debug { "Voice channel still has non-bot members, staying in channel" }
             return Mono.empty()
         }
 
+        logger.debug { "No non-bot members remaining in voice channel, preparing to disconnect voice channel after 5 seconds" }
+
         return Mono.delay(Duration.ofSeconds(5)).then {
             if (channelHasMembers(channel) || !channel.members.contains(selfMember)) {
+                logger.debug { "Non-bot members present in voice channel, cancelling disconnect" }
                 Mono.empty()
             } else {
+                logger.debug { "No non-bot members still remain in voice channel, disconnecting" }
                 event.guild.audioManager.closeAudioConnection().toMono()
             }
         }
