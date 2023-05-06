@@ -3,6 +3,7 @@ package com.github.sipe90.sackbot.handler
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.sipe90.sackbot.audio.event.GuildVoiceEventEmitter
 import com.github.sipe90.sackbot.auth.DiscordAuthority
+import com.github.sipe90.sackbot.service.JDAService
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.stereotype.Component
@@ -15,7 +16,7 @@ import java.net.URI
 import java.util.logging.Level
 
 @Component
-class AudioEventsHandler(private val objectMapper: ObjectMapper, private val eventEmitter: GuildVoiceEventEmitter) : WebSocketHandler {
+class AudioEventsHandler(private val objectMapper: ObjectMapper, private val jdaService: JDAService, private val eventEmitter: GuildVoiceEventEmitter) : WebSocketHandler {
 
     override fun handle(session: WebSocketSession): Mono<Void> {
         val guildId = getGuildId(session.handshakeInfo.uri)
@@ -28,7 +29,8 @@ class AudioEventsHandler(private val objectMapper: ObjectMapper, private val eve
                 if (!hasAccess) {
                     session.close(CloseStatus.POLICY_VIOLATION.withReason("Forbidden")).thenMany(Mono.empty())
                 } else {
-                    eventEmitter.subscribe(guildId)
+                    Mono.just<Any>(buildInitialState(guildId))
+                        .mergeWith(eventEmitter.subscribe(guildId))
                         .map { objectMapper.writeValueAsString(it) }
                         .log(null, Level.FINE)
                         .map { session.textMessage(it) }
@@ -46,5 +48,12 @@ class AudioEventsHandler(private val objectMapper: ObjectMapper, private val eve
         return ReactiveSecurityContextHolder.getContext().map {
             (it.authentication as OAuth2AuthenticationToken).authorities as Collection<DiscordAuthority>
         }
+    }
+
+    private fun buildInitialState(guildId: String) =
+        InitialVoiceState(jdaService.getGuild(guildId)?.selfMember?.voiceState?.channel?.name)
+
+    data class InitialVoiceState(val currentChannel: String?) {
+        val type: String = this.javaClass.simpleName
     }
 }
