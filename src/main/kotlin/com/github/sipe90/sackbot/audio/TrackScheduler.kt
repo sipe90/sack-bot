@@ -5,26 +5,25 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
-import reactor.core.publisher.Flux
-import reactor.core.publisher.Sinks
+import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame
+import net.dv8tion.jda.api.audio.AudioSendHandler
+import java.nio.ByteBuffer
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
-class TrackScheduler(val player: AudioPlayer) : AudioEventAdapter() {
+class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
 
     private val queue: BlockingQueue<AudioTrack> = LinkedBlockingQueue()
 
-    private val trackSchedulerEventSink = Sinks.unsafe().many().multicast().directBestEffort<TrackSchedulerEvent>()
-
-    fun onTrackSchedulerEvent(): Flux<TrackSchedulerEvent> = trackSchedulerEventSink.asFlux()
+    val sendHandler: AudioSendHandler
 
     init {
+        sendHandler = AudioPlayerSendHandler(player)
         player.volume = 75
     }
 
     fun setVolume(volume: Int) {
         player.volume = volume
-        trackSchedulerEventSink.tryEmitNext(VolumeChangeEvent(volume))
     }
 
     fun getVolume(): Int {
@@ -82,14 +81,22 @@ class TrackScheduler(val player: AudioPlayer) : AudioEventAdapter() {
         }
     }
 
-    override fun onTrackStart(player: AudioPlayer?, track: AudioTrack?) {
-        trackSchedulerEventSink.tryEmitNext(TrackStartEvent(track!!))
-    }
-
     override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
-        trackSchedulerEventSink.tryEmitNext(TrackEndEvent(track))
         if (endReason.mayStartNext) {
             nextTrack()
         }
+    }
+
+    private class AudioPlayerSendHandler(private val audioPlayer: AudioPlayer) : AudioSendHandler {
+        private val buffer: ByteBuffer = ByteBuffer.allocate(1024)
+        private val frame: MutableAudioFrame = MutableAudioFrame()
+
+        init {
+            frame.setBuffer(buffer)
+        }
+
+        override fun isOpus() = true
+        override fun provide20MsAudio(): ByteBuffer = buffer.flip()
+        override fun canProvide(): Boolean = audioPlayer.provide(frame)
     }
 }

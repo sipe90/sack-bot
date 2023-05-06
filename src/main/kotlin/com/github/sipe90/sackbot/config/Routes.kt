@@ -1,6 +1,7 @@
 package com.github.sipe90.sackbot.config
 
 import com.github.sipe90.sackbot.auth.DiscordUser
+import com.github.sipe90.sackbot.handler.AudioEventsHandler
 import com.github.sipe90.sackbot.handler.AudioHandler
 import com.github.sipe90.sackbot.handler.SettingsHandler
 import com.github.sipe90.sackbot.handler.UserHandler
@@ -9,10 +10,12 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
+import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.status
 import org.springframework.web.reactive.function.server.router
+import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
@@ -54,6 +57,14 @@ class Routes(
                 }
             }
         }
+    }
+
+    @Bean
+    fun handlerMapping(audioEventsHandler: AudioEventsHandler): HandlerMapping {
+        val map = mapOf("/ws/events" to audioEventsHandler)
+        val order = -1
+
+        return SimpleUrlHandlerMapping(map, order)
     }
 
     private fun guildAccessFilter(

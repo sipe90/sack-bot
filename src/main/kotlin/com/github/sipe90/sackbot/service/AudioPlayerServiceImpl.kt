@@ -1,6 +1,5 @@
 package com.github.sipe90.sackbot.service
 
-import com.github.sipe90.sackbot.audio.TrackSchedulerEvent
 import com.github.sipe90.sackbot.component.LavaPlayerManager
 import com.github.sipe90.sackbot.exception.ValidationException
 import com.github.sipe90.sackbot.util.getVoiceChannel
@@ -8,7 +7,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import mu.KotlinLogging
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @Service
@@ -57,11 +55,5 @@ class AudioPlayerServiceImpl(
         val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
 
         return playerManager.getVolume(guild)
-    }
-
-    override fun onTrackEvent(guildId: String): Flux<TrackSchedulerEvent> {
-        val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
-
-        return playerManager.onTrackEvent(guild)
     }
 }

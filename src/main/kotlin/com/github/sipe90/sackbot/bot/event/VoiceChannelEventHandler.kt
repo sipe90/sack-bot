@@ -1,8 +1,8 @@
 package com.github.sipe90.sackbot.bot.event
 
-import club.minnced.jda.reactor.then
 import club.minnced.jda.reactor.toMono
 import com.github.sipe90.sackbot.SackException
+import com.github.sipe90.sackbot.audio.event.GuildVoiceEventEmitter
 import com.github.sipe90.sackbot.service.AudioFileService
 import com.github.sipe90.sackbot.service.AudioPlayerService
 import com.github.sipe90.sackbot.service.MemberService
@@ -17,9 +17,10 @@ import java.time.Duration
 
 @Component
 class VoiceChannelEventHandler(
-    val fileService: AudioFileService,
-    val playerService: AudioPlayerService,
-    val memberService: MemberService,
+    private val fileService: AudioFileService,
+    private val playerService: AudioPlayerService,
+    private val memberService: MemberService,
+    private val voiceEventEmitter: GuildVoiceEventEmitter,
 ) : EventHandler<GuildVoiceUpdateEvent> {
 
     private val logger = KotlinLogging.logger {}
@@ -96,15 +97,16 @@ class VoiceChannelEventHandler(
 
         logger.debug { "No non-bot members remaining in voice channel, preparing to disconnect voice channel after 5 seconds" }
 
-        return Mono.delay(Duration.ofSeconds(5)).then {
-            if (channelHasMembers(channel) || !channel.members.contains(selfMember)) {
-                logger.debug { "Non-bot members present in voice channel, cancelling disconnect" }
-                Mono.empty()
-            } else {
-                logger.debug { "No non-bot members still remain in voice channel, disconnecting" }
-                event.guild.audioManager.closeAudioConnection().toMono()
-            }
-        }
+        return Mono.delay(Duration.ofSeconds(5))
+            .doOnSuccess {
+                if (channelHasMembers(channel) || !channel.members.contains(selfMember)) {
+                    logger.debug { "Non-bot members present in voice channel, cancelling disconnect" }
+                } else {
+                    logger.debug { "No non-bot members still remain in voice channel, disconnecting" }
+                    event.guild.audioManager.closeAudioConnection()
+                    voiceEventEmitter.onVoiceChannelChange(event.guild.id, channel.name, null)
+                }
+            }.then(Mono.empty())
     }
 
     private fun channelHasMembers(channel: AudioChannelUnion): Boolean =

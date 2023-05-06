@@ -58,11 +58,13 @@ class DatabaseAudioSourceManager(private val audioFileService: AudioFileService)
         }
     }
 
+    override fun shutdown() {
+        // Nothing to do here
+    }
+
     private fun getAudioFile(identifier: String): AudioFile? {
         val id = identifier.split(":")
         if (id.size != 2) return null
         return audioFileService.findAudioFile(id[0], id[1]).block()
     }
-
-    override fun shutdown() {}
 }

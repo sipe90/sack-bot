@@ -1,9 +1,7 @@
 package com.github.sipe90.sackbot.service
 
-import com.github.sipe90.sackbot.audio.TrackSchedulerEvent
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface AudioPlayerService {
@@ -19,6 +17,4 @@ interface AudioPlayerService {
     fun setVolume(guildId: String, volume: Int)
 
     fun getVolume(guildId: String): Int
-
-    fun onTrackEvent(guildId: String): Flux<TrackSchedulerEvent>
 }

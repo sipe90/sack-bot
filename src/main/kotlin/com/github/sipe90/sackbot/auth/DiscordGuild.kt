@@ -9,4 +9,4 @@ data class DiscordGuild(
     val owner: Boolean?,
     val permissions: Int?,
     val features: List<String>?,
-): Serializable
+) : Serializable
