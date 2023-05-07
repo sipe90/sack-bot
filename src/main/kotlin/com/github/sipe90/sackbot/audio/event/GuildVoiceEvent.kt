@@ -7,5 +7,9 @@ abstract class GuildVoiceEvent {
     @get:JsonIgnore
     abstract val guildId: String
 
+    abstract val initiatorName: String?
+
+    abstract val initiatorAvatar: String?
+
     val type: String = this.javaClass.simpleName
 }

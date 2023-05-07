@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Role
+import net.dv8tion.jda.api.entities.SelfUser
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.events.session.ShutdownEvent
@@ -111,6 +112,8 @@ class JDAService(
                 .doOnComplete { logger.info { "Updated commands for guild ${guild.name} (${guild.id})" } }
         }
     }
+
+    fun getSelf(): SelfUser = jda.selfUser
 
     fun getUser(userId: String): User? = jda.getUserById(userId)
 

@@ -1,5 +1,6 @@
 package com.github.sipe90.sackbot.audio.event
 
+import com.github.sipe90.sackbot.util.Initiator
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
@@ -11,19 +12,21 @@ class GuildVoiceEventEmitter {
     private val guildVoiceEventSink = Sinks.unsafe().many().multicast().directBestEffort<GuildVoiceEvent>()
 
     fun onTrackStart(guildId: String, track: AudioTrack) {
-        publish(TrackStartEvent.fromAudioTrack(guildId, track))
+        val initiator = track.userData as Initiator?
+        publish(TrackStartEvent(guildId, initiator?.name, initiator?.avatarUrl, track.info.title))
     }
 
     fun onTrackEnd(guildId: String, track: AudioTrack) {
-        publish(TrackEndEvent.fromAudioTrack(guildId, track))
+        val initiator = track.userData as Initiator?
+        publish(TrackEndEvent(guildId, initiator?.name, initiator?.avatarUrl, track.info.title))
     }
 
-    fun onVolumeChange(guildId: String, volume: Int) {
-        publish(VolumeChangeEvent(guildId, volume))
+    fun onVolumeChange(guildId: String, initiator: Initiator?, volume: Int) {
+        publish(VolumeChangeEvent(guildId, initiator?.name, initiator?.avatarUrl, volume))
     }
 
-    fun onVoiceChannelChange(guildId: String, channelLeft: String?, channelJoined: String?) {
-        publish(VoiceChannelEvent(guildId, channelLeft, channelJoined))
+    fun onVoiceChannelChange(guildId: String, initiator: Initiator?, channelLeft: String?, channelJoined: String?) {
+        publish(VoiceChannelEvent(guildId, initiator?.name, initiator?.avatarUrl, channelLeft, channelJoined))
     }
 
     fun subscribe(guildId: String): Flux<GuildVoiceEvent> =

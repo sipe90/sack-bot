@@ -27,9 +27,7 @@ class AudioPlayerServiceImpl(
     }
 
     override fun playAudioInChannel(name: String, audioChannel: AudioChannel): Mono<Unit> {
-        val identifier = "${audioChannel.guild.id}:$name"
-
-        return playerManager.playDatabaseTrack(identifier, audioChannel).then(Mono.empty())
+        return playerManager.playDatabaseTrack(name, audioChannel).then(Mono.empty())
     }
 
     override fun playUrlForUser(guildId: String, userId: String, url: String): Mono<AudioItem> {
@@ -44,11 +42,13 @@ class AudioPlayerServiceImpl(
         return playerManager.playExternalTrack(url, audioChannel)
     }
 
-    override fun setVolume(guildId: String, volume: Int) {
+    override fun setVolume(guildId: String, volume: Int): Mono<Unit> {
         val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
 
-        logger.debug { "Updating player volume to $volume for guild $guildId" }
-        playerManager.setVolume(guild, volume)
+        return Mono.defer {
+            logger.debug { "Updating player volume to $volume for guild $guildId" }
+            playerManager.setVolume(guild, volume)
+        }
     }
 
     override fun getVolume(guildId: String): Int {

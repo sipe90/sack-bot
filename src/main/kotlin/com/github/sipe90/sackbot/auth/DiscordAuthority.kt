@@ -8,6 +8,7 @@ import java.io.Serializable
  */
 data class DiscordAuthority(
     val guildId: String,
+    val memberId: String,
     val roles: Set<String>,
     val isOwner: Boolean,
 ) : GrantedAuthority, Serializable {

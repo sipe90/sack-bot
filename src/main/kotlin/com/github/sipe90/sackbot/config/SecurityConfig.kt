@@ -79,7 +79,7 @@ class SecurityConfig {
         return guilds.map {
             val member = it.getMemberById(userId) ?: throw RuntimeException("Member not found")
             val roles = member.roles.map(Role::getName).toSet()
-            DiscordAuthority(it.id, roles, member.isOwner)
+            DiscordAuthority(it.id, member.id, roles, member.isOwner)
         }
     }
 

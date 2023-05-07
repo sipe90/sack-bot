@@ -4,12 +4,13 @@ import com.github.sipe90.sackbot.audio.DatabaseAudioSourceManager
 import com.github.sipe90.sackbot.audio.TrackScheduler
 import com.github.sipe90.sackbot.audio.event.GuildVoiceEventEmitter
 import com.github.sipe90.sackbot.exception.NotFoundException
+import com.github.sipe90.sackbot.util.Initiator
+import com.github.sipe90.sackbot.util.withContext
 import com.sedmelluq.discord.lavaplayer.natives.ConnectorNativeLibLoader
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter
-import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager
@@ -48,26 +49,25 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    fun playDatabaseTrack(identifier: String, audioChannel: AudioChannel): Mono<AudioTrack> {
-        return playTrack(dbSourceManager, identifier, audioChannel)
-    }
-
-    private fun playTrack(
-        sourceManager: AudioSourceManager,
-        identifier: String,
-        audioChannel: AudioChannel,
-    ): Mono<AudioTrack> {
+    fun playDatabaseTrack(trackName: String, audioChannel: AudioChannel): Mono<AudioTrack> {
         val guild = audioChannel.guild
         val trackScheduler = getScheduler(guild)
 
         val currentChannel = guild.selfMember.voiceState?.channel
+        val identifier = "${audioChannel.guild.id}:$trackName"
 
-        return connectIfRequired(currentChannel, audioChannel, trackScheduler)
-            .then(
-                mono {
-                    sourceManager.loadItem(playerManager, AudioReference(identifier, null)) as AudioTrack?
-                },
-            ).doOnNext { trackScheduler.interrupt(it!!) }
+        return withContext { initiator ->
+            connectIfRequired(currentChannel, audioChannel, trackScheduler, initiator)
+                .then(
+                    mono {
+                        val track = dbSourceManager.loadItem(playerManager, AudioReference(identifier, trackName)) as AudioTrack?
+                        if (track != null) {
+                            track.userData = initiator
+                        }
+                        track
+                    },
+                ).doOnNext { trackScheduler.interrupt(it!!) }
+        }
     }
 
     fun playExternalTrack(identifier: String, audioChannel: AudioChannel): Mono<AudioItem> {
@@ -76,31 +76,35 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
 
         val currentChannel = guild.selfMember.voiceState?.channel
 
-        return connectIfRequired(currentChannel, audioChannel, trackScheduler)
-            .then(loadExternalTrack(identifier))
-            .doOnSuccess {
-                if (it is AudioTrack) {
-                    trackScheduler.interrupt(it)
-                } else if (it is AudioPlaylist) {
-                    trackScheduler.interrupt(it)
+        return withContext { initiator ->
+            connectIfRequired(currentChannel, audioChannel, trackScheduler, initiator)
+                .then(loadExternalTrack(identifier, initiator))
+                .doOnSuccess {
+                    if (it is AudioTrack) {
+                        trackScheduler.interrupt(it)
+                    } else if (it is AudioPlaylist) {
+                        trackScheduler.interrupt(it)
+                    }
                 }
-            }
+        }
     }
 
-    private fun loadExternalTrack(identifier: String): Mono<AudioItem> =
+    private fun loadExternalTrack(identifier: String, initiator: Initiator?): Mono<AudioItem> =
         Mono.create { sink ->
             playerManager.loadItem(
                 identifier,
                 FunctionalResultHandler(
-                    {
-                        logger.debug { "Found external track ${it.info.title}" }
-                        sink.success(it)
+                    { track ->
+                        logger.debug { "Found external track ${track.info.title}" }
+                        track.userData = initiator
+                        sink.success(track)
                     },
-                    {
+                    { playlist ->
                         logger.debug {
-                            "Found external playlist with tracks ${it.tracks.map { track -> track.info.title }}"
+                            "Found external playlist with tracks ${playlist.tracks.map { track -> track.info.title }}"
                         }
-                        sink.success(it)
+                        playlist.tracks.forEach { track -> track.userData = initiator }
+                        sink.success(playlist)
                     },
                     {
                         logger.warn { "Could not find external track with identifier $identifier" }
@@ -129,11 +133,12 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
         currentChannel: AudioChannelUnion?,
         audioChannel: AudioChannel,
         trackScheduler: TrackScheduler,
+        initiator: Initiator?,
     ): Mono<Void> =
         if (currentChannel != audioChannel) {
             connect(audioChannel, trackScheduler.sendHandler)
                 .doOnSuccess {
-                    voiceEventEmitter.onVoiceChannelChange(audioChannel.guild.id, currentChannel?.name, audioChannel.name)
+                    voiceEventEmitter.onVoiceChannelChange(audioChannel.guild.id, initiator, currentChannel?.name, audioChannel.name)
                 }
         } else {
             Mono.empty()
@@ -147,11 +152,14 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
         return Mono.delay(Duration.ofMillis(100)).then()
     }
 
-    fun setVolume(guild: Guild, volume: Int) {
-        val scheduler = getScheduler(guild)
-        logger.debug { "Setting volume for guild ${guild.id} player to $volume" }
-        scheduler.setVolume(volume)
-        voiceEventEmitter.onVolumeChange(guild.id, volume)
+    fun setVolume(guild: Guild, volume: Int): Mono<Unit> {
+        return withContext { initiator ->
+            val scheduler = getScheduler(guild)
+            logger.debug { "Setting volume for guild ${guild.id} player to $volume" }
+            scheduler.setVolume(volume)
+            voiceEventEmitter.onVolumeChange(guild.id, initiator, volume)
+            Mono.empty()
+        }
     }
 
     fun getVolume(guild: Guild): Int {

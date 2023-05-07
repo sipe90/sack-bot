@@ -1,10 +1,13 @@
 package com.github.sipe90.sackbot.config
 
+import com.github.sipe90.sackbot.SackException
 import com.github.sipe90.sackbot.auth.DiscordUser
 import com.github.sipe90.sackbot.handler.AudioEventsHandler
 import com.github.sipe90.sackbot.handler.AudioHandler
 import com.github.sipe90.sackbot.handler.SettingsHandler
 import com.github.sipe90.sackbot.handler.UserHandler
+import com.github.sipe90.sackbot.service.JDAService
+import com.github.sipe90.sackbot.util.createContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
@@ -28,6 +31,7 @@ class Routes(
     private val userHandler: UserHandler,
     private val audioHandler: AudioHandler,
     private val settingsHandler: SettingsHandler,
+    private val jdaService: JDAService,
 ) {
     @Bean
     fun apiRouter() = router {
@@ -79,16 +83,34 @@ class Routes(
     private fun handleAdmin(
         handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>,
     ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
-        requestWithPrincipal(req).flatMap { (req, user) ->
+        requestWithPrincipal(req).flatMap { (req, principal) ->
             val guildId = req.pathVariable("guildId")
-            if (hasAdminAccess(user, guildId)) handler(req, user) else status(HttpStatus.FORBIDDEN).build()
+            val user = jdaService.getUser(principal.getId()) ?: return@flatMap Mono.error(SackException("User not found"))
+            val member = jdaService.getGuild(guildId)?.getMember(user)
+            if (hasAdminAccess(principal, guildId)) {
+                handler(req, principal)
+                    .contextWrite(createContext(user, member))
+            } else {
+                status(HttpStatus.FORBIDDEN).build()
+            }
         }
     }
 
     private fun handle(
         handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>,
     ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
-        requestWithPrincipal(req).flatMap { (req, user) -> handler(req, user) }
+        requestWithPrincipal(req)
+            .flatMap { (req, principal) ->
+                val user = jdaService.getUser(principal.getId()) ?: return@flatMap Mono.error(SackException("User not found"))
+                val context = if (req.pathVariables().containsKey("guildId")) {
+                    val guildId = req.pathVariable("guildId")
+                    val member = jdaService.getGuild(guildId)?.getMember(user)
+                    createContext(user, member)
+                } else {
+                    createContext(user, null)
+                }
+                handler(req, principal).contextWrite(context)
+            }
     }
 
     private fun requestWithPrincipal(req: ServerRequest): Mono<Tuple2<ServerRequest, DiscordUser>> {

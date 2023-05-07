@@ -14,7 +14,7 @@ interface AudioPlayerService {
 
     fun playUrlInChannel(url: String, audioChannel: AudioChannel): Mono<AudioItem>
 
-    fun setVolume(guildId: String, volume: Int)
+    fun setVolume(guildId: String, volume: Int): Mono<Unit>
 
     fun getVolume(guildId: String): Int
 }

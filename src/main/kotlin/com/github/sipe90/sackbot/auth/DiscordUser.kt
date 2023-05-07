@@ -11,6 +11,11 @@ data class DiscordUser(
     private val attributes: Map<String, Any>,
 ) : OAuth2User, Serializable {
 
+    object Templates {
+        const val USER_AVATAR = "https://cdn.discordapp.com/avatars/%s/%s.%s"
+        const val DEFAULT_AVATAR = "https://cdn.discordapp.com/embed/avatars/%s.png"
+    }
+
     object Attributes {
         const val ID = "id"
         const val USERNAME = "username"
@@ -63,11 +68,19 @@ data class DiscordUser(
 
     fun isOwner(guildId: String): Boolean = authorities.find { it.guildId == guildId }?.isOwner ?: false
 
+    fun getAvatarUri(): String {
+        val avatarHash = getAvatar()
+        if (avatarHash != null) {
+            return Templates.USER_AVATAR.format(getId(), avatarHash, if (avatarHash.startsWith("a_")) "gif" else "png")
+        }
+        return Templates.DEFAULT_AVATAR.format(getDiscriminator() % 5)
+    }
+
     // Identity scope
 
     fun getId(): String = attributes[Attributes.ID] as String
     fun getUsername(): String = attributes[Attributes.USERNAME] as String
-    fun getDiscriminator(): String = attributes[Attributes.DISCRIMINATOR] as String
+    fun getDiscriminator(): Int = (attributes[Attributes.DISCRIMINATOR] as String).toInt()
     fun getAvatar(): String? = attributes[Attributes.AVATAR] as String?
     fun isBot(): Boolean? = attributes[Attributes.BOT] as Boolean?
     fun isSystem(): Boolean? = attributes[Attributes.SYSTEM] as Boolean?

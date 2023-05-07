@@ -40,7 +40,7 @@ class VolumeCommand(private val playerService: AudioPlayerService) : BotCommand(
 
         val volume = volumeOpt.asLong.coerceIn(1, 100)
 
-        playerService.setVolume(guild.id, volume.toInt())
-        return sendMessage(initiator, "Setting volume to `$volume%`")
+        return playerService.setVolume(guild.id, volume.toInt())
+            .then(sendMessage(initiator, "Setting volume to `$volume%`"))
     }
 }

@@ -104,7 +104,7 @@ class VoiceChannelEventHandler(
                 } else {
                     logger.debug { "No non-bot members still remain in voice channel, disconnecting" }
                     event.guild.audioManager.closeAudioConnection()
-                    voiceEventEmitter.onVoiceChannelChange(event.guild.id, channel.name, null)
+                    voiceEventEmitter.onVoiceChannelChange(event.guild.id, null, channel.name, null)
                 }
             }.then(Mono.empty())
     }

@@ -13,7 +13,6 @@ import org.springframework.web.reactive.socket.WebSocketSession
 import org.springframework.web.util.UriComponentsBuilder
 import reactor.core.publisher.Mono
 import java.net.URI
-import java.util.logging.Level
 
 @Component
 class AudioEventsHandler(private val objectMapper: ObjectMapper, private val jdaService: JDAService, private val eventEmitter: GuildVoiceEventEmitter) : WebSocketHandler {
@@ -32,7 +31,6 @@ class AudioEventsHandler(private val objectMapper: ObjectMapper, private val jda
                     Mono.just<Any>(buildInitialState(guildId))
                         .mergeWith(eventEmitter.subscribe(guildId))
                         .map { objectMapper.writeValueAsString(it) }
-                        .log(null, Level.FINE)
                         .map { session.textMessage(it) }
                 }
             },
