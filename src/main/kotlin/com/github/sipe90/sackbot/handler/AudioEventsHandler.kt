@@ -3,6 +3,7 @@ package com.github.sipe90.sackbot.handler
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.sipe90.sackbot.audio.event.GuildVoiceEventEmitter
 import com.github.sipe90.sackbot.auth.DiscordAuthority
+import com.github.sipe90.sackbot.service.AudioPlayerService
 import com.github.sipe90.sackbot.service.JDAService
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
@@ -15,7 +16,12 @@ import reactor.core.publisher.Mono
 import java.net.URI
 
 @Component
-class AudioEventsHandler(private val objectMapper: ObjectMapper, private val jdaService: JDAService, private val eventEmitter: GuildVoiceEventEmitter) : WebSocketHandler {
+class AudioEventsHandler(
+    private val objectMapper: ObjectMapper,
+    private val jdaService: JDAService,
+    private val audioPlayerService: AudioPlayerService,
+    private val eventEmitter: GuildVoiceEventEmitter
+) : WebSocketHandler {
 
     override fun handle(session: WebSocketSession): Mono<Void> {
         val guildId = getGuildId(session.handshakeInfo.uri)
@@ -48,10 +54,13 @@ class AudioEventsHandler(private val objectMapper: ObjectMapper, private val jda
         }
     }
 
-    private fun buildInitialState(guildId: String) =
-        InitialVoiceState(jdaService.getGuild(guildId)?.selfMember?.voiceState?.channel?.name)
+    private fun buildInitialState(guildId: String): InitialVoiceState {
+        val guild = jdaService.getGuild(guildId)
+        val volume = audioPlayerService.getVolume(guildId)
+        return InitialVoiceState(guild?.selfMember?.voiceState?.channel?.name, volume)
+    }
 
-    data class InitialVoiceState(val currentChannel: String?) {
+    data class InitialVoiceState(val currentChannel: String?, val volume: Int) {
         val type: String = this.javaClass.simpleName
     }
 }

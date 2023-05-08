@@ -43,6 +43,7 @@ class Routes(
             "/{guildId}".nest {
                 filter(this@Routes::guildAccessFilter)
                 GET("/members", handleAdmin(userHandler::guildMembers))
+                PUT("/volume", handleAdmin(audioHandler::setVolume))
                 "/sounds".nest {
                     GET("", handle(audioHandler::getSoundsList))
                     (POST("") and accept(MediaType.MULTIPART_FORM_DATA))

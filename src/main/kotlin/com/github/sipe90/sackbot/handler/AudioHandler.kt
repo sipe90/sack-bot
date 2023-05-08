@@ -182,10 +182,11 @@ class AudioHandler(
             .body(audioFileService.zipFiles(guildId, userId))
     }
 
-    private fun getVolume(request: ServerRequest): Int? {
-        val volumeStr = request.queryParamOrNull("vol") ?: return null
+    fun setVolume(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+        val guildId = request.pathVariable("guildId")
         try {
-            return Integer.parseInt(volumeStr).coerceIn(0, 100)
+            val volume = request.queryParamOrNull("volume")?.toInt()?.coerceIn(0, 100) ?: throw BadRequestException("Invalid volume parameter")
+            return audioPlayerService.setVolume(guildId, volume).flatMap { noContent().build() }
         } catch (e: NumberFormatException) {
             throw BadRequestException("Invalid volume parameter")
         }
