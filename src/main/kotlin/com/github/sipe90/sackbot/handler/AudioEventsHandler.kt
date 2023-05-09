@@ -20,7 +20,7 @@ class AudioEventsHandler(
     private val objectMapper: ObjectMapper,
     private val jdaService: JDAService,
     private val audioPlayerService: AudioPlayerService,
-    private val eventEmitter: GuildVoiceEventEmitter
+    private val eventEmitter: GuildVoiceEventEmitter,
 ) : WebSocketHandler {
 
     override fun handle(session: WebSocketSession): Mono<Void> {
