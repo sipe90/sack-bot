@@ -3,6 +3,8 @@ package com.github.sipe90.sackbot.persistence
 import com.github.sipe90.sackbot.persistence.dto.AudioFile
 import com.github.sipe90.sackbot.persistence.dto.LightAudioFile
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
+import org.springframework.data.mongodb.core.aggregation.Aggregation
+import org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation
 import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
@@ -31,16 +33,16 @@ class AudioFileRepositoryExtensionImpl(private val template: ReactiveMongoTempla
         return template.find(allAudioFilesQuery(guildId))
     }
 
-    override fun findAllAudioFilesByTags(guildId: String, tags: Set<String>): Flux<AudioFile> {
-        if (tags.isEmpty()) {
-            return findAllAudioFiles(guildId)
-        }
-        var criteria = Criteria.where("tags").`is`(tags.first())
-        tags.drop(1).forEach {
-            criteria = criteria.and("tags").`is`(it)
-        }
+    override fun findRandomAudioFile(guildId: String, tags: Set<String>): Mono<AudioFile> {
+        val sampleOperation = Aggregation.sample(1)
+        val aggregation =
+            if (tags.isNotEmpty()) {
+                newAggregation(Aggregation.match(Criteria.where("tags").all(tags)), sampleOperation)
+            } else {
+                newAggregation(sampleOperation)
+            }
 
-        return template.find(allAudioFilesQuery(guildId).addCriteria(criteria))
+        return template.aggregate(aggregation, "audio_files", AudioFile::class.java).next()
     }
 
     override fun deleteAudioFile(guildId: String, name: String): Mono<Boolean> {

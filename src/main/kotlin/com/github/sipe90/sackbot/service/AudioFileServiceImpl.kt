@@ -26,11 +26,7 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
     }
 
     override fun randomAudioFile(guildId: String, userId: String, tags: Set<String>): Mono<AudioFile> {
-        val audioFiles = audioFileRepository.findAllAudioFilesByTags(guildId, tags)
-        return audioFiles.count()
-            .filter { it > 0 }
-            .map { (1..it).random() }
-            .flatMap { audioFiles.take(it).last() }
+        return audioFileRepository.findRandomAudioFile(guildId, tags)
     }
 
     override fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile> {

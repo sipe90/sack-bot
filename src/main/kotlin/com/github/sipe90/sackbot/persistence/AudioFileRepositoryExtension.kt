@@ -15,7 +15,7 @@ interface AudioFileRepositoryExtension {
 
     fun findAllAudioFiles(guildId: String): Flux<AudioFile>
 
-    fun findAllAudioFilesByTags(guildId: String, tags: Set<String>): Flux<AudioFile>
-
     fun deleteAudioFile(guildId: String, name: String): Mono<Boolean>
+
+    fun findRandomAudioFile(guildId: String, tags: Set<String>): Mono<AudioFile>
 }
