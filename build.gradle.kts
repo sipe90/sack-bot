@@ -51,6 +51,9 @@ kotlin {
 }
 
 jib {
+    from {
+        image = "eclipse-temurin:21"
+    }
     to {
         image = "sipe90/${project.name}:${project.version}"
     }
