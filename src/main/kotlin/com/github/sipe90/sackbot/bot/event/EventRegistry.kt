@@ -18,7 +18,6 @@ class EventRegistry(
     voiceChannelEventHandler: VoiceChannelEventHandler,
     slashCommandEventHandler: SlashCommandEventHandler,
 ) {
-
     private final val streamLogCategoryPrefix = "com.github.sipe90.sackbot"
 
     init {

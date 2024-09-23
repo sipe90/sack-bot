@@ -13,15 +13,20 @@ class MemberServiceImpl(
     private val memberRepository: MemberRepository,
     private val audioFileService: AudioFileService,
 ) : MemberService {
-
-    override fun getMember(guildId: String, userId: String): Mono<Member> =
+    override fun getMember(
+        guildId: String,
+        userId: String,
+    ): Mono<Member> =
         memberRepository.findMember(guildId, userId)
             .switchIfEmpty(memberRepository.save(Member(userId = userId, guildId = guildId)))
 
-    override fun getUserMemberships(userId: String): Flux<Member> =
-        memberRepository.getUserMemberships(userId)
+    override fun getUserMemberships(userId: String): Flux<Member> = memberRepository.getUserMemberships(userId)
 
-    override fun setMemberEntrySound(guildId: String, userId: String, name: String?): Mono<Unit> {
+    override fun setMemberEntrySound(
+        guildId: String,
+        userId: String,
+        name: String?,
+    ): Mono<Unit> {
         return updateMember(guildId, userId, name) { member ->
             member.entrySound = name
             member.modified = Instant.now()
@@ -30,7 +35,11 @@ class MemberServiceImpl(
         }
     }
 
-    override fun setMemberExitSound(guildId: String, userId: String, name: String?): Mono<Unit> {
+    override fun setMemberExitSound(
+        guildId: String,
+        userId: String,
+        name: String?,
+    ): Mono<Unit> {
         return updateMember(guildId, userId, name) { member ->
             member.exitSound = name
             member.modified = Instant.now()

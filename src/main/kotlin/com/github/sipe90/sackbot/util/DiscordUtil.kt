@@ -14,12 +14,16 @@ fun getGuild(user: User): Guild? =
         }
     }
 
-fun getMember(user: User): Member? =
-    getGuild(user)?.getMember(user)
+fun getMember(user: User): Member? = getGuild(user)?.getMember(user)
 
-fun getVoiceChannel(user: User): VoiceChannel? = user.mutualGuilds
-    .flatMap { guild -> guild.voiceChannels }
-    .find { vc -> vc.members.map { m -> m.id }.contains(user.id) }
+fun getVoiceChannel(user: User): VoiceChannel? =
+    user.mutualGuilds
+        .flatMap { guild -> guild.voiceChannels }
+        .find { vc -> vc.members.map { m -> m.id }.contains(user.id) }
 
-fun getVoiceChannel(guild: Guild, user: User): VoiceChannel? = guild.voiceChannels
-    .find { vc -> vc.members.map { m -> m.id }.contains(user.id) }
+fun getVoiceChannel(
+    guild: Guild,
+    user: User,
+): VoiceChannel? =
+    guild.voiceChannels
+        .find { vc -> vc.members.map { m -> m.id }.contains(user.id) }

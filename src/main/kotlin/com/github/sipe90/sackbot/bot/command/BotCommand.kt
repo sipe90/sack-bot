@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import reactor.core.publisher.Mono
 
 abstract class BotCommand {
-
     private val logger = KotlinLogging.logger {}
 
     private val defErrorMsg = "Error happened while processing command"
@@ -19,7 +18,11 @@ abstract class BotCommand {
 
     abstract val commandData: CommandData
 
-    fun processCommand(initiator: SlashCommandInteractionEvent, guild: Guild?, voiceChannel: VoiceChannel?): Mono<Unit> {
+    fun processCommand(
+        initiator: SlashCommandInteractionEvent,
+        guild: Guild?,
+        voiceChannel: VoiceChannel?,
+    ): Mono<Unit> {
         logger.debug { "Processing \"$commandName\" command" }
         initiator.deferReply().queue()
         return process(initiator, guild, voiceChannel)
@@ -30,9 +33,16 @@ abstract class BotCommand {
             }
     }
 
-    protected abstract fun process(initiator: SlashCommandInteractionEvent, guild: Guild?, voiceChannel: VoiceChannel?): Mono<Unit>
+    protected abstract fun process(
+        initiator: SlashCommandInteractionEvent,
+        guild: Guild?,
+        voiceChannel: VoiceChannel?,
+    ): Mono<Unit>
 
-    protected fun sendMessage(initiator: SlashCommandInteractionEvent, msg: String): Mono<Unit> {
+    protected fun sendMessage(
+        initiator: SlashCommandInteractionEvent,
+        msg: String,
+    ): Mono<Unit> {
         return initiator.hook.sendMessage(msg).asMono().then(Mono.empty())
     }
 }

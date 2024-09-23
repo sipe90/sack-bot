@@ -20,8 +20,10 @@ class UserHandler(
     private val memberService: MemberService,
     private val jdaService: JDAService,
 ) {
-
-    fun userInfo(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun userInfo(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val user = jdaService.getUser(principal.getId()) ?: throw RuntimeException("Could not get user")
         return ok()
             .body(
@@ -30,7 +32,10 @@ class UserHandler(
             )
     }
 
-    fun mutualGuilds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun mutualGuilds(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val userId = principal.getId()
         val user = jdaService.getUser(userId)
 
@@ -48,7 +53,10 @@ class UserHandler(
             )
     }
 
-    fun guildMembers(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun guildMembers(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
 
         return ok().body(
@@ -75,7 +83,7 @@ class UserHandler(
             (
                 config.adminRole != null &&
                     guild.getMember(user)?.roles?.any { it.name == config.adminRole } ?: false
-                )
+            )
 
     data class UserInfo(
         val name: String,

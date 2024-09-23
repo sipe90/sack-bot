@@ -14,18 +14,23 @@ import reactor.core.publisher.Mono
 
 @Repository
 class AudioFileRepositoryExtensionImpl(private val template: ReactiveMongoTemplate) : AudioFileRepositoryExtension {
-
     override fun getAllAudioFilesWithoutData(guildId: String): Flux<LightAudioFile> {
         val query = allAudioFilesQuery(guildId)
         query.fields().exclude("data")
         return template.find(query, "audio_files")
     }
 
-    override fun audioFileExists(guildId: String, name: String): Mono<Boolean> {
+    override fun audioFileExists(
+        guildId: String,
+        name: String,
+    ): Mono<Boolean> {
         return template.exists(singleAudioFileQuery(guildId, name), AudioFile::class.java)
     }
 
-    override fun findAudioFile(guildId: String, name: String): Mono<AudioFile> {
+    override fun findAudioFile(
+        guildId: String,
+        name: String,
+    ): Mono<AudioFile> {
         return template.findOne(singleAudioFileQuery(guildId, name), AudioFile::class.java)
     }
 
@@ -33,7 +38,10 @@ class AudioFileRepositoryExtensionImpl(private val template: ReactiveMongoTempla
         return template.find(allAudioFilesQuery(guildId))
     }
 
-    override fun findRandomAudioFile(guildId: String, tags: Set<String>): Mono<AudioFile> {
+    override fun findRandomAudioFile(
+        guildId: String,
+        tags: Set<String>,
+    ): Mono<AudioFile> {
         val sampleOperation = Aggregation.sample(1)
         val aggregation =
             if (tags.isNotEmpty()) {
@@ -45,11 +53,20 @@ class AudioFileRepositoryExtensionImpl(private val template: ReactiveMongoTempla
         return template.aggregate(aggregation, "audio_files", AudioFile::class.java).next()
     }
 
-    override fun deleteAudioFile(guildId: String, name: String): Mono<Boolean> {
+    override fun deleteAudioFile(
+        guildId: String,
+        name: String,
+    ): Mono<Boolean> {
         return template.findAndRemove(singleAudioFileQuery(guildId, name), AudioFile::class.java).map { true }
     }
 
     private fun allAudioFilesQuery(guildId: String): Query = Query(Criteria.where("guildId").`is`(guildId))
 
-    private fun singleAudioFileQuery(guildId: String, name: String): Query = Query(Criteria.where("guildId").`is`(guildId).and("name").`is`(name))
+    private fun singleAudioFileQuery(
+        guildId: String,
+        name: String,
+    ): Query =
+        Query(
+            Criteria.where("guildId").`is`(guildId).and("name").`is`(name),
+        )
 }

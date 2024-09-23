@@ -11,7 +11,6 @@ import org.springframework.web.reactive.config.WebFluxConfigurer
 @Configuration
 @EnableWebFlux
 class WebFluxConfig(private val objectMapper: ObjectMapper) : WebFluxConfigurer {
-
     override fun configureHttpMessageCodecs(configurer: ServerCodecConfigurer) {
         configurer.defaultCodecs().jackson2JsonEncoder(
             Jackson2JsonEncoder(objectMapper),

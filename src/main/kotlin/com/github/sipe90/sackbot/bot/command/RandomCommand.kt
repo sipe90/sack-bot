@@ -13,11 +13,11 @@ import reactor.core.publisher.Mono
 @Component
 class RandomCommand(private val fileService: AudioFileService, private val playerService: AudioPlayerService) :
     BotCommand() {
-
     final override val commandName = "random"
 
-    final override val commandData = Commands.slash("random", "Play a random sound")
-        .addOption(OptionType.STRING, "tag", "Filter by tag", false)
+    final override val commandData =
+        Commands.slash("random", "Play a random sound")
+            .addOption(OptionType.STRING, "tag", "Filter by tag", false)
 
     override fun process(
         initiator: SlashCommandInteractionEvent,

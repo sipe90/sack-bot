@@ -10,7 +10,6 @@ data class DiscordUser(
     private val authorities: Collection<DiscordAuthority>,
     private val attributes: Map<String, Any>,
 ) : OAuth2User, Serializable {
-
     object Templates {
         const val USER_AVATAR = "https://cdn.discordapp.com/avatars/%s/%s.%s"
         const val DEFAULT_AVATAR = "https://cdn.discordapp.com/embed/avatars/%s.png"
@@ -32,18 +31,19 @@ data class DiscordUser(
 
         fun getForScope(scope: String): List<String> =
             when (scope) {
-                "identify" -> listOf(
-                    ID,
-                    USERNAME,
-                    DISCRIMINATOR,
-                    AVATAR,
-                    BOT,
-                    SYSTEM,
-                    MFA_ENABLED,
-                    LOCALE,
-                    FLAGS,
-                    PREMIUM_TYPE,
-                )
+                "identify" ->
+                    listOf(
+                        ID,
+                        USERNAME,
+                        DISCRIMINATOR,
+                        AVATAR,
+                        BOT,
+                        SYSTEM,
+                        MFA_ENABLED,
+                        LOCALE,
+                        FLAGS,
+                        PREMIUM_TYPE,
+                    )
                 "email" -> listOf(VERIFIED, EMAIL)
                 else -> listOf()
             }
@@ -61,8 +61,9 @@ data class DiscordUser(
 
     override fun getName() = getUsername()
 
-    fun getRoles(guildId: String): Set<String> = authorities.find { it.guildId == guildId }?.roles
-        ?: throw RuntimeException("User is not a member of this guild")
+    fun getRoles(guildId: String): Set<String> =
+        authorities.find { it.guildId == guildId }?.roles
+            ?: throw RuntimeException("User is not a member of this guild")
 
     fun isInGuild(guildId: String): Boolean = authorities.any { it.guildId == guildId }
 
@@ -79,18 +80,28 @@ data class DiscordUser(
     // Identity scope
 
     fun getId(): String = attributes[Attributes.ID] as String
+
     fun getUsername(): String = attributes[Attributes.USERNAME] as String
+
     fun getDiscriminator(): Int = (attributes[Attributes.DISCRIMINATOR] as String).toInt()
+
     fun getAvatar(): String? = attributes[Attributes.AVATAR] as String?
+
     fun isBot(): Boolean? = attributes[Attributes.BOT] as Boolean?
+
     fun isSystem(): Boolean? = attributes[Attributes.SYSTEM] as Boolean?
+
     fun isMfaEnabled(): Boolean? = attributes[Attributes.MFA_ENABLED] as Boolean?
+
     fun getLocale(): String? = attributes[Attributes.LOCALE] as String?
+
     fun getFlags(): Int? = attributes[Attributes.FLAGS] as Int?
+
     fun getPremiumType(): Int? = attributes[Attributes.PREMIUM_TYPE] as Int?
 
     // Email scope
 
     fun isVerified(): Boolean? = attributes[Attributes.VERIFIED] as Boolean?
+
     fun getEmail(): String? = attributes[Attributes.EMAIL] as String?
 }

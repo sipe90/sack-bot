@@ -22,7 +22,6 @@ class VoiceChannelEventHandler(
     private val memberService: MemberService,
     private val voiceEventEmitter: GuildVoiceEventEmitter,
 ) : EventHandler<GuildVoiceUpdateEvent> {
-
     private val logger = KotlinLogging.logger {}
 
     override fun handleEvent(event: GuildVoiceUpdateEvent): Mono<Unit> {
@@ -109,6 +108,5 @@ class VoiceChannelEventHandler(
             }.then(Mono.empty())
     }
 
-    private fun channelHasMembers(channel: AudioChannelUnion): Boolean =
-        channel.members.any { !it.user.isBot }
+    private fun channelHasMembers(channel: AudioChannelUnion): Boolean = channel.members.any { !it.user.isBot }
 }

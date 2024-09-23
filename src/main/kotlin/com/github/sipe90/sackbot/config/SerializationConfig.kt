@@ -8,7 +8,6 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 
 @Configuration
 class SerializationConfig {
-
     @Bean
     fun objectMapper(): ObjectMapper {
         return Jackson2ObjectMapperBuilder.json()

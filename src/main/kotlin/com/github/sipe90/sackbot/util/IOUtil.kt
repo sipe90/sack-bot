@@ -17,7 +17,10 @@ fun stripExtension(fileName: String): String {
     return if (last > 0) fileName.substring(0, last) else fileName
 }
 
-fun withExtension(fileName: String, extension: String?): String {
+fun withExtension(
+    fileName: String,
+    extension: String?,
+): String {
     if (extension == null) return fileName
     return "$fileName.$extension"
 }

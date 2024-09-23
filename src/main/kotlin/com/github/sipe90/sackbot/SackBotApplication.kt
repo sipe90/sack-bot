@@ -15,7 +15,6 @@ import java.util.concurrent.Executor
 @EnableScheduling
 @ConfigurationPropertiesScan("com.github.sipe90.sackbot.config")
 class SackBotApplication {
-
     @Bean
     @Primary
     fun taskExecutor(): Executor {

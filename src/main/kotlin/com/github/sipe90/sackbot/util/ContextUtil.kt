@@ -9,7 +9,10 @@ object ContextKey {
     const val INITIATOR = "INITIATOR"
 }
 
-fun createContext(user: User, member: Member?): Context =
+fun createContext(
+    user: User,
+    member: Member?,
+): Context =
     Context.of(
         ContextKey.INITIATOR,
         Initiator(

@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono
 
 @Component
 class UrlCommand(private val playerService: AudioPlayerService) : BotCommand() {
-
     final override val commandName = "url"
 
     final override val commandData =

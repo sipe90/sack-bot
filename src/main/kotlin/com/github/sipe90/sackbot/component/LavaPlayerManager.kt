@@ -33,7 +33,6 @@ import java.time.Duration
 
 @Component
 class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager, private val voiceEventEmitter: GuildVoiceEventEmitter) {
-
     private val logger = KotlinLogging.logger {}
 
     private final val playerManager = DefaultAudioPlayerManager()
@@ -49,7 +48,10 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
         ConnectorNativeLibLoader.loadConnectorLibrary()
     }
 
-    fun playDatabaseTrack(trackName: String, audioChannel: AudioChannel): Mono<AudioTrack> {
+    fun playDatabaseTrack(
+        trackName: String,
+        audioChannel: AudioChannel,
+    ): Mono<AudioTrack> {
         val guild = audioChannel.guild
         val trackScheduler = getScheduler(guild)
 
@@ -70,7 +72,10 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
         }
     }
 
-    fun playExternalTrack(identifier: String, audioChannel: AudioChannel): Mono<AudioItem> {
+    fun playExternalTrack(
+        identifier: String,
+        audioChannel: AudioChannel,
+    ): Mono<AudioItem> {
         val guild = audioChannel.guild
         val trackScheduler = getScheduler(guild)
 
@@ -89,7 +94,10 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
         }
     }
 
-    private fun loadExternalTrack(identifier: String, initiator: Initiator?): Mono<AudioItem> =
+    private fun loadExternalTrack(
+        identifier: String,
+        initiator: Initiator?,
+    ): Mono<AudioItem> =
         Mono.create { sink ->
             playerManager.loadItem(
                 identifier,
@@ -144,7 +152,10 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
             Mono.empty()
         }
 
-    private fun connect(audioChannel: AudioChannel, sendHandler: AudioSendHandler): Mono<Void> {
+    private fun connect(
+        audioChannel: AudioChannel,
+        sendHandler: AudioSendHandler,
+    ): Mono<Void> {
         val audioManager = audioChannel.guild.audioManager
         audioManager.openAudioConnection(audioChannel)
         audioManager.sendingHandler = sendHandler
@@ -152,7 +163,10 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
         return Mono.delay(Duration.ofMillis(100)).then()
     }
 
-    fun setVolume(guild: Guild, volume: Int): Mono<Unit> {
+    fun setVolume(
+        guild: Guild,
+        volume: Int,
+    ): Mono<Unit> {
         return withContext { initiator ->
             val scheduler = getScheduler(guild)
             logger.debug { "Setting volume for guild ${guild.id} player to $volume" }
@@ -168,11 +182,18 @@ class LavaPlayerManager(private val dbSourceManager: DatabaseAudioSourceManager,
     }
 
     class AudioEventListener(private val guildId: String, private val voiceEventEmitter: GuildVoiceEventEmitter) : AudioEventAdapter() {
-        override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+        override fun onTrackStart(
+            player: AudioPlayer,
+            track: AudioTrack,
+        ) {
             voiceEventEmitter.onTrackStart(guildId, track)
         }
 
-        override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+        override fun onTrackEnd(
+            player: AudioPlayer,
+            track: AudioTrack,
+            endReason: AudioTrackEndReason,
+        ) {
             voiceEventEmitter.onTrackEnd(guildId, track)
         }
     }

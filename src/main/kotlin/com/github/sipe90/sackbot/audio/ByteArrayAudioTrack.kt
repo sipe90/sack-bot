@@ -14,7 +14,6 @@ class ByteArrayAudioTrack(
     val containerTrackFactory: MediaContainerDescriptor,
     private val sourceManager: AudioSourceManager?,
 ) : DelegatedAudioTrack(trackInfo) {
-
     override fun process(localExecutor: LocalAudioTrackExecutor?) {
         ByteArraySeekableInputStream(audio).use { inputStream ->
             processDelegate(

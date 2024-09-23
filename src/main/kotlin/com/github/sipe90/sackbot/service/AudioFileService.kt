@@ -6,8 +6,10 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface AudioFileService {
-
-    fun audioFileExists(guildId: String, name: String): Mono<Boolean>
+    fun audioFileExists(
+        guildId: String,
+        name: String,
+    ): Mono<Boolean>
 
     fun getAudioFiles(guildId: String): Flux<LightAudioFile>
 
@@ -26,13 +28,29 @@ interface AudioFileService {
         userId: String,
     ): Mono<AudioFile>
 
-    fun findAudioFile(guildId: String, name: String): Mono<AudioFile>
+    fun findAudioFile(
+        guildId: String,
+        name: String,
+    ): Mono<AudioFile>
 
-    fun deleteAudioFile(guildId: String, name: String): Mono<Boolean>
+    fun deleteAudioFile(
+        guildId: String,
+        name: String,
+    ): Mono<Boolean>
 
-    fun randomAudioFile(guildId: String, userId: String, tags: Set<String>): Mono<AudioFile>
+    fun randomAudioFile(
+        guildId: String,
+        userId: String,
+        tags: Set<String>,
+    ): Mono<AudioFile>
 
-    fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile>
+    fun randomAudioFile(
+        guildId: String,
+        userId: String,
+    ): Mono<AudioFile>
 
-    fun zipFiles(guildId: String, userId: String): Mono<ByteArray>
+    fun zipFiles(
+        guildId: String,
+        userId: String,
+    ): Mono<ByteArray>
 }

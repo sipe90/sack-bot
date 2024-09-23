@@ -14,10 +14,13 @@ class AudioPlayerServiceImpl(
     private val jdaService: JDAService,
     private val playerManager: LavaPlayerManager,
 ) : AudioPlayerService {
-
     private val logger = KotlinLogging.logger {}
 
-    override fun playAudioForUser(guildId: String, userId: String, name: String): Mono<Unit> {
+    override fun playAudioForUser(
+        guildId: String,
+        userId: String,
+        name: String,
+    ): Mono<Unit> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
         val voiceChannel =
@@ -26,11 +29,18 @@ class AudioPlayerServiceImpl(
         return playAudioInChannel(name, voiceChannel)
     }
 
-    override fun playAudioInChannel(name: String, audioChannel: AudioChannel): Mono<Unit> {
+    override fun playAudioInChannel(
+        name: String,
+        audioChannel: AudioChannel,
+    ): Mono<Unit> {
         return playerManager.playDatabaseTrack(name, audioChannel).then(Mono.empty())
     }
 
-    override fun playUrlForUser(guildId: String, userId: String, url: String): Mono<AudioItem> {
+    override fun playUrlForUser(
+        guildId: String,
+        userId: String,
+        url: String,
+    ): Mono<AudioItem> {
         val user = jdaService.getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val voiceChannel =
             getVoiceChannel(user) ?: throw ValidationException("Could not find voice channel to play in")
@@ -38,11 +48,17 @@ class AudioPlayerServiceImpl(
         return playUrlInChannel(url, voiceChannel)
     }
 
-    override fun playUrlInChannel(url: String, audioChannel: AudioChannel): Mono<AudioItem> {
+    override fun playUrlInChannel(
+        url: String,
+        audioChannel: AudioChannel,
+    ): Mono<AudioItem> {
         return playerManager.playExternalTrack(url, audioChannel)
     }
 
-    override fun setVolume(guildId: String, volume: Int): Mono<Unit> {
+    override fun setVolume(
+        guildId: String,
+        volume: Int,
+    ): Mono<Unit> {
         val guild = jdaService.getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
 
         return Mono.defer {

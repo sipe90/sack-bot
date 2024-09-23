@@ -13,14 +13,14 @@ import reactor.core.publisher.Mono
 
 @Component
 class VolumeCommand(private val playerService: AudioPlayerService) : BotCommand() {
-
     final override val commandName = "volume"
 
-    final override val commandData = Commands.slash(commandName, "Check or set bot volume")
-        .addOptions(
-            OptionData(OptionType.INTEGER, "volume", "New volume (0-100)", false)
-                .setMinValue(0).setMaxValue(100),
-        ).setDefaultPermissions(DefaultMemberPermissions.DISABLED)
+    final override val commandData =
+        Commands.slash(commandName, "Check or set bot volume")
+            .addOptions(
+                OptionData(OptionType.INTEGER, "volume", "New volume (0-100)", false)
+                    .setMinValue(0).setMaxValue(100),
+            ).setDefaultPermissions(DefaultMemberPermissions.DISABLED)
 
     override fun process(
         initiator: SlashCommandInteractionEvent,

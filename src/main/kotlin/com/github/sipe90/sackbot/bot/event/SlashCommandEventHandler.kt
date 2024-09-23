@@ -16,7 +16,6 @@ class SlashCommandEventHandler(
     private val jdaService: JDAService,
 ) :
     EventHandler<SlashCommandInteractionEvent> {
-
     private val logger = KotlinLogging.logger {}
 
     private val commandsMap = commands.associateBy(BotCommand::commandName)

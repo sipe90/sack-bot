@@ -22,12 +22,12 @@ class AudioEventsHandler(
     private val audioPlayerService: AudioPlayerService,
     private val eventEmitter: GuildVoiceEventEmitter,
 ) : WebSocketHandler {
-
     override fun handle(session: WebSocketSession): Mono<Void> {
-        val guildId = getGuildId(session.handshakeInfo.uri)
-            ?: return session.send(
-                session.close(CloseStatus.POLICY_VIOLATION.withReason("Missing guildId parameter")).thenMany(Mono.empty()),
-            )
+        val guildId =
+            getGuildId(session.handshakeInfo.uri)
+                ?: return session.send(
+                    session.close(CloseStatus.POLICY_VIOLATION.withReason("Missing guildId parameter")).thenMany(Mono.empty()),
+                )
 
         return session.send(
             hasGuildAccess(guildId).flatMapMany { hasAccess ->
@@ -48,6 +48,7 @@ class AudioEventsHandler(
             .queryParams.getFirst("guildId")
 
     private fun hasGuildAccess(guildId: String) = getAuthorities().map { it.any { auth -> auth.guildId == guildId } }
+
     private fun getAuthorities(): Mono<Collection<DiscordAuthority>> {
         return ReactiveSecurityContextHolder.getContext().map {
             (it.authentication as OAuth2AuthenticationToken).authorities as Collection<DiscordAuthority>

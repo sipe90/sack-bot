@@ -20,20 +20,32 @@ import java.util.zip.ZipOutputStream
 
 @Service
 class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository) : AudioFileService {
-
-    override fun findAudioFile(guildId: String, name: String): Mono<AudioFile> {
+    override fun findAudioFile(
+        guildId: String,
+        name: String,
+    ): Mono<AudioFile> {
         return audioFileRepository.findAudioFile(guildId, name)
     }
 
-    override fun randomAudioFile(guildId: String, userId: String, tags: Set<String>): Mono<AudioFile> {
+    override fun randomAudioFile(
+        guildId: String,
+        userId: String,
+        tags: Set<String>,
+    ): Mono<AudioFile> {
         return audioFileRepository.findRandomAudioFile(guildId, tags)
     }
 
-    override fun randomAudioFile(guildId: String, userId: String): Mono<AudioFile> {
+    override fun randomAudioFile(
+        guildId: String,
+        userId: String,
+    ): Mono<AudioFile> {
         return randomAudioFile(guildId, userId, emptySet())
     }
 
-    override fun zipFiles(guildId: String, userId: String): Mono<ByteArray> {
+    override fun zipFiles(
+        guildId: String,
+        userId: String,
+    ): Mono<ByteArray> {
         return audioFileRepository.findAllAudioFiles(guildId)
             .collectList()
             .map {
@@ -51,7 +63,10 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
             }
     }
 
-    override fun audioFileExists(guildId: String, name: String): Mono<Boolean> {
+    override fun audioFileExists(
+        guildId: String,
+        name: String,
+    ): Mono<Boolean> {
         return audioFileRepository.audioFileExists(guildId, name)
     }
 
@@ -96,19 +111,33 @@ class AudioFileServiceImpl(private val audioFileRepository: AudioFileRepository)
         )
     }
 
-    override fun deleteAudioFile(guildId: String, name: String): Mono<Boolean> {
+    override fun deleteAudioFile(
+        guildId: String,
+        name: String,
+    ): Mono<Boolean> {
         return audioFileRepository.deleteAudioFile(guildId, name)
     }
 
-    private fun validateFile(data: ByteArray, name: String, extension: String?): Mono<Void> {
-        val detectionResult = ByteArraySeekableInputStream(data).use { inputStream ->
-            MediaContainerDetection(
-                ContainerRegistries.audio,
-                AudioReference("$name${if (extension !== null) ".$extension" else ""}", null),
-                inputStream,
-                MediaContainerHints.from(null, extension),
-            ).detectContainer()
+    private fun validateFile(
+        data: ByteArray,
+        name: String,
+        extension: String?,
+    ): Mono<Void> {
+        val detectionResult =
+            ByteArraySeekableInputStream(data).use { inputStream ->
+                MediaContainerDetection(
+                    ContainerRegistries.audio,
+                    AudioReference("$name${if (extension !== null) ".$extension" else ""}", null),
+                    inputStream,
+                    MediaContainerHints.from(null, extension),
+                ).detectContainer()
+            }
+        return if (!detectionResult.isContainerDetected) {
+            Mono.error(
+                ValidationException("Invalid or unsupported sound file format"),
+            )
+        } else {
+            Mono.empty()
         }
-        return if (!detectionResult.isContainerDetected) Mono.error(ValidationException("Invalid or unsupported sound file format")) else Mono.empty()
     }
 }

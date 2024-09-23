@@ -10,7 +10,10 @@ import reactor.core.publisher.Mono
 
 @Repository
 class MemberRepositoryExtensionImpl(private val template: ReactiveMongoTemplate) : MemberRepositoryExtension {
-    override fun findMember(guildId: String, userId: String): Mono<Member> {
+    override fun findMember(
+        guildId: String,
+        userId: String,
+    ): Mono<Member> {
         return template.findOne(Query(Criteria.where("guildId").`is`(guildId).and("userId").`is`(userId)), Member::class.java)
     }
 

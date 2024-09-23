@@ -11,8 +11,10 @@ import reactor.core.publisher.Mono
 
 @Component
 class SettingsHandler(private val config: BotConfig, private val jdaService: JDAService) {
-
-    fun getSettings(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun getSettings(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         return ServerResponse.ok().bodyValue(
             SettingsDTO(
                 SettingsDTO.UploadSettings(

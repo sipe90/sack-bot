@@ -14,16 +14,16 @@ import reactor.core.publisher.Mono
 
 @Component
 class SetCommand(private val memberService: MemberService, private val audioFileService: AudioFileService) : BotCommand() {
-
     final override val commandName = "set"
 
-    final override val commandData = Commands.slash("set", "Set your personal sounds")
-        .addSubcommands(
-            SubcommandData("entry", "Entry sound to be played when entering a voice channel")
-                .addOption(OptionType.STRING, "sound", "Sound name", false),
-            SubcommandData("exit", "Exit sound to be played when leaving a voice channel")
-                .addOption(OptionType.STRING, "sound", "Sound name", false),
-        )
+    final override val commandData =
+        Commands.slash("set", "Set your personal sounds")
+            .addSubcommands(
+                SubcommandData("entry", "Entry sound to be played when entering a voice channel")
+                    .addOption(OptionType.STRING, "sound", "Sound name", false),
+                SubcommandData("exit", "Exit sound to be played when leaving a voice channel")
+                    .addOption(OptionType.STRING, "sound", "Sound name", false),
+            )
 
     override fun process(
         initiator: SlashCommandInteractionEvent,

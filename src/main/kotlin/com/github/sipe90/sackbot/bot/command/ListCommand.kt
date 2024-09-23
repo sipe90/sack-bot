@@ -11,11 +11,11 @@ import reactor.core.publisher.Mono
 
 @Component
 class ListCommand(private val fileService: AudioFileService) : BotCommand() {
-
     final override val commandName = "list"
 
-    final override val commandData = Commands.slash("list", "List all sounds")
-        .addOption(OptionType.STRING, "tag", "Filter by tag", false)
+    final override val commandData =
+        Commands.slash("list", "List all sounds")
+            .addOption(OptionType.STRING, "tag", "Filter by tag", false)
 
     override fun process(
         initiator: SlashCommandInteractionEvent,

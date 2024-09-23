@@ -34,35 +34,36 @@ class Routes(
     private val jdaService: JDAService,
 ) {
     @Bean
-    fun apiRouter() = router {
-        ("/api" and accept(MediaType.APPLICATION_JSON)).nest {
-            GET("/ping") { noContent().build() }
-            GET("/me", handle(userHandler::userInfo))
-            GET("/guilds", handle(userHandler::mutualGuilds))
-            GET("/settings", handle(settingsHandler::getSettings))
-            "/{guildId}".nest {
-                filter(this@Routes::guildAccessFilter)
-                GET("/members", handleAdmin(userHandler::guildMembers))
-                PUT("/volume", handleAdmin(audioHandler::setVolume))
-                "/sounds".nest {
-                    GET("", handle(audioHandler::getSoundsList))
-                    (POST("") and accept(MediaType.MULTIPART_FORM_DATA))
-                        .invoke(handleAdmin(audioHandler::uploadSounds))
-                    PUT("/entry", handle(audioHandler::setEntrySound))
-                    PUT("/exit", handle(audioHandler::setExitSound))
-                    POST("/rnd", handle(audioHandler::playRandomSound))
-                    POST("/url", handle(audioHandler::playUrl))
-                    GET("/export", handleAdmin(audioHandler::exportSounds))
-                    "/{name}".nest {
-                        GET("/download", handleAdmin(audioHandler::downloadSound))
-                        POST("", handle(audioHandler::updateSound))
-                        DELETE("", handleAdmin(audioHandler::deleteSound))
-                        POST("/play", handle(audioHandler::playSound))
+    fun apiRouter() =
+        router {
+            ("/api" and accept(MediaType.APPLICATION_JSON)).nest {
+                GET("/ping") { noContent().build() }
+                GET("/me", handle(userHandler::userInfo))
+                GET("/guilds", handle(userHandler::mutualGuilds))
+                GET("/settings", handle(settingsHandler::getSettings))
+                "/{guildId}".nest {
+                    filter(this@Routes::guildAccessFilter)
+                    GET("/members", handleAdmin(userHandler::guildMembers))
+                    PUT("/volume", handleAdmin(audioHandler::setVolume))
+                    "/sounds".nest {
+                        GET("", handle(audioHandler::getSoundsList))
+                        (POST("") and accept(MediaType.MULTIPART_FORM_DATA))
+                            .invoke(handleAdmin(audioHandler::uploadSounds))
+                        PUT("/entry", handle(audioHandler::setEntrySound))
+                        PUT("/exit", handle(audioHandler::setExitSound))
+                        POST("/rnd", handle(audioHandler::playRandomSound))
+                        POST("/url", handle(audioHandler::playUrl))
+                        GET("/export", handleAdmin(audioHandler::exportSounds))
+                        "/{name}".nest {
+                            GET("/download", handleAdmin(audioHandler::downloadSound))
+                            POST("", handle(audioHandler::updateSound))
+                            DELETE("", handleAdmin(audioHandler::deleteSound))
+                            POST("/play", handle(audioHandler::playSound))
+                        }
                     }
                 }
             }
         }
-    }
 
     @Bean
     fun handlerMapping(audioEventsHandler: AudioEventsHandler): HandlerMapping {
@@ -83,36 +84,37 @@ class Routes(
 
     private fun handleAdmin(
         handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>,
-    ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
-        requestWithPrincipal(req).flatMap { (req, principal) ->
-            val guildId = req.pathVariable("guildId")
-            val user = jdaService.getUser(principal.getId()) ?: return@flatMap Mono.error(SackException("User not found"))
-            val member = jdaService.getGuild(guildId)?.getMember(user)
-            if (hasAdminAccess(principal, guildId)) {
-                handler(req, principal)
-                    .contextWrite(createContext(user, member))
-            } else {
-                status(HttpStatus.FORBIDDEN).build()
+    ): (ServerRequest) -> Mono<out ServerResponse> =
+        { req ->
+            requestWithPrincipal(req).flatMap { (req, principal) ->
+                val guildId = req.pathVariable("guildId")
+                val user = jdaService.getUser(principal.getId()) ?: return@flatMap Mono.error(SackException("User not found"))
+                val member = jdaService.getGuild(guildId)?.getMember(user)
+                if (hasAdminAccess(principal, guildId)) {
+                    handler(req, principal)
+                        .contextWrite(createContext(user, member))
+                } else {
+                    status(HttpStatus.FORBIDDEN).build()
+                }
             }
         }
-    }
 
-    private fun handle(
-        handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>,
-    ): (ServerRequest) -> Mono<out ServerResponse> = { req ->
-        requestWithPrincipal(req)
-            .flatMap { (req, principal) ->
-                val user = jdaService.getUser(principal.getId()) ?: return@flatMap Mono.error(SackException("User not found"))
-                val context = if (req.pathVariables().containsKey("guildId")) {
-                    val guildId = req.pathVariable("guildId")
-                    val member = jdaService.getGuild(guildId)?.getMember(user)
-                    createContext(user, member)
-                } else {
-                    createContext(user, null)
+    private fun handle(handler: (ServerRequest, DiscordUser) -> Mono<out ServerResponse>): (ServerRequest) -> Mono<out ServerResponse> =
+        { req ->
+            requestWithPrincipal(req)
+                .flatMap { (req, principal) ->
+                    val user = jdaService.getUser(principal.getId()) ?: return@flatMap Mono.error(SackException("User not found"))
+                    val context =
+                        if (req.pathVariables().containsKey("guildId")) {
+                            val guildId = req.pathVariable("guildId")
+                            val member = jdaService.getGuild(guildId)?.getMember(user)
+                            createContext(user, member)
+                        } else {
+                            createContext(user, null)
+                        }
+                    handler(req, principal).contextWrite(context)
                 }
-                handler(req, principal).contextWrite(context)
-            }
-    }
+        }
 
     private fun requestWithPrincipal(req: ServerRequest): Mono<Tuple2<ServerRequest, DiscordUser>> {
         return req.principal()
@@ -120,6 +122,8 @@ class Routes(
             .map { Tuples.of(req, it.principal as DiscordUser) }
     }
 
-    private fun hasAdminAccess(user: DiscordUser, guildId: String): Boolean =
-        user.isOwner(guildId) || (config.adminRole != null && user.getRoles(guildId).contains(config.adminRole))
+    private fun hasAdminAccess(
+        user: DiscordUser,
+        guildId: String,
+    ): Boolean = user.isOwner(guildId) || (config.adminRole != null && user.getRoles(guildId).contains(config.adminRole))
 }

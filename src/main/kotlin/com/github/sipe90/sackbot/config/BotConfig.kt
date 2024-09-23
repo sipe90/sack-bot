@@ -10,7 +10,6 @@ data class BotConfig(
     val activity: ActivityConfig,
     val upload: UploadConfig,
 ) {
-
     data class ActivityConfig(
         val type: String,
         val text: String,

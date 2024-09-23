@@ -31,7 +31,6 @@ import java.net.URI
 @Configuration
 @EnableWebFluxSecurity
 class SecurityConfig {
-
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http {
@@ -75,7 +74,10 @@ class SecurityConfig {
         }
     }
 
-    private fun buildAuthorities(userId: String, guilds: List<Guild>): List<DiscordAuthority> {
+    private fun buildAuthorities(
+        userId: String,
+        guilds: List<Guild>,
+    ): List<DiscordAuthority> {
         return guilds.map {
             val member = it.getMemberById(userId) ?: throw RuntimeException("Member not found")
             val roles = member.roles.map(Role::getName).toSet()
@@ -84,7 +86,6 @@ class SecurityConfig {
     }
 
     class AuthenticationFailureHandler : ServerAuthenticationFailureHandler {
-
         private var redirectStrategy: ServerRedirectStrategy = DefaultServerRedirectStrategy()
         private var fallbackLocation = URI.create("/login?error")
 

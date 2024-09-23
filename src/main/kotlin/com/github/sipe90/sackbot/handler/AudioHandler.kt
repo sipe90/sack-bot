@@ -34,8 +34,10 @@ class AudioHandler(
     private val audioFileService: AudioFileService,
     private val memberService: MemberService,
 ) {
-
-    fun playSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun playSound(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
         val userId = principal.getId()
@@ -44,7 +46,10 @@ class AudioHandler(
             .flatMap { noContent().build() }
     }
 
-    fun playRandomSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun playRandomSound(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
         val tags = request.queryParams()["tags"]
@@ -54,7 +59,10 @@ class AudioHandler(
             .flatMap { noContent().build() }
     }
 
-    fun playUrl(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun playUrl(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
         val url = request.queryParam("url").orElseThrow { BadRequestException("Query parameter url is required") }
@@ -63,14 +71,20 @@ class AudioHandler(
             .flatMap { noContent().build() }
     }
 
-    fun getSoundsList(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun getSoundsList(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
 
         return ok()
             .body(audioFileService.getAudioFiles(guildId))
     }
 
-    fun updateSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun updateSound(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
         val userId = principal.getId()
@@ -88,7 +102,10 @@ class AudioHandler(
             .flatMap { noContent().build() }
     }
 
-    fun uploadSounds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun uploadSounds(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
 
@@ -132,7 +149,10 @@ class AudioHandler(
             }.then(noContent().build())
     }
 
-    fun setEntrySound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun setEntrySound(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
         val name = request.queryParam("name").orElse(null)
@@ -140,7 +160,10 @@ class AudioHandler(
         return memberService.setMemberEntrySound(guildId, userId, name).then(ok().build())
     }
 
-    fun setExitSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun setExitSound(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
         val name = request.queryParam("name").orElse(null)
@@ -148,7 +171,10 @@ class AudioHandler(
         return memberService.setMemberExitSound(guildId, userId, name).then(ok().build())
     }
 
-    fun deleteSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun deleteSound(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
 
@@ -157,7 +183,10 @@ class AudioHandler(
             .switchIfEmpty(notFound().build())
     }
 
-    fun downloadSound(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun downloadSound(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val name = request.pathVariable("name")
 
@@ -172,7 +201,10 @@ class AudioHandler(
         }.switchIfEmpty(notFound().build())
     }
 
-    fun exportSounds(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun exportSounds(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         val userId = principal.getId()
 
@@ -182,10 +214,16 @@ class AudioHandler(
             .body(audioFileService.zipFiles(guildId, userId))
     }
 
-    fun setVolume(request: ServerRequest, principal: DiscordUser): Mono<ServerResponse> {
+    fun setVolume(
+        request: ServerRequest,
+        principal: DiscordUser,
+    ): Mono<ServerResponse> {
         val guildId = request.pathVariable("guildId")
         try {
-            val volume = request.queryParamOrNull("volume")?.toInt()?.coerceIn(0, 100) ?: throw BadRequestException("Invalid volume parameter")
+            val volume =
+                request.queryParamOrNull(
+                    "volume",
+                )?.toInt()?.coerceIn(0, 100) ?: throw BadRequestException("Invalid volume parameter")
             return audioPlayerService.setVolume(guildId, volume).flatMap { noContent().build() }
         } catch (e: NumberFormatException) {
             throw BadRequestException("Invalid volume parameter")

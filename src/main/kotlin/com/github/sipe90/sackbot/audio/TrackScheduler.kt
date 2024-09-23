@@ -12,7 +12,6 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
 class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
-
     private val queue: BlockingQueue<AudioTrack> = LinkedBlockingQueue()
 
     val sendHandler: AudioSendHandler
@@ -35,41 +34,47 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
      *
      * @param track The track to play or add to queue.
      */
-    fun queue(track: AudioTrack) = synchronized(queue) {
-        if (!player.startTrack(track, true)) {
-            queue.offer(track)
+    fun queue(track: AudioTrack) =
+        synchronized(queue) {
+            if (!player.startTrack(track, true)) {
+                queue.offer(track)
+            }
         }
-    }
 
-    fun queue(playlist: AudioPlaylist) = synchronized(queue) {
-        for (track in playlist.tracks) {
-            if (playlist.selectedTrack != null && track != playlist.selectedTrack) continue
-            queue(track)
+    fun queue(playlist: AudioPlaylist) =
+        synchronized(queue) {
+            for (track in playlist.tracks) {
+                if (playlist.selectedTrack != null && track != playlist.selectedTrack) continue
+                queue(track)
+            }
         }
-    }
 
     fun interrupt(track: AudioTrack) = interrupt(track, false)
 
-    fun interrupt(track: AudioTrack, preserveQueue: Boolean) = synchronized(queue) {
+    fun interrupt(
+        track: AudioTrack,
+        preserveQueue: Boolean,
+    ) = synchronized(queue) {
         player.playTrack(track)
         if (!preserveQueue) {
             queue.clear()
         }
     }
 
-    fun interrupt(playlist: AudioPlaylist) = synchronized(queue) {
-        var first = true
-        for (track in playlist.tracks) {
-            if (playlist.selectedTrack != null && track != playlist.selectedTrack) continue
-            if (first) {
-                interrupt(track)
-                queue.clear()
-                first = false
-            } else {
-                queue(track)
+    fun interrupt(playlist: AudioPlaylist) =
+        synchronized(queue) {
+            var first = true
+            for (track in playlist.tracks) {
+                if (playlist.selectedTrack != null && track != playlist.selectedTrack) continue
+                if (first) {
+                    interrupt(track)
+                    queue.clear()
+                    first = false
+                } else {
+                    queue(track)
+                }
             }
         }
-    }
 
     /**
      * Start the next track, stopping the current one if it is playing.
@@ -81,7 +86,11 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         }
     }
 
-    override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+    override fun onTrackEnd(
+        player: AudioPlayer,
+        track: AudioTrack,
+        endReason: AudioTrackEndReason,
+    ) {
         if (endReason.mayStartNext) {
             nextTrack()
         }
@@ -96,7 +105,9 @@ class TrackScheduler(private val player: AudioPlayer) : AudioEventAdapter() {
         }
 
         override fun isOpus() = true
+
         override fun provide20MsAudio(): ByteBuffer = buffer.flip()
+
         override fun canProvide(): Boolean = audioPlayer.provide(frame)
     }
 }

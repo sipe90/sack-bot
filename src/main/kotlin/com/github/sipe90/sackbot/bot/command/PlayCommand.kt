@@ -14,11 +14,11 @@ import reactor.core.publisher.Mono
 @Component
 class PlayCommand(private val fileService: AudioFileService, private val playerService: AudioPlayerService) :
     BotCommand() {
-
     final override val commandName = "play"
 
-    final override val commandData = Commands.slash("play", "Play a sound")
-        .addOption(OptionType.STRING, "sound", "Sound name", true)
+    final override val commandData =
+        Commands.slash("play", "Play a sound")
+            .addOption(OptionType.STRING, "sound", "Sound name", true)
 
     override fun process(
         initiator: SlashCommandInteractionEvent,

@@ -18,10 +18,12 @@ import java.io.DataOutput
 @Component
 class DatabaseAudioSourceManager(private val audioFileService: AudioFileService) :
     ProbingAudioSourceManager(ContainerRegistries.audio) {
-
     override fun getSourceName() = "db"
 
-    override fun loadItem(manager: AudioPlayerManager, reference: AudioReference): AudioItem? {
+    override fun loadItem(
+        manager: AudioPlayerManager,
+        reference: AudioReference,
+    ): AudioItem? {
         val audioFile = getAudioFile(reference.identifier) ?: return null
         ByteArraySeekableInputStream(audioFile.data).use {
             return handleLoadResult(
@@ -39,16 +41,25 @@ class DatabaseAudioSourceManager(private val audioFileService: AudioFileService)
         return true
     }
 
-    override fun encodeTrack(track: AudioTrack, output: DataOutput) {
+    override fun encodeTrack(
+        track: AudioTrack,
+        output: DataOutput,
+    ) {
         encodeTrackFactory((track as ByteArrayAudioTrack).containerTrackFactory, output)
     }
 
-    override fun createTrack(trackInfo: AudioTrackInfo, containerTrackFactory: MediaContainerDescriptor): AudioTrack? {
+    override fun createTrack(
+        trackInfo: AudioTrackInfo,
+        containerTrackFactory: MediaContainerDescriptor,
+    ): AudioTrack? {
         val audioFile = getAudioFile(trackInfo.identifier) ?: return null
         return ByteArrayAudioTrack(audioFile.data, trackInfo, containerTrackFactory, this)
     }
 
-    override fun decodeTrack(trackInfo: AudioTrackInfo, input: DataInput): AudioTrack? {
+    override fun decodeTrack(
+        trackInfo: AudioTrackInfo,
+        input: DataInput,
+    ): AudioTrack? {
         val containerTrackFactory = decodeTrackFactory(input)
         return if (containerTrackFactory != null) {
             val audioFile = getAudioFile(trackInfo.identifier) ?: return null

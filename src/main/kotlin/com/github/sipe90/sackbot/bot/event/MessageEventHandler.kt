@@ -21,7 +21,6 @@ final class MessageEventHandler(
     private val fileService: AudioFileService,
     private val jdaService: JDAService,
 ) : EventHandler<MessageReceivedEvent> {
-
     private val logger = KotlinLogging.logger {}
 
     override fun handleEvent(event: MessageReceivedEvent): Mono<Unit> {
@@ -35,8 +34,9 @@ final class MessageEventHandler(
     private fun processPrivateMessageEvent(event: MessageReceivedEvent): Mono<Unit> {
         if (event.author.isBot) return Mono.empty()
 
-        val guild = getGuild(event.author)
-            ?: return sendMessage(event, "Could not find guild or voice channel to perform the action.")
+        val guild =
+            getGuild(event.author)
+                ?: return sendMessage(event, "Could not find guild or voice channel to perform the action.")
         val hasAdminAccess = jdaService.hasAdminAccess(event.author, guild)
 
         if (event.message.attachments.isNotEmpty()) {
@@ -53,7 +53,10 @@ final class MessageEventHandler(
         }
     }
 
-    private fun handleUploads(event: MessageReceivedEvent, guild: Guild): Mono<Unit> {
+    private fun handleUploads(
+        event: MessageReceivedEvent,
+        guild: Guild,
+    ): Mono<Unit> {
         return event.message.attachments.toFlux().flatMap { attachment ->
             val fileName = attachment.fileName
             val fileExtension = attachment.fileExtension
@@ -101,7 +104,10 @@ final class MessageEventHandler(
             .then(Mono.empty())
     }
 
-    private fun sendMessage(event: MessageReceivedEvent, message: String): Mono<Unit> =
+    private fun sendMessage(
+        event: MessageReceivedEvent,
+        message: String,
+    ): Mono<Unit> =
         event.author.openPrivateChannel()
             .flatMap { channel -> channel.sendMessage(message) }
             .asMono()
