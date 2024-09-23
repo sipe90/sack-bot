@@ -1,19 +1,18 @@
 plugins {
     id("maven-publish")
-    id("org.springframework.boot") version "3.0.6"
+    id("org.springframework.boot") version "3.3.0"
     id("io.spring.dependency-management") version "1.1.0"
     id("org.jetbrains.kotlin.plugin.spring") version "1.8.20"
     id("com.google.cloud.tools.jib") version "3.3.1"
     id("net.researchgate.release") version "3.0.2"
-    id("com.diffplug.spotless") version "6.18.0"
-    kotlin("jvm") version "1.8.20"
+    id("com.diffplug.spotless") version "6.25.0"
+    kotlin("jvm") version "2.0.20"
 }
 
 group = "com.github.sipe90"
 
 repositories {
     mavenCentral()
-    jcenter()
     maven {
         url = uri("https://jitpack.io")
     }
@@ -34,12 +33,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
-    implementation("ch.qos.logback:logback-classic:1.4.6")
+    implementation("ch.qos.logback:logback-classic:1.4.12")
 
-    implementation("net.dv8tion:JDA:5.0.0-beta.8")
+    implementation("net.dv8tion:JDA:5.1.1")
     implementation("com.github.minndevelopment:jda-reactor:1.6.0")
-    implementation("com.github.walkyst:lavaplayer-fork:1.4.0")
-    implementation("com.sedmelluq:jda-nas:1.1.0")
+    implementation("dev.arbjerg:lavaplayer:2.2.2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
@@ -49,7 +47,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 jib {

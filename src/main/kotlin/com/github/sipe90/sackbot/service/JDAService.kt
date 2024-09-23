@@ -4,7 +4,6 @@ import club.minnced.jda.reactor.createManager
 import club.minnced.jda.reactor.on
 import club.minnced.jda.reactor.toFlux
 import com.github.sipe90.sackbot.config.BotConfig
-import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import mu.KotlinLogging
@@ -36,7 +35,6 @@ class JDAService(
     private val environment: String,
     private val config: BotConfig,
 ) {
-
     private val logger = KotlinLogging.logger {}
 
     final val eventManager = createManager()
@@ -60,27 +58,27 @@ class JDAService(
                 it.jda.httpClient.connectionPool.evictAll()
             }
 
-        jda = JDABuilder.create(
-            config.token,
-            GatewayIntent.DIRECT_MESSAGES,
-            GatewayIntent.GUILD_MESSAGES,
-            GatewayIntent.GUILD_MEMBERS,
-            GatewayIntent.GUILD_VOICE_STATES,
-        )
-            .setMemberCachePolicy(MemberCachePolicy.ALL)
-            .enableCache(CacheFlag.VOICE_STATE)
-            .disableCache(
-                CacheFlag.ACTIVITY,
-                CacheFlag.EMOJI,
-                CacheFlag.STICKER,
-                CacheFlag.CLIENT_STATUS,
-                CacheFlag.ONLINE_STATUS,
-                CacheFlag.SCHEDULED_EVENTS,
+        jda =
+            JDABuilder.create(
+                config.token,
+                GatewayIntent.DIRECT_MESSAGES,
+                GatewayIntent.GUILD_MESSAGES,
+                GatewayIntent.GUILD_MEMBERS,
+                GatewayIntent.GUILD_VOICE_STATES,
             )
-            .setEventManager(eventManager)
-            .setAudioSendFactory(NativeAudioSendFactory())
-            .setStatus(OnlineStatus.DO_NOT_DISTURB)
-            .build()
+                .setMemberCachePolicy(MemberCachePolicy.ALL)
+                .enableCache(CacheFlag.VOICE_STATE)
+                .disableCache(
+                    CacheFlag.ACTIVITY,
+                    CacheFlag.EMOJI,
+                    CacheFlag.STICKER,
+                    CacheFlag.CLIENT_STATUS,
+                    CacheFlag.ONLINE_STATUS,
+                    CacheFlag.SCHEDULED_EVENTS,
+                )
+                .setEventManager(eventManager)
+                .setStatus(OnlineStatus.DO_NOT_DISTURB)
+                .build()
     }
 
     fun registerCommands(commandData: List<CommandData>) {
@@ -121,8 +119,10 @@ class JDAService(
 
     fun getMutualGuilds(userId: String): List<Guild> = jda.getMutualGuilds(jda.getUserById(userId))
 
-    fun isMutualGuild(guildId: String, userId: String): Boolean =
-        getMutualGuilds(userId).any { it.id == guildId }
+    fun isMutualGuild(
+        guildId: String,
+        userId: String,
+    ): Boolean = getMutualGuilds(userId).any { it.id == guildId }
 
     fun getAdminRole(guildId: String): Role? {
         val guild = getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
@@ -134,13 +134,19 @@ class JDAService(
         return guild.getRolesByName(config.adminRole, false).first()
     }
 
-    fun hasAdminAccess(userId: String, guildId: String): Boolean {
+    fun hasAdminAccess(
+        userId: String,
+        guildId: String,
+    ): Boolean {
         val user = getUser(userId) ?: throw IllegalArgumentException("Invalid user id")
         val guild = getGuild(guildId) ?: throw IllegalArgumentException("Invalid guild id")
         return hasAdminAccess(user, guild)
     }
 
-    fun hasAdminAccess(user: User, guild: Guild): Boolean {
+    fun hasAdminAccess(
+        user: User,
+        guild: Guild,
+    ): Boolean {
         val adminRole = getAdminRole(guild)
 
         if (guild.ownerId == user.id) return true
