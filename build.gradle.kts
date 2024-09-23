@@ -57,6 +57,9 @@ jib {
     to {
         image = "sipe90/${project.name}:${project.version}"
     }
+    container {
+        mainClass = "com.github.sipe90.sackbot.SackBotApplication"
+    }
 }
 
 spotless {
