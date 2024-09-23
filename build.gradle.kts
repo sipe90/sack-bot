@@ -13,9 +13,8 @@ group = "com.github.sipe90"
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://jitpack.io")
-    }
+    maven(url = "https://jitpack.io")
+    maven(url = "https://maven.lavalink.dev/releases")
 }
 
 dependencies {
@@ -38,6 +37,7 @@ dependencies {
     implementation("net.dv8tion:JDA:5.1.1")
     implementation("com.github.minndevelopment:jda-reactor:1.6.0")
     implementation("dev.arbjerg:lavaplayer:2.2.2")
+    implementation("dev.lavalink.youtube:v2:1.8.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")

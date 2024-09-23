@@ -49,6 +49,7 @@ class AudioEventsHandler(
 
     private fun hasGuildAccess(guildId: String) = getAuthorities().map { it.any { auth -> auth.guildId == guildId } }
 
+    @Suppress("Unchecked_cast")
     private fun getAuthorities(): Mono<Collection<DiscordAuthority>> {
         return ReactiveSecurityContextHolder.getContext().map {
             (it.authentication as OAuth2AuthenticationToken).authorities as Collection<DiscordAuthority>
