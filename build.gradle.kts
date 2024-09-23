@@ -58,7 +58,7 @@ jib {
         image = "sipe90/${project.name}:${project.version}"
     }
     container {
-        mainClass = "com.github.sipe90.sackbot.SackBotApplication"
+        mainClass = "com.github.sipe90.sackbot.SackBotApplicationKt"
     }
 }
 
